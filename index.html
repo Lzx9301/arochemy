@@ -1,0 +1,324 @@
+!doctype html
+html lang=zh-Hant
+head
+    meta charset=utf-8 
+    meta name=viewport content=width=device-width, initial-scale=1 
+    titleArochemy｜精油與香氛title
+    meta name=description content=天然精油與香氛生活。探索精選精油、客製香氛服務與芳療文章。 
+    link rel=stylesheet href=.styles.css 
+head
+
+body
+    !-- Sticky Header --
+    header class=header id=top
+        div class=container header-inner
+            a class=brand href=#top aria-label=回到頂端
+                span class=brand-badgeAspan
+                span class=brand-nameArochemyspan
+            a
+
+            !-- Desktop Nav --
+            nav class=nav
+                a href=brand.html品牌故事a
+                a href=products.html產品a
+                a href=service.html服務a
+                a href=articles.html文章a
+                a href=contact.html聯絡a
+                a href=faqFAQa
+            nav
+
+            div class=header-cta
+
+                !-- Mobile Burger --
+                button class=burger id=burgerBtn type=button aria-label=開啟選單 aria-expanded=false
+                    spanspanspanspanspanspan
+                button
+            div
+        div
+    header
+
+    !-- Mobile Drawer --
+    !-- Mobile Dropdown (Top) --
+    div class=mobile-drawer id=mobileDrawer aria-hidden=true
+        div class=mobile-dropdown role=dialog aria-modal=true aria-label=手機選單
+            nav class=mobile-nav
+                a href=brand.html品牌故事a
+                a href=products.html產品a
+                a href=service.html服務a
+                a href=articles.html文章a
+                a href=contact.html聯絡a
+                a href=faq.htmlFAQa
+            nav
+
+            div class=mobile-panel-actions
+                a class=btn href=products.html探索精油a
+                a class=btn primary href=contact.html立即聯絡a
+            div
+        div
+    div
+
+
+
+    main
+        !-- Hero --
+        section class=hero
+            div class=container hero-grid
+                div
+                    div class=kicker
+                        自然・純淨・安心
+                    div
+                    h1讓香氛回到日常，找回生活的平衡h1
+                    p class=lead
+                        精選天然精油與香氛產品，搭配清楚的使用建議與注意事項，
+                        讓你在家也能安心享受香氣帶來的放鬆與療癒。
+                    p
+                    div class=hero-actions
+                        a class=btn primary href=#featured探索精選產品a
+                        a class=btn href=#service了解客製服務a
+                    div
+                    ul class=hero-bullets
+                        li清楚標示用途與注意事項li
+                        li提供 COA  SDS 下載（產品頁）li
+                        li支援手機、平板友善瀏覽li
+                    ul
+                div
+
+                div class=hero-card aria-label=主視覺圖
+                    div class=hero-image role=img aria-label=主視覺圖片預留位置
+                        spanHero Image Placeholderspan
+                    div
+                    div class=hero-card-note
+                        這裡之後放品牌情緒圖（植物  精油氛圍）即可
+                    div
+                div
+            div
+        section
+
+        !-- Brand Story (Short) --
+        section class=section id=story
+            div class=container
+                div class=section-head
+                    h2品牌故事h2
+                    p class=muted
+                        用最短的文字說清楚：你們為什麼做這個品牌。
+                    p
+                div
+
+                div class=story-grid
+                    div class=card
+                        h3我們相信香氣能改變日常h3
+                        p
+                            Arochemy 希望把「天然香氛」變成你日常中容易靠近的一件事。
+                            不需要很專業，也能從選擇、使用到保存都更安心。
+                        p
+                    div
+                    div class=card
+                        h3透明資訊與安心使用h3
+                        p
+                            我們重視資訊透明與使用安全，產品頁會提供清楚的使用建議與注意事項，
+                            並提供 COA  SDS 供下載參考。
+                        p
+                    div
+                div
+
+                div class=section-actions
+                    a class=btn href=#contact想了解更多？聯絡我們a
+                div
+            div
+        section
+
+        !-- Featured Products (3 cards) --
+        section class=section soft id=featured
+            div class=container
+                div class=section-head
+                    h2精選產品h2
+                    p class=muted
+                        首頁先放 3 個最熱門  最代表品牌的產品即可。
+                    p
+                div
+
+                div class=grid-3
+                    a class=product-card href=# aria-label=產品 1（範例）
+                        div class=product-image role=img aria-label=產品圖片預留div
+                        div class=product-body
+                            div class=product-title
+                                薰衣草精油（範例）
+                            div
+                            div class=product-desc muted
+                                舒緩放鬆、適合睡前香氛。
+                            div
+                        div
+                    a
+
+                    a class=product-card href=# aria-label=產品 2（範例）
+                        div class=product-image role=img aria-label=產品圖片預留div
+                        div class=product-body
+                            div class=product-title
+                                茶樹精油（範例）
+                            div
+                            div class=product-desc muted
+                                清新潔淨、居家常備。
+                            div
+                        div
+                    a
+
+                    a class=product-card href=# aria-label=產品 3（範例）
+                        div class=product-image role=img aria-label=產品圖片預留div
+                        div class=product-body
+                            div class=product-title
+                                複方舒壓（範例）
+                            div
+                            div class=product-desc muted
+                                忙碌時刻的專注與安定。
+                            div
+                        div
+                    a
+                div
+
+                div class=section-actions
+                    a class=btn primary href=#前往產品總覽a
+                div
+            div
+        section
+
+        !-- Custom Service --
+        section class=section id=service
+            div class=container
+                div class=service-banner
+                    div class=service-banner-img role=img aria-label=服務主圖預留div
+                    div class=service-banner-body
+                        h2客製香氛服務h2
+                        p class=muted
+                            需要專屬香氣、空間香氛設計或禮盒搭配？這裡先放一張圖＋一句話，
+                            點進去看服務分類與流程即可。
+                        p
+                        div class=service-actions
+                            a class=btn primary href=#了解服務內容a
+                            a class=btn href=#contact直接詢問a
+                        div
+                    div
+                div
+            div
+        section
+
+        !-- Articles Preview --
+        section class=section soft id=articles
+            div class=container
+                div class=section-head
+                    h2文章h2
+                    p class=muted
+                        先放 1–2 篇示範文章做版型，之後接 Strapi 再動態帶入。
+                    p
+                div
+
+                div class=grid-2
+                    a class=article-card href=#
+                        div class=article-title
+                            新手怎麼選精油？3 個安全原則
+                        div
+                        div class=article-meta muted
+                            精油入門｜5 min read
+                        div
+                        p class=article-excerpt muted
+                            從用途、濃度到禁忌，快速建立選購與使用的基本觀念。
+                        p
+                    a
+
+                    a class=article-card href=#
+                        div class=article-title
+                            精油保存怎麼做？避免氧化的關鍵
+                        div
+                        div class=article-meta muted
+                            使用方法｜4 min read
+                        div
+                        p class=article-excerpt muted
+                            了解光照、溫度、容器對精油品質的影響，延長香氣與效能。
+                        p
+                    a
+                div
+
+                div class=section-actions
+                    a class=btn href=#閱讀更多文章a
+                div
+            div
+        section
+
+        !-- Contact + FAQ --
+        section class=section id=contact
+            div class=container
+                div class=section-head
+                    h2聯絡資訊 & FAQh2
+                    p class=muted
+                        先把聯絡方式放清楚；FAQ 先做「形式」，內容可慢慢補。
+                    p
+                div
+
+                div class=grid-2
+                    div class=card
+                        h3聯絡我們h3
+                        p class=muted
+                            （示範）Email：hello@arochemy.com
+                        p
+                        p class=muted
+                            （示範）營業時間：週一至週五 1000–1800
+                        p
+                        div class=section-actions
+                            a class=btn primary href=httpsline.meRtip@yourlineid target=_blank rel=noopener
+                                LINE 直接聯絡
+                            a
+                        div
+                    div
+
+                    div class=card
+                        h3FAQ（示範）h3
+                        details
+                            summaryQ：精油可以直接塗抹皮膚嗎？summary
+                            p class=muted
+                                A：建議稀釋後使用，避免敏感部位；如有疑慮請先諮詢專業人士。
+                            p
+                        details
+                        details
+                            summaryQ：如何保存精油？summary
+                            p class=muted
+                                A：避光、密封、常溫保存；開封後建議於 6–12 個月內使用。
+                            p
+                        details
+                        details
+                            summaryQ：有提供客製香氛或課程嗎？summary
+                            p class=muted
+                                A：可提供客製服務；課程資訊未來將上線，歡迎先透過 LINE 詢問。
+                            p
+                        details
+                    div
+                div
+            div
+        section
+
+        !-- Footer --
+        footer class=footer
+            div class=container footer-inner
+                div class=footer-left
+                    div class=footer-brand
+                        Arochemy
+                    div
+                    div class=muted
+                        © span id=yearspan Arochemy. All rights reserved.
+                    div
+                div
+                div class=footer-links
+                    a href=#隱私權政策a
+                    a href=#服務條款a
+                    a href=#top回到頂端a
+                div
+            div
+        footer
+    main
+
+    !-- Floating LINE Button --
+    a class=line-fab href=httpsline.meRtip@yourlineid target=_blank rel=noopener aria-label=用 LINE 聯絡我們
+        LINE 聯絡
+    a
+
+    script src=.main.jsscript
+body
+html

@@ -1,112 +1,216 @@
-<main>
-  <!-- Category Hero -->
-  <section class="cat-hero">
-    <div class="container cat-hero-grid">
-      <div class="cat-hero-text">
-        <div class="kicker">Products</div>
-        <h1 class="cat-title">單方精油</h1>
-        <p class="cat-desc muted">
-          這裡放分類簡介（2–4 行即可），例如：以單方精油為主，提供清楚的用途、使用建議與注意事項，
-          並於產品頁提供 COA / SDS 下載參考。
-        </p>
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Arochemy｜精油與香氛</title>
+    <meta name="description" content="天然精油與香氛生活。探索精選精油、客製香氛服務與芳療文章。" />
+    <link rel="stylesheet" href="./styles.css" />
+</head>
 
-        <div class="cat-points">
-          <div class="point">
-            <div class="point-num">99%</div>
-            <div class="muted">天然來源（示意）</div>
-          </div>
-          <div class="point">
-            <div class="point-num">COA</div>
-            <div class="muted">檢驗文件（示意）</div>
-          </div>
-          <div class="point">
-            <div class="point-num">SDS</div>
-            <div class="muted">安全資料表（示意）</div>
-          </div>
+<body>
+    <!-- Sticky Header -->
+    <header class="header" id="top">
+        <div class="container header-inner">
+            <a class="brand" href="#top" aria-label="回到頂端">
+                <span class="brand-badge">A</span>
+                <span class="brand-name">Arochemy</span>
+            </a>
+
+            <!-- Desktop Nav -->
+            <nav class="nav">
+                <a href="brand.html">品牌故事</a>
+                <a href="products.html">產品</a>
+                <a href="service.html">服務</a>
+                <a href="articles.html">文章</a>
+                <a href="contact.html">聯絡</a>
+                <a href="faq">FAQ</a>
+            </nav>
+
+            <div class="header-cta">
+
+                <!-- Mobile Burger -->
+                <button class="burger" id="burgerBtn" type="button" aria-label="開啟選單" aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
         </div>
-      </div>
+    </header>
 
-      <div class="cat-hero-media" aria-label="分類主視覺">
-        <!-- 之後換成真正圖片：<img ...> -->
-        <div class="cat-hero-img" role="img" aria-label="分類圖片預留"></div>
-      </div>
+    <!-- Mobile Drawer -->
+    <!-- Mobile Dropdown (Top) -->
+    <div class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
+        <div class="mobile-dropdown" role="dialog" aria-modal="true" aria-label="手機選單">
+            <nav class="mobile-nav">
+                <a href="brand.html">品牌故事</a>
+                <a href="products.html">產品</a>
+                <a href="service.html">服務</a>
+                <a href="articles.html">文章</a>
+                <a href="contact.html">聯絡</a>
+                <a href="faq.html">FAQ</a>
+            </nav>
+
+            <div class="mobile-panel-actions">
+                <a class="btn" href="products.html">探索精油</a>
+                <a class="btn primary" href="contact.html">立即聯絡</a>
+            </div>
+        </div>
     </div>
-  </section>
 
-  <!-- Filter / Category bar -->
-  <section class="section">
-    <div class="container">
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <div class="toolbar-title">全部商品</div>
-          <div class="toolbar-sub muted"><span id="totalCount">12</span> items</div>
-        </div>
 
-        <div class="toolbar-right">
-          <div class="chips">
-            <a class="chip active" href="#">單方精油</a>
-            <a class="chip" href="#">複方精油</a>
-            <a class="chip" href="#">噴霧</a>
-            <a class="chip" href="#">按摩油</a>
-            <a class="chip" href="#">眼罩</a>
-          </div>
-        </div>
-      </div>
 
-      <!-- Product Grid -->
-      <div class="product-grid">
-        <!-- 卡片 1 -->
-        <a class="p-card" href="#" aria-label="薰衣草精油">
-          <div class="p-media">
-            <!-- 植物圖（預設顯示） -->
-            <div class="p-img plant" aria-label="植物圖預留"></div>
-            <!-- 瓶子圖（hover 顯示） -->
-            <div class="p-img bottle" aria-label="瓶子圖預留"></div>
-          </div>
-          <div class="p-body">
-            <div class="p-name">薰衣草精油</div>
-            <div class="p-meta muted">Lavender • 5ml / 10ml</div>
-          </div>
-        </a>
+    <main>
+        <!-- Category Hero -->
+        <section class="cat-hero">
+            <div class="container cat-hero-grid">
+                <div class="cat-hero-text">
+                    <div class="kicker">
+                        Products
+                    </div>
+                    <h1 class="cat-title">單方精油</h1>
+                    <p class="cat-desc muted">
+                        這裡放分類簡介（2–4 行即可），例如：以單方精油為主，提供清楚的用途、使用建議與注意事項，
+                        並於產品頁提供 COA / SDS 下載參考。
+                    </p>
 
-        <!-- 卡片 2 -->
-        <a class="p-card" href="#" aria-label="茶樹精油">
-          <div class="p-media">
-            <div class="p-img plant"></div>
-            <div class="p-img bottle"></div>
-          </div>
-          <div class="p-body">
-            <div class="p-name">茶樹精油</div>
-            <div class="p-meta muted">Tea Tree • 5ml / 10ml</div>
-          </div>
-        </a>
+                    <div class="cat-points">
+                        <div class="point">
+                            <div class="point-num">
+                                99%
+                            </div>
+                            <div class="muted">
+                                天然來源（示意）
+                            </div>
+                        </div>
+                        <div class="point">
+                            <div class="point-num">
+                                COA
+                            </div>
+                            <div class="muted">
+                                檢驗文件（示意）
+                            </div>
+                        </div>
+                        <div class="point">
+                            <div class="point-num">
+                                SDS
+                            </div>
+                            <div class="muted">
+                                安全資料表（示意）
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- 卡片 3 -->
-        <a class="p-card" href="#" aria-label="甜橙精油">
-          <div class="p-media">
-            <div class="p-img plant"></div>
-            <div class="p-img bottle"></div>
-          </div>
-          <div class="p-body">
-            <div class="p-name">甜橙精油</div>
-            <div class="p-meta muted">Orange • 5ml / 10ml</div>
-          </div>
-        </a>
+                <div class="cat-hero-media" aria-label="分類主視覺">
+                    <!-- 之後換成真正圖片：<img ...> -->
+                    <div class="cat-hero-img" role="img" aria-label="分類圖片預留"></div>
+                </div>
+            </div>
+        </section>
 
-        <!-- 卡片 4 -->
-        <a class="p-card" href="#" aria-label="迷迭香精油">
-          <div class="p-media">
-            <div class="p-img plant"></div>
-            <div class="p-img bottle"></div>
-          </div>
-          <div class="p-body">
-            <div class="p-name">迷迭香精油</div>
-            <div class="p-meta muted">Rosemary • 5ml / 10ml</div>
-          </div>
-        </a>
+        <!-- Filter / Category bar -->
+        <section class="section">
+            <div class="container">
+                <div class="toolbar">
+                    <div class="toolbar-left">
+                        <div class="toolbar-title">
+                            全部商品
+                        </div>
+                        <div class="toolbar-sub muted">
+                            <span id="totalCount">12</span> items
+                        </div>
+                    </div>
 
-        <!-- 你可以先複製貼上多幾張做視覺 -->
-      </div>
-    </div>
-  </section>
-</main>
+                    <div class="toolbar-right">
+                        <div class="chips">
+                            <a class="chip active" href="#">單方精油</a>
+                            <a class="chip" href="#">複方精油</a>
+                            <a class="chip" href="#">噴霧</a>
+                            <a class="chip" href="#">按摩油</a>
+                            <a class="chip" href="#">眼罩</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Grid -->
+                <div class="product-grid">
+                    <!-- 卡片 1 -->
+                    <a class="p-card" href="#" aria-label="薰衣草精油">
+                        <div class="p-media">
+                            <!-- 植物圖（預設顯示） -->
+                            <div class="p-img plant" aria-label="植物圖預留"></div>
+                            <!-- 瓶子圖（hover 顯示） -->
+                            <div class="p-img bottle" aria-label="瓶子圖預留"></div>
+                        </div>
+                        <div class="p-body">
+                            <div class="p-name">
+                                薰衣草精油
+                            </div>
+                            <div class="p-meta muted">
+                                Lavender • 5ml / 10ml
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- 卡片 2 -->
+                    <a class="p-card" href="#" aria-label="茶樹精油">
+                        <div class="p-media">
+                            <div class="p-img plant"></div>
+                            <div class="p-img bottle"></div>
+                        </div>
+                        <div class="p-body">
+                            <div class="p-name">
+                                茶樹精油
+                            </div>
+                            <div class="p-meta muted">
+                                Tea Tree • 5ml / 10ml
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- 卡片 3 -->
+                    <a class="p-card" href="#" aria-label="甜橙精油">
+                        <div class="p-media">
+                            <div class="p-img plant"></div>
+                            <div class="p-img bottle"></div>
+                        </div>
+                        <div class="p-body">
+                            <div class="p-name">
+                                甜橙精油
+                            </div>
+                            <div class="p-meta muted">
+                                Orange • 5ml / 10ml
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- 卡片 4 -->
+                    <a class="p-card" href="#" aria-label="迷迭香精油">
+                        <div class="p-media">
+                            <div class="p-img plant"></div>
+                            <div class="p-img bottle"></div>
+                        </div>
+                        <div class="p-body">
+                            <div class="p-name">
+                                迷迭香精油
+                            </div>
+                            <div class="p-meta muted">
+                                Rosemary • 5ml / 10ml
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- 你可以先複製貼上多幾張做視覺 -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Floating LINE Button -->
+    <a class="line-fab" href="https://line.me/R/ti/p/@yourlineid" target="_blank" rel="noopener" aria-label="用 LINE 聯絡我們">
+        LINE 聯絡
+    </a>
+
+    <script src="./main.js"></script>
+</body>
+</html>

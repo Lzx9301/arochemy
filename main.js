@@ -69,6 +69,25 @@ catMenu?.querySelectorAll("a").forEach((a) => {
 window.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeCatMenu();
 });
+// ===== Mobile auto image switch (no hover devices) =====
+if (window.matchMedia("(hover: none)").matches) {
+  const cards = document.querySelectorAll(".product-image");
+
+  cards.forEach((imgBox) => {
+    const plant = imgBox.querySelector(".p-img.plant");
+    const bottle = imgBox.querySelector(".p-img.bottle");
+    if (!plant || !bottle) return;
+
+    let showBottle = false;
+
+    setInterval(() => {
+      showBottle = !showBottle;
+      plant.style.opacity = showBottle ? "0" : "1";
+      bottle.style.opacity = showBottle ? "1" : "0";
+    }, 2500); // ⏱ 每 2.5 秒切換（你可改）
+  });
+}
 
 })();
+
 

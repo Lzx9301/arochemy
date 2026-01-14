@@ -35,4 +35,40 @@
   // Footer 年份
   const yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = String(new Date().getFullYear());
+
+  // Products page: category dropdown
+const catBtn = document.getElementById("catBtn");
+const catMenu = document.getElementById("catMenu");
+
+const closeCatMenu = () => {
+  if (!catMenu || !catBtn) return;
+  catMenu.classList.remove("open");
+  catBtn.setAttribute("aria-expanded", "false");
+};
+
+const toggleCatMenu = () => {
+  if (!catMenu || !catBtn) return;
+  const isOpen = catMenu.classList.toggle("open");
+  catBtn.setAttribute("aria-expanded", String(isOpen));
+};
+
+catBtn?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  toggleCatMenu();
+});
+
+// 點到頁面其他地方就關閉
+document.addEventListener("click", () => closeCatMenu());
+
+// 點選分類後關閉（先不做篩選也沒關係）
+catMenu?.querySelectorAll("a").forEach((a) => {
+  a.addEventListener("click", () => closeCatMenu());
+});
+
+// ESC 關閉
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeCatMenu();
+});
+
 })();
+

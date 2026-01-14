@@ -121,15 +121,34 @@
                         </div>
                     </div>
 
-                    <div class="toolbar-right">
-                        <div class="chips">
-                            <a class="chip active" href="#">單方精油</a>
-                            <a class="chip" href="#">複方精油</a>
-                            <a class="chip" href="#">噴霧</a>
-                            <a class="chip" href="#">按摩油</a>
-                            <a class="chip" href="#">眼罩</a>
-                        </div>
-                    </div>
+                    <div class="toolbar">
+  <div class="toolbar-left">
+    <!-- 分類漢堡按鈕 -->
+    <button class="cat-btn" id="catBtn" type="button" aria-expanded="false" aria-controls="catMenu">
+      <span class="cat-icon" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
+      <span class="cat-label">商品分類</span>
+    </button>
+
+    <div class="toolbar-sub muted"><span id="totalCount">12</span> items</div>
+
+    <!-- 下拉選單 -->
+    <div class="cat-menu" id="catMenu" role="menu" aria-label="商品分類選單">
+      <a class="cat-item active" href="products.html?cat=single" role="menuitem">單方精油</a>
+      <a class="cat-item" href="products.html?cat=blend" role="menuitem">複方精油</a>
+      <a class="cat-item" href="products.html?cat=spray" role="menuitem">噴霧</a>
+      <a class="cat-item" href="products.html?cat=massage" role="menuitem">按摩油</a>
+      <a class="cat-item" href="products.html?cat=eyemask" role="menuitem">眼罩</a>
+    </div>
+  </div>
+
+  <div class="toolbar-right">
+    <!-- 右側留空或未來放排序/搜尋 -->
+    <!-- <button class="btn">排序</button> -->
+  </div>
+</div>
+
                 </div>
 
                 <!-- Product Grid -->
@@ -214,4 +233,5 @@
     <script src="./main.js"></script>
 </body>
 </html>
+
 

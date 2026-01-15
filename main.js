@@ -89,39 +89,56 @@
         });
     }
 
-    // ===== Products category menu + title sync =====
+    // ===== Products category menu (mobile-safe) =====
+    // ===== Products category menu (mobile-safe) =====
     const catToggle = document.getElementById("catToggle");
     const catMenu = document.getElementById("catMenu");
     const currentCat = document.getElementById("currentCat");
     const catItems = document.querySelectorAll(".cat-item");
 
-    /* 開 / 關選單 */
-    catToggle.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const isOpen = catMenu.classList.toggle("open");
-        catToggle.setAttribute("aria-expanded", String(isOpen));
-    });
-
-    /* 點分類 → 改標題 */
-    catItems.forEach(item => {
-        item.addEventListener("click", () => {
-            const label = item.textContent;
-
-            currentCat.textContent = label; // ⭐ 重點
+    if (catToggle && catMenu && currentCat) {
+        const closeMenu = () => {
             catMenu.classList.remove("open");
             catToggle.setAttribute("aria-expanded", "false");
+        };
 
-            // 👉 之後你可以在這裡加：
-            // filterProducts(item.dataset.cat);
-            // or update URL
+        const toggleMenu = () => {
+            const isOpen = catMenu.classList.toggle("open");
+            catToggle.setAttribute("aria-expanded", String(isOpen));
+        };
+
+        // ✅ 用 pointerup：手機更穩
+        catToggle.addEventListener("pointerup", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleMenu();
         });
-    });
 
-    /* 點外面關閉 */
-    document.addEventListener("click", () => {
-        catMenu.classList.remove("open");
-        catToggle.setAttribute("aria-expanded", "false");
-    });
+        // 點選分類 → 改標題 → 關閉
+        catItems.forEach((item) => {
+            item.addEventListener("pointerup", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                currentCat.textContent = item.textContent.trim();
+                closeMenu();
+                // 之後要加 filterProducts(item.dataset.cat) 就放這
+            });
+        });
+
+        // ✅ 只有點到「選單外面」才關閉（不會誤殺）
+        document.addEventListener("pointerdown", (e) => {
+            const target = e.target;
+            if (!(target instanceof Element)) return;
+            if (catToggle.contains(target) || catMenu.contains(target)) return;
+            closeMenu();
+        });
+
+        // ESC 關閉（桌機）
+        window.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") closeMenu();
+        });
+    }
+
 
 
 })();

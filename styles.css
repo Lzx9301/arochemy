@@ -644,8 +644,27 @@ details p{
   }
 
   .hero-image {
-    height: 220px; /* 可調 200–260 */
+    border-radius: 0;
+    height: 240px;   /* 可依你品牌調 220–300 */
   }
 }
 
+
+/* 手機 Hero 圖片滿版、無框 */
+@media (max-width: 640px) {
+  .hero-card {
+    order: -1;
+
+    /* 移除卡片感 */
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    padding: 0;
+
+    /* 滿版關鍵 */
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+  }
+}
 

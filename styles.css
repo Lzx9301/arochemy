@@ -666,5 +666,10 @@ details p{
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
   }
+
+  .hero-image {
+    border: none;        /* ✅ 移除虛線框 */
+  }
 }
+
 

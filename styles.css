@@ -620,11 +620,16 @@ details p{
 }
 
 
-/* 手機時下拉選單撐寬比較好點 */
 @media (max-width: 640px){
+  .toolbar-left{
+    width: 100%;
+  }
+
   .cat-menu{
-    min-width: min(92vw, 320px);
+    left: 0;
+    right: 0;
+    min-width: unset;
+    width: 100%;
   }
 }
-
 

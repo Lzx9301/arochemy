@@ -113,43 +113,31 @@
             <div class="container">
                 <div class="toolbar">
                     <div class="toolbar-left">
-                        <div class="toolbar-title">
-                            全部商品
-                        </div>
+
+                        <!-- 🔥 這一行就是「目前分類」＋「開選單按鈕」 -->
+                        <button class="toolbar-title-btn" id="catToggle" aria-expanded="false">
+                            <span id="currentCat">全部商品</span>
+                            <span class="chevron">▾</span>
+                        </button>
+
                         <div class="toolbar-sub muted">
                             <span id="totalCount">12</span> items
                         </div>
+
+                        <!-- 🔽 分類選單（只屬於左側） -->
+                        <div class="cat-menu" id="catMenu" role="menu">
+                            <button class="cat-item" data-cat="all">全部商品</button>
+                            <button class="cat-item" data-cat="single">單方精油</button>
+                            <button class="cat-item" data-cat="blend">複方精油</button>
+                            <button class="cat-item" data-cat="spray">噴霧</button>
+                            <button class="cat-item" data-cat="massage">按摩油</button>
+                            <button class="cat-item" data-cat="eyemask">眼罩</button>
+                        </div>
+
                     </div>
-
-                    <div class="toolbar">
-  <div class="toolbar-left">
-    <!-- 分類漢堡按鈕 -->
-    <button class="cat-btn" id="catBtn" type="button" aria-expanded="false" aria-controls="catMenu">
-      <span class="cat-icon" aria-hidden="true">
-        <span></span><span></span><span></span>
-      </span>
-      <span class="cat-label">商品分類</span>
-    </button>
-
-    <div class="toolbar-sub muted"><span id="totalCount">12</span> items</div>
-
-    <!-- 下拉選單 -->
-    <div class="cat-menu" id="catMenu" role="menu" aria-label="商品分類選單">
-      <a class="cat-item active" href="products.html?cat=single" role="menuitem">單方精油</a>
-      <a class="cat-item" href="products.html?cat=blend" role="menuitem">複方精油</a>
-      <a class="cat-item" href="products.html?cat=spray" role="menuitem">噴霧</a>
-      <a class="cat-item" href="products.html?cat=massage" role="menuitem">按摩油</a>
-      <a class="cat-item" href="products.html?cat=eyemask" role="menuitem">眼罩</a>
-    </div>
-  </div>
-
-  <div class="toolbar-right">
-    <!-- 右側留空或未來放排序/搜尋 -->
-    <!-- <button class="btn">排序</button> -->
-  </div>
-</div>
-
                 </div>
+
+
 
                 <!-- Product Grid -->
                 <div class="product-grid">
@@ -233,5 +221,3 @@
     <script src="./main.js"></script>
 </body>
 </html>
-
-

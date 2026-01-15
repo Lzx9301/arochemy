@@ -642,5 +642,10 @@ details p{
   .hero-card {
     order: -1;
   }
+
+  .hero-image {
+    height: 220px; /* 可調 200–260 */
+  }
 }
+
 

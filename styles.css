@@ -415,31 +415,6 @@ details p {
     text-decoration: underline;
 }
 
-/* Floating LINE Button - 圓形版 */
-.line-fab{
-  position: fixed;
-  right: 18px;
-  bottom: 18px;
-  z-index: 1200;
-
-  width: 56px;
-  height: 56px;
-
-  display: grid;
-  place-items: center;
-
-  border-radius: 999px;
-  background: #06C755;
-  color: white;
-  font-weight: 900;
-  text-decoration: none;
-
-  box-shadow: 0 10px 25px rgba(0,0,0,0.18);
-}
-
-.line-fab:hover{
-  transform: translateY(-2px);
-}
 
 
 /* ===== Responsive ===== */
@@ -728,28 +703,8 @@ details p {
     }
 }
 
-/* Floating IG Button */
-.ig-fab {
-    position: fixed;
-    right: 18px;
-    bottom: 78px;
-    /* 讓它在 LINE 上方 */
-    z-index: 1200;
-    width: 56px;
-    height: 56px;
-    display: grid;
-    place-items: center;
-    border-radius: 999px;
-    background: #111;
-    color: #fff;
-    font-weight: 900;
-    text-decoration: none;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.18);
-}
 
-.ig-fab:hover {
-    transform: translateY(-2px);
-}
+
 
 /* 手機稍微小一點，避免太擋內容 */
 @media (max-width: 640px) {
@@ -763,4 +718,128 @@ details p {
         right: 14px;
         bottom: 14px;
     }
+}
+
+/* 共用浮動按鈕 icon */
+/* 共用浮動按鈕（更一致的品牌感） */
+.social-fab{
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1200;
+}
+
+.fab{
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(0,0,0,.18);
+  text-decoration: none;
+}
+
+.fab.line{
+  background: #06C755;
+}
+
+.fab.ig{
+  background: #fff;
+}
+
+.fab i{
+  font-size: 26px;
+  line-height: 1;
+  display: block;
+}
+
+.fab.ig i{
+  color: #444; /* 比純黑柔一點 */
+}
+
+.fab.line i{
+  color: #fff;
+}
+
+.fab svg{
+  width: 26px;
+  height: 26px;
+}
+
+/* 
+.line-fab,
+.ig-fab{
+  position: fixed;
+  right: 18px;
+  z-index: 1200;
+
+  width: 52px;
+  height: 52px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  ✅ 改成柔和的陰影，不要太厚重
+  box-shadow: 0 10px 24px rgba(0,0,0,0.14);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+
+兩顆之間距離更舒服
+.line-fab{ bottom: 18px; }
+.ig-fab{ bottom: 78px; }  18 + 52 + 8 間距 = 78
+
+LINE：保留品牌綠但降低「刺眼感」
+.line-fab{
+  background: #06C755;
+}
+
+IG：不要厚黑底，改成跟網站一致的「白底玻璃」
+.ig-fab{
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(0,0,0,0.10);
+  backdrop-filter: blur(10px);
+}
+
+hover 動態（更像精品站）
+.line-fab:hover,
+.ig-fab:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(0,0,0,0.18);
+}
+
+icon 尺寸統一、不要太大
+.fab-icon{
+  width: 22px;
+  height: 22px;
+  display: block;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+
+}
+
+IG icon 用深色（跟白底配）
+.ig-fab .fab-icon{
+  color: rgba(0,0,0,0.82);
+}
+
+LINE icon 用白色
+.line-fab .fab-icon{
+  color: #fff;
+}
+ */
+/* 手機再小一點 */
+@media (max-width: 640px){
+  .line-fab,
+  .ig-fab{
+    width: 48px;
+    height: 48px;
+    right: 14px;
+  }
+  .line-fab{ bottom: 14px; }
+  .ig-fab{ bottom: 70px; } /* 14 + 48 + 8 */
 }

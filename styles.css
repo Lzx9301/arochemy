@@ -843,3 +843,16 @@ LINE icon 用白色
   .line-fab{ bottom: 14px; }
   .ig-fab{ bottom: 70px; } /* 14 + 48 + 8 */
 }
+@media (max-width: 640px) {
+  /* 讓圖片貼近 header（把 hero 上方空白縮小） */
+  .hero {
+    padding-top: 0;      /* 原本 56px */
+    padding-bottom: 24px;/* 你可留著或調整 */
+  }
+
+  /* 防止 hero-card 可能有外距（保險） */
+  .hero-card {
+    margin-top: 0;
+  }
+}
+

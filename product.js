@@ -1,56 +1,76 @@
-// product.js — 單一商品頁（對應你目前 HTML 的 id）
 const slug = new URLSearchParams(location.search).get("slug") || "taiwania";
 
-const product = {
-  name: "臺灣杉",
-  en: "Taiwania",
-  latin: "Taiwania cryptomerioides Hayata",
-  variants: [
-    { label: "5 ml", price: 666 },
-    { label: "10 ml", price: 1280 },
-    { label: "30 ml", price: 2666 },
-  ],
-  overview: [
-    { k: "科屬", v: "柏科臺灣杉屬" },
-    { k: "萃取部位", v: "木材" },
-    { k: "萃取方法", v: "蒸餾" },
-    { k: "植物產地", v: "臺灣" },
-    { k: "香氣概述", v: "油潤柔和的木質香調，略帶一絲堅果味" },
-    { k: "建議用途", v: "芳香療法、製作香水噴霧、蠟燭" },
-  ],
-  composition: [
-    { name: "倍半萜類-醇類", value: 51.2 },
-    { name: "倍半萜類", value: 34.7 },
-    { name: "其他", value: 14.1 },
-  ],
-  docs: {
-    coa: "assets/COA-sample.pdf",
-    sds: "assets/SDS-sample.pdf",
-    eu: "assets/EU-allergen-sample.pdf",
+// product.js — 單一商品頁（對應你目前 HTML 的 id）
+
+const PRODUCTS = {
+  taiwania: {
+    name: "臺灣杉",
+    en: "Taiwania",
+    latin: "Taiwania cryptomerioides Hayata",
+    variants: [
+      { label: "5 ml", price: 666 },
+      { label: "10 ml", price: 1280 },
+      { label: "30 ml", price: 2666 },
+    ],
+    composition: [
+      { name: "倍半萜類-醇類", value: 51.2 },
+      { name: "倍半萜類", value: 34.7 },
+      { name: "其他", value: 14.1 },
+    ],
+    docs: {
+      coa: "assets/COA-sample.pdf",
+      sds: "assets/SDS-sample.pdf",
+      eu: "assets/EU-allergen-sample.pdf",
+    },
+    overview: [
+      { k: "科屬", v: "柏科臺灣杉屬" },
+      { k: "萃取部位", v: "木材" },
+      { k: "萃取方法", v: "蒸餾" },
+      { k: "植物產地", v: "臺灣" },
+      { k: "香氣概述", v: "油潤柔和的木質香調，略帶一絲堅果味" },
+      { k: "建議用途", v: "芳香療法、製作香水噴霧、蠟燭" },
+    ],
+    description: [
+      "這裡先放臺灣杉的介紹段落…",
+    ],
+    storage: ["放置於陰涼處，避免陽光直射。"],
+    usage: ["搭配擴香工具使用。"],
+    caution: ["不建議嬰幼兒、孕婦使用。"],
+    images: ["img1", "img2", "img3"],
   },
-  description: [
-    "臺灣杉目前仍是唯一以臺灣（Taiwania）為屬名的物種，也是臺灣第一高樹……",
-    "更令人驚嘆的是，台灣杉也是著名的「活化石」……",
-    "臺灣杉木材精油成分大多是倍半萜類化合物……",
-    "近期研究以電腦模擬探索可能的生理調節潛力……",
-  ],
-  storage: [
-    "放置於陰涼處，避免陽光直射。",
-    "保存於孩童、寵物不可及之處。",
-  ],
-  usage: [
-    "可搭配擴香工具使用，如擴香石、水氧機等。",
-    "可與酒精調和，製作空間或衣物芳香噴霧。",
-    "個人護理用途需以植物油稀釋，建議低濃度使用。",
-  ],
-  caution: [
-    "不建議嬰幼兒、孕婦使用。",
-    "體質敏感者，使用前務必先進行測試。",
-    "切勿直接塗抹於皮膚、黏膜、眼睛、耳道等部位。",
-    "如有刺激反應，先以大量植物油稀釋再清洗，必要時就醫。",
-  ],
-  images: ["img1", "img2", "img3"], // placeholder
+
+  lavender: {
+    name: "薰衣草",
+    en: "Lavender",
+    latin: "Lavandula angustifolia",
+    variants: [
+      { label: "5 ml", price: 520 },
+      { label: "10 ml", price: 980 },
+    ],
+    composition: [
+      { name: "芳樟醇", value: 32.4 },
+      { name: "乙酸芳樟酯", value: 28.1 },
+      { name: "其他", value: 39.5 },
+    ],
+    docs: { coa: "#", sds: "#", eu: "#" },
+    overview: [
+      { k: "科屬", v: "唇形科" },
+      { k: "萃取部位", v: "花穗" },
+      { k: "萃取方法", v: "蒸餾" },
+      { k: "植物產地", v: "法國（示意）" },
+      { k: "香氣概述", v: "清甜草本花香" },
+      { k: "建議用途", v: "放鬆、睡前擴香" },
+    ],
+    description: ["這裡先放薰衣草的介紹段落…"],
+    storage: ["避光密封保存。"],
+    usage: ["睡前擴香 2–3 滴。"],
+    caution: ["敏感肌請先稀釋測試。"],
+    images: ["img1", "img2"],
+  },
 };
+
+const product = PRODUCTS[slug] || PRODUCTS.taiwania;
+
 
 let selectedVariantIndex = 2; // 預設 30 ml
 let qty = 1;
@@ -239,5 +259,4 @@ mountOverview();
 mountComposition();
 mountLongText();
 mountActions();
-
 

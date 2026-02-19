@@ -1,47 +1,45 @@
-// products.js — 由資料自動生成商品卡（純前端）
-// 之後接 Strapi/Firestore：把這個 PRODUCTS 換成 API 取得即可
-
-const PRODUCTS = [
-  {
-    slug: "taiwania",
-    name: "臺灣杉",
-    en: "Taiwania",
-    priceFrom: 666,
-    tags: ["合科", "建議另計"],
-  },
-  {
-    slug: "lavender",
-    name: "薰衣草",
-    en: "Lavender",
-    priceFrom: 520,
-    tags: ["花香", "熱銷"],
-  },
-];
-
-function formatPrice(n) {
-  return `NT$ ${Number(n).toLocaleString("zh-Hant-TW")} 起`;
+async function loadProducts() {
+  const res = await fetch("./products.json", { cache: "no-store" });
+  if (!res.ok) throw new Error("products.json 讀取失敗");
+  const data = await res.json();
+  return data.products || [];
 }
 
-function mountProducts() {
+function fmtPrice(n) {
+  return `NT$ ${Number(n).toLocaleString("zh-Hant-TW")}`;
+}
+
+function cardHTML(p) {
+  const minPrice = Math.min(...(p.variants || []).map(v => v.price));
+  const img = (p.images && p.images[0]) ? p.images[0] : "";
+
+  return `
+    <a class="p-card" href="product.html?slug=${encodeURIComponent(p.slug)}">
+      <div class="p-media">
+        ${
+          img
+            ? `<img src="${img}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;display:block;">`
+            : `<div class="p-img plant"></div>`
+        }
+      </div>
+      <div class="p-body">
+        <div class="p-name">${p.name}</div>
+        <div class="p-meta">${p.en || ""}</div>
+        <div class="p-meta">${fmtPrice(minPrice)} 起</div>
+      </div>
+    </a>
+  `;
+}
+
+(async function initProductsPage() {
   const grid = document.getElementById("productGrid");
-  if (!grid) return;
+  if (!grid) return; // 不是 products.html 就直接不做事
 
-  grid.innerHTML = PRODUCTS.map((p) => {
-    const tags = (p.tags || []).map(t => `<span class="p-chip">${t}</span>`).join("");
-    return `
-      <a class="p-card2" href="product.html?slug=${encodeURIComponent(p.slug)}">
-        <div class="p-card2-media" aria-label="${p.name} image"></div>
-        <div class="p-card2-body">
-          <div class="p-card2-title">${p.name}</div>
-          <div class="p-card2-sub">${p.en}</div>
-          <div class="p-card2-bottom">
-            <div class="p-card2-price">${formatPrice(p.priceFrom)}</div>
-            <div class="p-card2-tags">${tags}</div>
-          </div>
-        </div>
-      </a>
-    `;
-  }).join("");
-}
-
-mountProducts();
+  try {
+    const products = await loadProducts();
+    grid.innerHTML = products.map(cardHTML).join("");
+  } catch (err) {
+    console.error(err);
+    grid.innerHTML = `<p class="muted">商品載入失敗（請確認 products.json 路徑與 GitHub Pages 部署）</p>`;
+  }
+})();

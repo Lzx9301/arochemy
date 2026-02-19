@@ -1,43 +1,62 @@
 {
+  "siteDefaults": {
+    "storage": [
+      "放置於陰涼處，避免陽光直射。",
+      "使用後請旋緊瓶蓋，避免揮發與氧化。",
+      "保存於孩童、寵物不可及之處。"
+    ],
+    "usage": [
+      "純精油請勿直接塗抹皮膚；若需使用於身體，請以植物油稀釋後再使用。",
+      "可搭配擴香工具使用，如擴香石、恆溫擴香器、水氧機等。",
+      "可與酒精調和，製作空間或衣物芳香噴霧。"
+    ],
+    "caution": [
+      "不建議嬰幼兒、孕婦使用；如需使用請先諮詢專業人員。",
+      "體質敏感者，使用前務必先進行局部測試。",
+      "避免接觸眼睛、黏膜與傷口；若不慎接觸請以大量植物油先行擦拭後再以清水沖洗。",
+      "如有不適請停止使用，必要時請諮詢醫療專業人員。"
+    ]
+  },
   "products": [
     {
-      "id": 1,
       "slug": "taiwania",
       "name": "臺灣杉",
       "en": "Taiwania",
       "latin": "Taiwania cryptomerioides Hayata",
       "category": "single-oil",
-
+      "tags": ["合科", "建議另計"],
       "variants": [
         { "label": "5 ml", "price": 666 },
-        { "label": "10 ml", "price": 1280 },
+        { "label": "10 ml", "price": 1166 },
         { "label": "30 ml", "price": 2666 }
       ],
-
       "images": [
-        "assets/taiwania-1.jpg",
-        "assets/taiwania-2.jpg"
+        "assets/products/taiwania/1.jpg",
+        "assets/products/taiwania/2.jpg",
+        "assets/products/taiwania/3.jpg"
       ],
-
-      "overview": [
-        { "k": "科屬", "v": "柏科臺灣杉屬" },
-        { "k": "萃取部位", "v": "木材" }
-      ],
-
-      "composition": [
-        { "name": "倍半萜類-醇類", "value": 51.2 }
-      ],
-
-      "docs": {
-        "coa": "assets/coa.pdf",
-        "sds": "assets/sds.pdf",
-        "eu": "assets/eu.pdf"
+      "overview": {
+        "科屬": "柏科（Cupressaceae）臺灣杉屬",
+        "萃取部位": "木材",
+        "萃取方法": "蒸餾",
+        "植物產地": "臺灣",
+        "香氣概述": "油潤柔和的木質香調，略帶一絲堅果味",
+        "建議用途": "芳香療法、製作香水噴霧、蠟燭"
       },
-
-      "description": [],
-      "storage": [],
-      "usage": [],
-      "caution": []
+      "composition": [
+        { "name": "倍半萜類-醇類", "value": 51.2 },
+        { "name": "倍半萜類", "value": 34.7 },
+        { "name": "其他", "value": 14.1 }
+      ],
+      "docs": {
+        "coa": "assets/docs/COA-taiwania.pdf",
+        "sds": "assets/docs/SDS-taiwania.pdf",
+        "eu": "assets/docs/EU-taiwania.pdf"
+      },
+      "description": [
+        "臺灣杉目前仍是唯一以臺灣（Taiwania）為屬名的物種……",
+        "臺灣杉木材精油成分大多是倍半萜類化合物……"
+      ]
     }
   ]
 }

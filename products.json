@@ -1,59 +1,43 @@
 {
   "products": [
     {
-      "slug": "taiwania-oil",
+      "id": 1,
+      "slug": "taiwania",
       "name": "臺灣杉",
       "en": "Taiwania",
       "latin": "Taiwania cryptomerioides Hayata",
-      "tags": ["合科", "建議另計"],
+      "category": "single-oil",
+
       "variants": [
-        { "id": "v5", "label": "5 ml", "price": 666 },
-        { "id": "v10", "label": "10 ml", "price": 1280 },
-        { "id": "v30", "label": "30 ml", "price": 2666 }
+        { "label": "5 ml", "price": 666 },
+        { "label": "10 ml", "price": 1280 },
+        { "label": "30 ml", "price": 2666 }
       ],
-      "overview": [
-        { "k": "科屬", "v": "柏科臺灣杉屬" },
-        { "k": "萃取部位", "v": "木材" },
-        { "k": "萃取方法", "v": "蒸餾" },
-        { "k": "植物產地", "v": "臺灣" },
-        { "k": "香氣概述", "v": "油潤柔和的木質香調，略帶一絲堅果味" },
-        { "k": "建議用途", "v": "芳香療法、製作香水噴霧、蠟燭" }
-      ],
-      "composition": [
-        { "name": "倍半萜類-醇類", "value": 51.2 },
-        { "name": "倍半萜類", "value": 34.7 },
-        { "name": "其他", "value": 14.1 }
-      ],
-      "docs": {
-        "coa": "assets/COA-sample.pdf",
-        "sds": "assets/SDS-sample.pdf",
-        "eu": "assets/EU-allergen-sample.pdf"
-      },
-      "description": [
-        "臺灣杉目前仍是唯一以臺灣（Taiwania）為屬名的物種，也是臺灣第一高樹……",
-        "更令人驚嘆的是，台灣杉也是著名的「活化石」……",
-        "臺灣杉木材精油成分大多是倍半萜類化合物……",
-        "近期研究以電腦模擬探索可能的生理調節潛力……"
-      ],
-      "storage": [
-        "放置於陰涼處，避免陽光直射。",
-        "保存於孩童、寵物不可及之處。"
-      ],
-      "usage": [
-        "純精油可搭配擴香工具使用，如擴香石、水氧機等。",
-        "可與酒精調和，製作空間或衣物芳香噴霧。",
-        "若為個人護理用途，以植物油稀釋，建議低濃度使用。"
-      ],
-      "caution": [
-        "不建議嬰幼兒、孕婦使用。",
-        "體質敏感者，使用前務必先進行測試。",
-        "切勿直接塗抹於皮膚、黏膜、鼻子、眼睛等部位。"
-      ],
+
       "images": [
         "assets/taiwania-1.jpg",
-        "assets/taiwania-2.jpg",
-        "assets/taiwania-3.jpg"
-      ]
+        "assets/taiwania-2.jpg"
+      ],
+
+      "overview": [
+        { "k": "科屬", "v": "柏科臺灣杉屬" },
+        { "k": "萃取部位", "v": "木材" }
+      ],
+
+      "composition": [
+        { "name": "倍半萜類-醇類", "value": 51.2 }
+      ],
+
+      "docs": {
+        "coa": "assets/coa.pdf",
+        "sds": "assets/sds.pdf",
+        "eu": "assets/eu.pdf"
+      },
+
+      "description": [],
+      "storage": [],
+      "usage": [],
+      "caution": []
     }
   ]
 }

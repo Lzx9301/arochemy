@@ -3,12 +3,20 @@ function getSlug() {
   return p.get("slug");
 }
 
-Failed to load resource: the server responded with a status of 404 ()瞭解這個錯誤
-product-page.js:258 Error: products.json 讀取失敗
-    at loadData (product-page.js:8:22)
-    at async init (product-page.js:240:18)
-init @ product-page.js:258瞭解這個錯誤
-/favicon.ico:1  Failed to load resource: the server responded with a status of 404 ()
+async function loadData() {
+  const url = new URL("products.json", location.href).toString();
+  console.log("[loadData] fetching:", url);
+
+  const res = await fetch(url, { cache: "no-store" });
+  console.log("[loadData] status:", res.status, res.statusText);
+
+  if (!res.ok) {
+    throw new Error(`products.json 讀取失敗：${res.status} ${res.statusText}\nURL=${url}`);
+  }
+
+  const data = await res.json();
+  return data.products || [];
+}
 
 function fmtPrice(n) {
   return `NT$ ${Number(n).toLocaleString("zh-Hant-TW")}`;

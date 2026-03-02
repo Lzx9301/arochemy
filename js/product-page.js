@@ -157,6 +157,22 @@ function mountComposition() {
   });
 }
 
+const DEFAULT_STORAGE = [
+  "放置於陰涼處，避免陽光直射。",
+  "保存於孩童、寵物不可及之處。",
+];
+
+const DEFAULT_USAGE = [
+  "純精油可搭配擴香工具使用，如擴香石、水氧機等。",
+  "若作個人護理用途，請先以植物油稀釋後再使用。",
+];
+
+const DEFAULT_CAUTION = [
+  "不建議嬰幼兒、孕婦使用。",
+  "體質敏感者使用前請先做局部測試。",
+  "避免接觸眼睛、黏膜與傷口。",
+];
+
 function mountLongText() {
   // 個別精油說明（每個精油自己寫）
   const desc = document.getElementById("descText");
@@ -168,9 +184,9 @@ function mountLongText() {
     ul.innerHTML = (arr || []).map(t => `<li>${t}</li>`).join("");
   };
 
-  fillList("storageList", siteDefaults.storage);
-  fillList("usageList", siteDefaults.usage);
-  fillList("cautionList", siteDefaults.caution);
+fillList("storageList", (product.storage && product.storage.length) ? product.storage : DEFAULT_STORAGE);
+fillList("usageList", (product.usage && product.usage.length) ? product.usage : DEFAULT_USAGE);
+fillList("cautionList", (product.caution && product.caution.length) ? product.caution : DEFAULT_CAUTION);
 }
 
 function mountGallery() {

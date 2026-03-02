@@ -77,25 +77,45 @@ function mountQty() {
   });
 }
 
-function mountOverviewKV() {
+function mountOverview() {
   const dl = document.getElementById("overviewKV");
   dl.innerHTML = "";
 
-  // 你指定的固定 6 欄，順序固定
-  const order = ["科屬", "萃取部位", "萃取方法", "植物產地", "香氣概述", "建議用途"];
+  const ov = product.overview;
 
-  order.forEach((k) => {
-    const v = product.overview?.[k] ?? "—";
+  // ✅ 情況 A：overview 是陣列 [{k,v}, ...]
+  if (Array.isArray(ov)) {
+    ov.forEach(({ k, v }) => {
+      const dt = document.createElement("dt");
+      dt.textContent = k ?? "";
+      const dd = document.createElement("dd");
+      dd.textContent = v ?? "";
+      dl.appendChild(dt);
+      dl.appendChild(dd);
+    });
+    return;
+  }
 
-    const dt = document.createElement("dt");
-    dt.textContent = k;
+  // ✅ 情況 B：overview 是物件 {"科屬":"...", ...}
+  if (ov && typeof ov === "object") {
+    Object.entries(ov).forEach(([k, v]) => {
+      const dt = document.createElement("dt");
+      dt.textContent = k;
+      const dd = document.createElement("dd");
+      dd.textContent = String(v ?? "");
+      dl.appendChild(dt);
+      dl.appendChild(dd);
+    });
+    return;
+  }
 
-    const dd = document.createElement("dd");
-    dd.textContent = v;
-
-    dl.appendChild(dt);
-    dl.appendChild(dd);
-  });
+  // ✅ 情況 C：overview 不存在或是字串 → 顯示提示（不中斷頁面）
+  const dt = document.createElement("dt");
+  dt.textContent = "產品概述";
+  const dd = document.createElement("dd");
+  dd.textContent = "（尚未填寫）";
+  dl.appendChild(dt);
+  dl.appendChild(dd);
 }
 
 function mountComposition() {

@@ -4,15 +4,9 @@ function getSlug() {
 }
 
 async function loadData() {
-  const url = new URL("products.json", location.href).toString();
-  console.log("[loadData] fetching:", url);
+  const res = await fetch("/arochemy/products.json", { cache: "no-store" });
 
-  const res = await fetch(url, { cache: "no-store" });
-  console.log("[loadData] status:", res.status, res.statusText);
-
-  if (!res.ok) {
-    throw new Error(`products.json 讀取失敗：${res.status} ${res.statusText}\nURL=${url}`);
-  }
+  if (!res.ok) throw new Error("products.json 讀取失敗");
 
   const data = await res.json();
   return data.products || [];

@@ -1,6 +1,12 @@
 async function loadProducts() {
-  const res = await fetch("./products.json", { cache: "no-store" });
-  if (!res.ok) throw new Error("products.json 讀取失敗");
+  const url = new URL("products.json", location.href).toString();
+  console.log("[loadProducts] fetching:", url);
+
+  const res = await fetch(url, { cache: "no-store" });
+  console.log("[loadProducts] status:", res.status, res.statusText);
+
+  if (!res.ok) throw new Error(`products.json 讀取失敗：${res.status} ${res.statusText}\nURL=${url}`);
+
   const data = await res.json();
   return data.products || [];
 }

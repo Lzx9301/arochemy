@@ -5,11 +5,8 @@ function getSlug() {
 
 async function loadData() {
   const res = await fetch("/arochemy/products.json", { cache: "no-store" });
-
   if (!res.ok) throw new Error("products.json 讀取失敗");
-
-  const data = await res.json();
-  return data.products || [];
+  return await res.json(); // ✅回傳整包物件
 }
 
 function fmtPrice(n) {
@@ -81,7 +78,7 @@ function mountQty() {
 }
 
 function mountOverview() {
-  const dl = document.getElementById("overviewKV");
+  const dl = document.getElementById("overview");
   dl.innerHTML = "";
 
   const ov = product.overview;
@@ -240,10 +237,11 @@ function mountActions() {
 (async function init() {
   try {
     const slug = getSlug();
-    const data = await loadData();
-    siteDefaults = data.siteDefaults;
 
-    const products = data.products || [];
+    const data = await loadData();         // ✅ data 是物件
+    siteDefaults = data.siteDefaults || null;
+
+    const products = data.products || [];  // ✅ products 是陣列
     product = products.find(p => p.slug === slug) || products[0];
     if (!product) throw new Error("找不到任何商品資料");
 
@@ -253,7 +251,7 @@ function mountActions() {
     mountGallery();
     mountVariants();
     mountQty();
-    mountOverviewKV();
+    mountOverview();     // ✅改這裡（不是 mountOverviewKV）
     mountComposition();
     mountLongText();
     mountActions();

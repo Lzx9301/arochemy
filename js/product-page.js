@@ -1,22 +1,30 @@
+// product-page.js (final)
+
 function getSlug() {
-  const p = new URLSearchParams(location.search);
-  return p.get("slug");
+  return new URLSearchParams(location.search).get("slug");
 }
 
-
+async function loadData() {
+  // GitHub Pages 專案頁：一定要加 /arochemy/
+  const res = await fetch("/arochemy/products.json", { cache: "no-store" });
+  if (!res.ok) throw new Error("products.json 讀取失敗");
+  return await res.json(); // { siteDefaults, products }
+}
 
 function fmtPrice(n) {
   return `NT$ ${Number(n).toLocaleString("zh-Hant-TW")}`;
 }
 
+// ===== state =====
 let product = null;
 let selectedVariantIndex = 0;
 let qty = 1;
 let siteDefaults = null;
 
+// ===== mount =====
 function mountBasic() {
-  document.getElementById("bcName").textContent = product.name;
-  document.getElementById("pName").textContent = product.name;
+  document.getElementById("bcName").textContent = product.name || "";
+  document.getElementById("pName").textContent = product.name || "";
   document.getElementById("pEn").textContent = product.en || "";
   document.getElementById("pLatin").textContent = product.latin || "";
 
@@ -25,20 +33,27 @@ function mountBasic() {
   document.getElementById("btnEU").href  = product.docs?.eu  || "#";
 }
 
+function updatePrice() {
+  const base = product.variants?.[selectedVariantIndex]?.price ?? 0;
+  document.getElementById("pPrice").textContent = fmtPrice(base);
+}
+
 function mountVariants() {
   const wrap = document.getElementById("variantPills");
+  if (!wrap) return;
+
   wrap.innerHTML = "";
 
-  product.variants.forEach((v, idx) => {
+  (product.variants || []).forEach((v, idx) => {
     const btn = document.createElement("button");
-    btn.className = "p-pill" + (idx === selectedVariantIndex ? " active" : "");
     btn.type = "button";
-    btn.textContent = v.label;
+    btn.className = "p-pill" + (idx === selectedVariantIndex ? " active" : "");
+    btn.textContent = v.label || "";
 
     btn.addEventListener("click", () => {
       selectedVariantIndex = idx;
+      mountVariants(); // 重新畫 active 狀態
       updatePrice();
-      mountVariants();
     });
 
     wrap.appendChild(btn);
@@ -47,21 +62,21 @@ function mountVariants() {
   updatePrice();
 }
 
-function updatePrice() {
-  const base = product.variants[selectedVariantIndex].price;
-  document.getElementById("pPrice").textContent = fmtPrice(base);
-}
-
 function mountQty() {
   const input = document.getElementById("qtyInput");
+  if (!input) return;
+
+  const minus = document.getElementById("qtyMinus");
+  const plus  = document.getElementById("qtyPlus");
+
   input.value = String(qty);
 
-  document.getElementById("qtyMinus").addEventListener("click", () => {
+  minus?.addEventListener("click", () => {
     qty = Math.max(1, qty - 1);
     input.value = String(qty);
   });
 
-  document.getElementById("qtyPlus").addEventListener("click", () => {
+  plus?.addEventListener("click", () => {
     qty = Math.min(99, qty + 1);
     input.value = String(qty);
   });
@@ -74,12 +89,15 @@ function mountQty() {
 }
 
 function mountOverview() {
-  const dl = document.getElementById("overview");
+  // ✅你的 HTML 原本是 id="overviewKV"
+  // 如果你 HTML 是 id="overview"，改成 const dl = document.getElementById("overview");
+  const dl = document.getElementById("overviewKV");
+  if (!dl) return;
+
   dl.innerHTML = "";
 
   const ov = product.overview;
 
-  // ✅ 情況 A：overview 是陣列 [{k,v}, ...]
   if (Array.isArray(ov)) {
     ov.forEach(({ k, v }) => {
       const dt = document.createElement("dt");
@@ -92,7 +110,6 @@ function mountOverview() {
     return;
   }
 
-  // ✅ 情況 B：overview 是物件 {"科屬":"...", ...}
   if (ov && typeof ov === "object") {
     Object.entries(ov).forEach(([k, v]) => {
       const dt = document.createElement("dt");
@@ -105,7 +122,7 @@ function mountOverview() {
     return;
   }
 
-  // ✅ 情況 C：overview 不存在或是字串 → 顯示提示（不中斷頁面）
+  // 沒資料也不要讓頁面壞掉
   const dt = document.createElement("dt");
   dt.textContent = "產品概述";
   const dd = document.createElement("dd");
@@ -116,6 +133,8 @@ function mountOverview() {
 
 function mountComposition() {
   const root = document.getElementById("compBars");
+  if (!root) return;
+
   root.innerHTML = "";
 
   (product.composition || []).forEach((c) => {
@@ -126,7 +145,7 @@ function mountComposition() {
 
     const name = document.createElement("div");
     name.className = "p-bar-name";
-    name.textContent = c.name;
+    name.textContent = c.name || "";
 
     const track = document.createElement("div");
     track.className = "p-bar-track";
@@ -141,29 +160,29 @@ function mountComposition() {
 
     const val = document.createElement("div");
     val.className = "p-bar-val";
-    val.textContent = `${Number(c.value).toFixed(2)}%`;
+    val.textContent = `${Number(c.value || 0).toFixed(2)}%`;
 
     row.appendChild(left);
     row.appendChild(val);
     root.appendChild(row);
 
     requestAnimationFrame(() => {
-      fill.style.width = `${Math.max(0, Math.min(100, Number(c.value)))}%`;
+      fill.style.width = `${Math.max(0, Math.min(100, Number(c.value || 0)))}%`;
     });
   });
 }
 
-
-
 function mountGallery() {
   const main = document.getElementById("mainImg");
   const thumbs = document.getElementById("thumbs");
+  if (!main || !thumbs) return;
+
   const imgs = product.images || [];
 
   const setMain = (idx) => {
     const url = imgs[idx];
     if (url) {
-      main.innerHTML = `<img src="${url}" alt="${product.name}" style="width:100%;height:100%;object-fit:cover;display:block;">`;
+      main.innerHTML = `<img src="${url}" alt="${product.name || ""}" style="width:100%;height:100%;object-fit:cover;display:block;">`;
     } else {
       main.innerHTML = "";
     }
@@ -188,54 +207,20 @@ function mountGallery() {
   setMain(0);
 }
 
-function mountActions() {
-  document.getElementById("btnFav").addEventListener("click", () => alert("（測試）已收藏"));
-  document.getElementById("btnCart").addEventListener("click", () => {
-    const v = product.variants[selectedVariantIndex];
-    alert(`（測試）加入購物車：${product.name} ${v.label} x ${qty}`);
-  });
-  document.getElementById("btnBuy").addEventListener("click", () => {
-    const v = product.variants[selectedVariantIndex];
-    alert(`（測試）立即購買：${product.name} ${v.label} x ${qty}`);
-  });
-}
-
-function getSlug() {
-  const p = new URLSearchParams(location.search);
-  return p.get("slug");
-}
-
-async function loadData() {
-  // ✅ GitHub Pages 專案頁：/arochemy/ 要保留
-  const res = await fetch("/arochemy/products.json", { cache: "no-store" });
-  if (!res.ok) throw new Error("products.json 讀取失敗");
-  return await res.json(); // ✅回整包 { siteDefaults, products }
-}
-
-function fmtPrice(n) {
-  return `NT$ ${Number(n).toLocaleString("zh-Hant-TW")}`;
-}
-
-let product = null;
-let selectedVariantIndex = 0;
-let qty = 1;
-let siteDefaults = null;
-
-// ... 你的 mountBasic / mountVariants / updatePrice / mountQty / mountOverview / mountComposition / mountGallery / mountActions 都可保留
-
 function mountLongText() {
-  // 個別精油說明（每個精油自己寫）
   const desc = document.getElementById("descText");
-  desc.innerHTML = (product.description || []).map(t => `<p>${t}</p>`).join("");
+  if (desc) {
+    desc.innerHTML = (product.description || []).map(t => `<p>${t}</p>`).join("");
+  }
 
-  // ✅ 固定模板（全站共用）：優先用 product 自己的，沒有就用 siteDefaults
   const defaults = siteDefaults || {};
-  const storage = (product.storage && product.storage.length) ? product.storage : (defaults.storage || []);
-  const usage   = (product.usage && product.usage.length)     ? product.usage   : (defaults.usage || []);
-  const caution = (product.caution && product.caution.length) ? product.caution : (defaults.caution || []);
+  const storage = (product.storage?.length) ? product.storage : (defaults.storage || []);
+  const usage   = (product.usage?.length)   ? product.usage   : (defaults.usage || []);
+  const caution = (product.caution?.length) ? product.caution : (defaults.caution || []);
 
   const fillList = (id, arr) => {
     const ul = document.getElementById(id);
+    if (!ul) return;
     ul.innerHTML = (arr || []).map(t => `<li>${t}</li>`).join("");
   };
 
@@ -244,6 +229,21 @@ function mountLongText() {
   fillList("cautionList", caution);
 }
 
+function mountActions() {
+  document.getElementById("btnFav")?.addEventListener("click", () => alert("（測試）已收藏"));
+
+  document.getElementById("btnCart")?.addEventListener("click", () => {
+    const v = product.variants?.[selectedVariantIndex];
+    alert(`（測試）加入購物車：${product.name} ${v?.label || ""} x ${qty}`);
+  });
+
+  document.getElementById("btnBuy")?.addEventListener("click", () => {
+    const v = product.variants?.[selectedVariantIndex];
+    alert(`（測試）立即購買：${product.name} ${v?.label || ""} x ${qty}`);
+  });
+}
+
+// ===== init =====
 (async function init() {
   try {
     const slug = getSlug();
@@ -261,7 +261,7 @@ function mountLongText() {
     mountGallery();
     mountVariants();
     mountQty();
-    mountOverview();     // ✅注意：是 mountOverview() 不是 mountOverviewKV()
+    mountOverview();
     mountComposition();
     mountLongText();
     mountActions();

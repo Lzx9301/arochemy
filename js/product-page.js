@@ -3,11 +3,7 @@ function getSlug() {
   return p.get("slug");
 }
 
-async function loadData() {
-  const res = await fetch("/arochemy/products.json", { cache: "no-store" });
-  if (!res.ok) throw new Error("products.json 讀取失敗");
-  return await res.json(); // ✅回傳整包物件
-}
+
 
 function fmtPrice(n) {
   return `NT$ ${Number(n).toLocaleString("zh-Hant-TW")}`;
@@ -157,37 +153,7 @@ function mountComposition() {
   });
 }
 
-const DEFAULT_STORAGE = [
-  "放置於陰涼處，避免陽光直射。",
-  "保存於孩童、寵物不可及之處。",
-];
 
-const DEFAULT_USAGE = [
-  "純精油可搭配擴香工具使用，如擴香石、水氧機等。",
-  "若作個人護理用途，請先以植物油稀釋後再使用。",
-];
-
-const DEFAULT_CAUTION = [
-  "不建議嬰幼兒、孕婦使用。",
-  "體質敏感者使用前請先做局部測試。",
-  "避免接觸眼睛、黏膜與傷口。",
-];
-
-function mountLongText() {
-  // 個別精油說明（每個精油自己寫）
-  const desc = document.getElementById("descText");
-  desc.innerHTML = (product.description || []).map(t => `<p>${t}</p>`).join("");
-
-  // 固定模板（全站共用）
-  const fillList = (id, arr) => {
-    const ul = document.getElementById(id);
-    ul.innerHTML = (arr || []).map(t => `<li>${t}</li>`).join("");
-  };
-
-fillList("storageList", (product.storage && product.storage.length) ? product.storage : DEFAULT_STORAGE);
-fillList("usageList", (product.usage && product.usage.length) ? product.usage : DEFAULT_USAGE);
-fillList("cautionList", (product.caution && product.caution.length) ? product.caution : DEFAULT_CAUTION);
-}
 
 function mountGallery() {
   const main = document.getElementById("mainImg");
@@ -234,14 +200,58 @@ function mountActions() {
   });
 }
 
+function getSlug() {
+  const p = new URLSearchParams(location.search);
+  return p.get("slug");
+}
+
+async function loadData() {
+  // ✅ GitHub Pages 專案頁：/arochemy/ 要保留
+  const res = await fetch("/arochemy/products.json", { cache: "no-store" });
+  if (!res.ok) throw new Error("products.json 讀取失敗");
+  return await res.json(); // ✅回整包 { siteDefaults, products }
+}
+
+function fmtPrice(n) {
+  return `NT$ ${Number(n).toLocaleString("zh-Hant-TW")}`;
+}
+
+let product = null;
+let selectedVariantIndex = 0;
+let qty = 1;
+let siteDefaults = null;
+
+// ... 你的 mountBasic / mountVariants / updatePrice / mountQty / mountOverview / mountComposition / mountGallery / mountActions 都可保留
+
+function mountLongText() {
+  // 個別精油說明（每個精油自己寫）
+  const desc = document.getElementById("descText");
+  desc.innerHTML = (product.description || []).map(t => `<p>${t}</p>`).join("");
+
+  // ✅ 固定模板（全站共用）：優先用 product 自己的，沒有就用 siteDefaults
+  const defaults = siteDefaults || {};
+  const storage = (product.storage && product.storage.length) ? product.storage : (defaults.storage || []);
+  const usage   = (product.usage && product.usage.length)     ? product.usage   : (defaults.usage || []);
+  const caution = (product.caution && product.caution.length) ? product.caution : (defaults.caution || []);
+
+  const fillList = (id, arr) => {
+    const ul = document.getElementById(id);
+    ul.innerHTML = (arr || []).map(t => `<li>${t}</li>`).join("");
+  };
+
+  fillList("storageList", storage);
+  fillList("usageList", usage);
+  fillList("cautionList", caution);
+}
+
 (async function init() {
   try {
     const slug = getSlug();
+    const data = await loadData();
 
-    const data = await loadData();         // ✅ data 是物件
     siteDefaults = data.siteDefaults || null;
 
-    const products = data.products || [];  // ✅ products 是陣列
+    const products = data.products || [];
     product = products.find(p => p.slug === slug) || products[0];
     if (!product) throw new Error("找不到任何商品資料");
 
@@ -251,7 +261,7 @@ function mountActions() {
     mountGallery();
     mountVariants();
     mountQty();
-    mountOverview();     // ✅改這裡（不是 mountOverviewKV）
+    mountOverview();     // ✅注意：是 mountOverview() 不是 mountOverviewKV()
     mountComposition();
     mountLongText();
     mountActions();

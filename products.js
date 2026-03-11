@@ -12,11 +12,11 @@ function fmtPrice(n) {
 
 function cardHTML(p) {
   const prices = (p.variants || [])
-    .map(v => Number(v.price))
-    .filter(n => !Number.isNaN(n));
+    .map((v) => Number(v.price))
+    .filter((n) => !Number.isNaN(n));
 
   const minPrice = prices.length ? Math.min(...prices) : 0;
-  const img = (p.images && p.images[0]) ? p.images[0] : "";
+  const img = p.images && p.images[0] ? p.images[0] : "";
 
   return `
     <a class="p-card" href="product.html?slug=${encodeURIComponent(p.slug)}">
@@ -64,7 +64,7 @@ function updateURL(cat) {
 
 function filterProducts(products, cat) {
   if (cat === "all") return products;
-  return products.filter(p => p.category === cat);
+  return products.filter((p) => p.category === cat);
 }
 
 function renderProducts(allProducts, activeCat, grid, currentCat, totalCount) {
@@ -87,68 +87,68 @@ function renderProducts(allProducts, activeCat, grid, currentCat, totalCount) {
 
 document.addEventListener("DOMContentLoaded", async () => {
   const grid = document.getElementById("productGrid");
+  const catDropdown = document.getElementById("catDropdown");
   const catToggle = document.getElementById("catToggle");
   const catMenu = document.getElementById("catMenu");
   const currentCat = document.getElementById("currentCat");
   const totalCount = document.getElementById("totalCount");
   const catItems = document.querySelectorAll(".cat-item");
 
-  if (!grid || !catToggle || !catMenu) return;
+  if (!grid || !catDropdown || !catToggle || !catMenu) return;
 
   let allProducts = [];
   let activeCat = getCategoryFromURL();
 
-  // 點一下開關選單
-  catToggle.addEventListener("click", (e) => {
+  function openMenu() {
+    catMenu.classList.add("open");
+    catToggle.setAttribute("aria-expanded", "true");
+  }
+
+  function closeMenu() {
+    catMenu.classList.remove("open");
+    catToggle.setAttribute("aria-expanded", "false");
+  }
+
+  function toggleMenu() {
+    const isOpen = catMenu.classList.contains("open");
+    if (isOpen) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  }
+
+  catToggle.addEventListener("pointerdown", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    e.stopImmediatePropagation();
-
-    const willOpen = !catMenu.classList.contains("open");
-    catMenu.classList.toggle("open", willOpen);
-    catToggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
+    toggleMenu();
   });
 
-  // 點選單內部不要冒泡出去
-  catMenu.addEventListener("click", (e) => {
+  catMenu.addEventListener("pointerdown", (e) => {
     e.stopPropagation();
-    e.stopImmediatePropagation();
   });
 
-  // 點分類
   catItems.forEach((item) => {
-    item.addEventListener("click", (e) => {
+    item.addEventListener("pointerdown", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      e.stopImmediatePropagation();
 
       activeCat = item.dataset.cat || "all";
       renderProducts(allProducts, activeCat, grid, currentCat, totalCount);
       updateURL(activeCat);
-
-      catMenu.classList.remove("open");
-      catToggle.setAttribute("aria-expanded", "false");
+      closeMenu();
     });
   });
 
-  // 延後綁定外部點擊，避免同一次 click 立刻把選單關掉
-  setTimeout(() => {
-    document.addEventListener("click", (e) => {
-      const insideMenu = catMenu.contains(e.target);
-      const insideToggle = catToggle.contains(e.target);
+  document.addEventListener("pointerdown", (e) => {
+    if (!catDropdown.contains(e.target)) {
+      closeMenu();
+    }
+  });
 
-      if (!insideMenu && !insideToggle) {
-        catMenu.classList.remove("open");
-        catToggle.setAttribute("aria-expanded", "false");
-      }
-    });
-  }, 0);
-
-  // ESC 關閉選單
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
-      catMenu.classList.remove("open");
-      catToggle.setAttribute("aria-expanded", "false");
+      closeMenu();
     }
   });
 

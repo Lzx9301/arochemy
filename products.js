@@ -110,13 +110,22 @@ function filterProducts(products, cat) {
       });
     });
 
+catMenu?.addEventListener("click", (e) => {
+  e.stopPropagation();
+});
+    
     // 點外面關閉
-    document.addEventListener("click", (e) => {
-      if (!catMenu.contains(e.target) && !catToggle.contains(e.target)) {
-        catMenu.classList.remove("open");
-        catToggle.setAttribute("aria-expanded", "false");
-      }
-    });
+document.addEventListener("click", (e) => {
+  if (!catMenu.classList.contains("open")) return;
+
+  const insideMenu = catMenu.contains(e.target);
+  const insideToggle = catToggle.contains(e.target);
+
+  if (!insideMenu && !insideToggle) {
+    catMenu.classList.remove("open");
+    catToggle.setAttribute("aria-expanded", "false");
+  }
+});
 
     // ESC 關閉
     document.addEventListener("keydown", (e) => {

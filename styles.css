@@ -523,6 +523,7 @@ details p {
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
+    z-index: 20;
 }
 
 .toolbar-title-btn {
@@ -1197,3 +1198,4 @@ details p {
         font-size: 12px;
     }
 }
+

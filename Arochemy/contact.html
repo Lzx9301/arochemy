@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Arochemy｜聯絡</title>
+  <meta name="description" content="聯絡 Arochemy，洽詢產品、合作、客製香氛或其他服務。" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+  <header class="header" id="top">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="回到首頁">
+        <span class="brand-badge">A</span>
+        <span class="brand-name">Arochemy</span>
+      </a>
+
+      <nav class="nav">
+        <a href="brand.html">品牌故事</a>
+        <a href="products.html">產品</a>
+        <a href="service.html">服務</a>
+        <a href="articles.html">文章</a>
+        <a href="contact.html">聯絡</a>
+        <a href="faq.html">FAQ</a>
+      </nav>
+
+      <div class="header-cta">
+        <button class="burger" id="burgerBtn" type="button" aria-label="開啟選單" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
+    <div class="mobile-dropdown" role="dialog" aria-modal="true" aria-label="手機選單">
+      <nav class="mobile-nav">
+        <a href="brand.html">品牌故事</a>
+        <a href="products.html">產品</a>
+        <a href="service.html">服務</a>
+        <a href="articles.html">文章</a>
+        <a href="contact.html">聯絡</a>
+        <a href="faq.html">FAQ</a>
+      </nav>
+
+      <div class="mobile-panel-actions">
+        <a class="btn" href="products.html">探索精油</a>
+        <a class="btn primary" href="contact.html">立即聯絡</a>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <div class="kicker">Contact</div>
+          <h1>有任何問題、合作需求或選香想法，都歡迎聯絡我們。</h1>
+          <p class="lead">
+            無論是產品詢問、品牌合作、禮盒需求或空間香氛規劃，
+            都可以透過表單或社群方式與我們聯繫。
+          </p>
+        </div>
+
+        <div class="hero-card">
+          <div class="hero-image">聯絡頁主視覺預留</div>
+          <div class="hero-card-note">可放品牌包裝、客服桌面、香氛工具、社群視覺。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="grid-2">
+          <div class="card">
+            <h3>聯絡資訊</h3>
+            <p><strong>Email：</strong> hello@arochemy.com</p>
+            <p><strong>Instagram：</strong> @arochemy</p>
+            <p><strong>LINE：</strong> @yourlineid</p>
+            <p><strong>服務時間：</strong> 週一至週五 10:00–18:00</p>
+          </div>
+
+          <div class="card">
+            <h3>合作類型</h3>
+            <p>產品詢問、客製禮盒、品牌聯名、空間香氛、活動合作等皆可來信討論。</p>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+          <h3>聯絡表單</h3>
+          <form>
+            <div class="grid-2" style="margin-top:16px;">
+              <div>
+                <label for="name">姓名</label>
+                <input id="name" type="text" style="width:100%;padding:12px;margin-top:6px;border:1px solid rgba(0,0,0,.12);border-radius:12px;">
+              </div>
+
+              <div>
+                <label for="email">Email</label>
+                <input id="email" type="email" style="width:100%;padding:12px;margin-top:6px;border:1px solid rgba(0,0,0,.12);border-radius:12px;">
+              </div>
+            </div>
+
+            <div style="margin-top:16px;">
+              <label for="subject">主旨</label>
+              <input id="subject" type="text" style="width:100%;padding:12px;margin-top:6px;border:1px solid rgba(0,0,0,.12);border-radius:12px;">
+            </div>
+
+            <div style="margin-top:16px;">
+              <label for="message">訊息內容</label>
+              <textarea id="message" rows="6" style="width:100%;padding:12px;margin-top:6px;border:1px solid rgba(0,0,0,.12);border-radius:12px;resize:vertical;"></textarea>
+            </div>
+
+            <div style="margin-top:16px;">
+              <button type="submit" class="btn primary">送出訊息</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="social-fab">
+    <a class="fab ig" href="https://instagram.com/你的帳號" aria-label="Instagram" target="_blank" rel="noopener">
+      <span class="fab-text">IG</span>
+    </a>
+    <a class="fab line" href="https://line.me/R/ti/p/@yourlineid" aria-label="LINE" target="_blank" rel="noopener">
+      <span class="fab-text">LINE</span>
+    </a>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+</html>

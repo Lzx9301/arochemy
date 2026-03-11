@@ -1184,3 +1184,73 @@ details p {
   border: 1px solid rgba(0,0,0,.10);
   color: rgba(0,0,0,.75);
 }
+
+/* ===== 商品分類下拉 ===== */
+.toolbar-left{
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.toolbar-title-btn{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 22px;
+  font-weight: 900;
+  cursor: pointer;
+  color: #111;
+}
+
+.toolbar-title-btn .chevron{
+  font-size: 14px;
+  transform: translateY(2px);
+}
+
+.toolbar-sub{
+  font-size: 13px;
+}
+
+/* 關鍵：選單本體 */
+.cat-menu{
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  min-width: 220px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.10);
+  border-radius: 14px;
+  padding: 8px;
+  box-shadow: 0 16px 32px rgba(0,0,0,.10);
+  display: none;
+  z-index: 1000;
+}
+
+/* 打開 */
+.cat-menu.open{
+  display: block;
+}
+
+/* 關鍵：每個選項一定要顯示成 block */
+.cat-item{
+  width: 100%;
+  display: block;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111;
+  cursor: pointer;
+}
+
+.cat-item:hover{
+  background: rgba(0,0,0,.05);
+}

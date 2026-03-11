@@ -85,13 +85,13 @@ function filterProducts(products, cat) {
 
     // 開關選單
     catToggle?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      catMenu.classList.toggle("open");
-      catToggle.setAttribute(
-        "aria-expanded",
-        catMenu.classList.contains("open") ? "true" : "false"
-      );
-    });
+  e.preventDefault();
+  e.stopPropagation();
+
+  const willOpen = !catMenu.classList.contains("open");
+  catMenu.classList.toggle("open", willOpen);
+  catToggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
+});
 
     // 點分類
     catItems.forEach(item => {

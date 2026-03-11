@@ -11,7 +11,10 @@ function fmtPrice(n) {
 }
 
 function cardHTML(p) {
-  const prices = (p.variants || []).map(v => Number(v.price)).filter(n => !Number.isNaN(n));
+  const prices = (p.variants || [])
+    .map(v => Number(v.price))
+    .filter(n => !Number.isNaN(n));
+
   const minPrice = prices.length ? Math.min(...prices) : 0;
   const img = (p.images && p.images[0]) ? p.images[0] : "";
 
@@ -90,7 +93,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let allProducts = [];
   let activeCat = getCategoryFromURL();
 
-  // 先綁選單開關
+  // 開關選單
   catToggle.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -100,7 +103,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     catToggle.setAttribute("aria-expanded", !isOpen ? "true" : "false");
   });
 
-  // 點選單內不要冒泡
+  // 點選單內不關閉
   catMenu.addEventListener("click", (e) => {
     e.stopPropagation();
   });
@@ -122,7 +125,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  // 點外面關掉
+  // 點外面關閉
   document.addEventListener("click", (e) => {
     if (!catMenu.classList.contains("open")) return;
 
@@ -135,7 +138,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // ESC 關掉
+  // ESC 關閉
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       catMenu.classList.remove("open");
@@ -143,7 +146,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // 載入商品
+  // 載入商品並渲染
   try {
     allProducts = await loadProducts();
     renderProducts(allProducts, activeCat, grid, currentCat, totalCount);

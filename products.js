@@ -67,11 +67,16 @@ function filterProducts(products, cat) {
   return products.filter(p => p.category === cat);
 }
 
-function renderProducts(products, category, grid, currentCat, totalCount) {
-  const filtered = filterProducts(products, category);
+function renderProducts(allProducts, activeCat, grid, currentCat, totalCount) {
+  const filtered = filterProducts(allProducts, activeCat);
 
-  if (currentCat) currentCat.textContent = CAT_LABEL[category] || "全部商品";
-  if (totalCount) totalCount.textContent = String(filtered.length);
+  if (currentCat) {
+    currentCat.textContent = CAT_LABEL[activeCat] || "全部商品";
+  }
+
+  if (totalCount) {
+    totalCount.textContent = String(filtered.length);
+  }
 
   if (grid) {
     grid.innerHTML = filtered.length
@@ -86,65 +91,49 @@ document.addEventListener("DOMContentLoaded", async () => {
   const catMenu = document.getElementById("catMenu");
   const currentCat = document.getElementById("currentCat");
   const totalCount = document.getElementById("totalCount");
-  const catItems = document.querySelectorAll(".cat-item");
 
   if (!grid || !catToggle || !catMenu) return;
 
   let allProducts = [];
   let activeCat = getCategoryFromURL();
 
-  // 開關選單
-  catToggle.addEventListener("mousedown", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
+  // 統一管理：點按鈕、點分類、點外面關閉
+  document.addEventListener("click", (e) => {
+    const toggleClicked = e.target.closest("#catToggle");
+    const itemClicked = e.target.closest(".cat-item");
+    const clickedInsideMenu = e.target.closest("#catMenu");
 
-  const isOpen = catMenu.classList.contains("open");
-
-  if (isOpen) {
-    catMenu.classList.remove("open");
-    catToggle.setAttribute("aria-expanded", "false");
-  } else {
-    catMenu.classList.add("open");
-    catToggle.setAttribute("aria-expanded", "true");
-  }
-});
-
-  // 點選單內不關閉
-  catMenu.addEventListener("mousedown", (e) => {
-  e.stopPropagation();
-});
-
-  // 點分類
-  catItems.forEach((item) => {
-    item.addEventListener("click", (e) => {
+    // 1) 點分類按鈕：切換開關
+    if (toggleClicked) {
       e.preventDefault();
-      e.stopPropagation();
 
-      const cat = item.dataset.cat || "all";
-      activeCat = cat;
+      const isOpen = catMenu.classList.contains("open");
+      catMenu.classList.toggle("open", !isOpen);
+      catToggle.setAttribute("aria-expanded", !isOpen ? "true" : "false");
+      return;
+    }
 
+    // 2) 點分類選項：篩選 + 關閉
+    if (itemClicked) {
+      e.preventDefault();
+
+      activeCat = itemClicked.dataset.cat || "all";
       renderProducts(allProducts, activeCat, grid, currentCat, totalCount);
       updateURL(activeCat);
 
       catMenu.classList.remove("open");
       catToggle.setAttribute("aria-expanded", "false");
-    });
+      return;
+    }
+
+    // 3) 點外面：關閉選單
+    if (!clickedInsideMenu && catMenu.classList.contains("open")) {
+      catMenu.classList.remove("open");
+      catToggle.setAttribute("aria-expanded", "false");
+    }
   });
 
-  // 點外面關閉
-  document.addEventListener("mousedown", (e) => {
-  if (!catMenu.classList.contains("open")) return;
-
-  const insideMenu = catMenu.contains(e.target);
-  const insideToggle = catToggle.contains(e.target);
-
-  if (!insideMenu && !insideToggle) {
-    catMenu.classList.remove("open");
-    catToggle.setAttribute("aria-expanded", "false");
-  }
-});
-
-  // ESC 關閉
+  // ESC 關閉選單
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       catMenu.classList.remove("open");
@@ -152,7 +141,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // 載入商品並渲染
   try {
     allProducts = await loadProducts();
     renderProducts(allProducts, activeCat, grid, currentCat, totalCount);

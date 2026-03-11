@@ -1,11 +1,6 @@
 async function loadProducts() {
-  const url = new URL("products.json", location.href).toString();
-  console.log("[loadProducts] fetching:", url);
-
-  const res = await fetch(url, { cache: "no-store" });
-  console.log("[loadProducts] status:", res.status, res.statusText);
-
-  if (!res.ok) throw new Error(`products.json 讀取失敗：${res.status} ${res.statusText}\nURL=${url}`);
+  const res = await fetch("/arochemy/products.json", { cache: "no-store" });
+  if (!res.ok) throw new Error("products.json 讀取失敗");
 
   const data = await res.json();
   return data.products || [];
@@ -37,15 +32,102 @@ function cardHTML(p) {
   `;
 }
 
+const CAT_LABEL = {
+  all: "全部商品",
+  "single-oil": "單方精油",
+  blend: "複方精油",
+  spray: "噴霧",
+  massage: "按摩油",
+  eyemask: "眼罩"
+};
+
+function getCategoryFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("category") || "all";
+}
+
+function updateURL(cat) {
+  const url = new URL(window.location.href);
+  if (cat === "all") {
+    url.searchParams.delete("category");
+  } else {
+    url.searchParams.set("category", cat);
+  }
+  history.replaceState(null, "", url.toString());
+}
+
+function filterProducts(products, cat) {
+  if (cat === "all") return products;
+  return products.filter(p => p.category === cat);
+}
+
 (async function initProductsPage() {
   const grid = document.getElementById("productGrid");
-  if (!grid) return; // 不是 products.html 就直接不做事
+  const catToggle = document.getElementById("catToggle");
+  const catMenu = document.getElementById("catMenu");
+  const currentCat = document.getElementById("currentCat");
+  const totalCount = document.getElementById("totalCount");
+  const catItems = document.querySelectorAll(".cat-item");
+
+  if (!grid) return;
+
+  let allProducts = [];
 
   try {
-    const products = await loadProducts();
-    grid.innerHTML = products.map(cardHTML).join("");
+    allProducts = await loadProducts();
+
+    let activeCat = getCategoryFromURL();
+    let filtered = filterProducts(allProducts, activeCat);
+
+    currentCat.textContent = CAT_LABEL[activeCat] || "全部商品";
+    totalCount.textContent = filtered.length;
+    grid.innerHTML = filtered.map(cardHTML).join("");
+
+    // 開關選單
+    catToggle?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      catMenu.classList.toggle("open");
+      catToggle.setAttribute(
+        "aria-expanded",
+        catMenu.classList.contains("open") ? "true" : "false"
+      );
+    });
+
+    // 點分類
+    catItems.forEach(item => {
+      item.addEventListener("click", () => {
+        const cat = item.dataset.cat || "all";
+        const filtered = filterProducts(allProducts, cat);
+
+        currentCat.textContent = CAT_LABEL[cat] || "全部商品";
+        totalCount.textContent = filtered.length;
+        grid.innerHTML = filtered.map(cardHTML).join("");
+
+        updateURL(cat);
+
+        catMenu.classList.remove("open");
+        catToggle.setAttribute("aria-expanded", "false");
+      });
+    });
+
+    // 點外面關閉
+    document.addEventListener("click", (e) => {
+      if (!catMenu.contains(e.target) && !catToggle.contains(e.target)) {
+        catMenu.classList.remove("open");
+        catToggle.setAttribute("aria-expanded", "false");
+      }
+    });
+
+    // ESC 關閉
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        catMenu.classList.remove("open");
+        catToggle.setAttribute("aria-expanded", "false");
+      }
+    });
+
   } catch (err) {
     console.error(err);
-    grid.innerHTML = `<p class="muted">商品載入失敗（請確認 products.json 路徑與 GitHub Pages 部署）</p>`;
+    grid.innerHTML = `<p class="muted">商品載入失敗：${err.message}</p>`;
   }
 })();

@@ -91,47 +91,58 @@ document.addEventListener("DOMContentLoaded", async () => {
   const catMenu = document.getElementById("catMenu");
   const currentCat = document.getElementById("currentCat");
   const totalCount = document.getElementById("totalCount");
+  const catItems = document.querySelectorAll(".cat-item");
 
   if (!grid || !catToggle || !catMenu) return;
 
   let allProducts = [];
   let activeCat = getCategoryFromURL();
 
-  // 統一管理：點按鈕、點分類、點外面關閉
-  document.addEventListener("click", (e) => {
-    const toggleClicked = e.target.closest("#catToggle");
-    const itemClicked = e.target.closest(".cat-item");
-    const clickedInsideMenu = e.target.closest("#catMenu");
+  // 點一下開關選單
+  catToggle.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
 
-    // 1) 點分類按鈕：切換開關
-    if (toggleClicked) {
+    const willOpen = !catMenu.classList.contains("open");
+    catMenu.classList.toggle("open", willOpen);
+    catToggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
+  });
+
+  // 點選單內部不要冒泡出去
+  catMenu.addEventListener("click", (e) => {
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  });
+
+  // 點分類
+  catItems.forEach((item) => {
+    item.addEventListener("click", (e) => {
       e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
 
-      const isOpen = catMenu.classList.contains("open");
-      catMenu.classList.toggle("open", !isOpen);
-      catToggle.setAttribute("aria-expanded", !isOpen ? "true" : "false");
-      return;
-    }
-
-    // 2) 點分類選項：篩選 + 關閉
-    if (itemClicked) {
-      e.preventDefault();
-
-      activeCat = itemClicked.dataset.cat || "all";
+      activeCat = item.dataset.cat || "all";
       renderProducts(allProducts, activeCat, grid, currentCat, totalCount);
       updateURL(activeCat);
 
       catMenu.classList.remove("open");
       catToggle.setAttribute("aria-expanded", "false");
-      return;
-    }
-
-    // 3) 點外面：關閉選單
-    if (!clickedInsideMenu && catMenu.classList.contains("open")) {
-      catMenu.classList.remove("open");
-      catToggle.setAttribute("aria-expanded", "false");
-    }
+    });
   });
+
+  // 延後綁定外部點擊，避免同一次 click 立刻把選單關掉
+  setTimeout(() => {
+    document.addEventListener("click", (e) => {
+      const insideMenu = catMenu.contains(e.target);
+      const insideToggle = catToggle.contains(e.target);
+
+      if (!insideMenu && !insideToggle) {
+        catMenu.classList.remove("open");
+        catToggle.setAttribute("aria-expanded", "false");
+      }
+    });
+  }, 0);
 
   // ESC 關閉選單
   document.addEventListener("keydown", (e) => {

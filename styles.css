@@ -526,6 +526,11 @@ details p {
     z-index: 20;
 }
 
+.cat-dropdown {
+    position: relative;
+    z-index: 30;
+}
+
 .toolbar-title-btn {
     display: inline-flex;
     align-items: center;
@@ -559,7 +564,8 @@ details p {
     padding: 8px;
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1);
     display: none;
-    z-index: 1000;
+    z-index: 5000;
+    pointer-events: auto;
 }
 
 .cat-menu.open {
@@ -1197,5 +1203,13 @@ details p {
     .fab-text {
         font-size: 12px;
     }
+    .cat-dropdown {
+        width: 100%;
+    }
 }
 
+.toolbar,
+.section,
+.container {
+    overflow: visible;
+}

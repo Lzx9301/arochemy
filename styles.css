@@ -85,6 +85,13 @@ a {
     letter-spacing: 0.3px;
 }
 
+.brand-logo {
+    height: 38px;
+    width: auto;
+    display: block;
+    object-fit: contain;
+}
+
 .brand-badge {
     width: 34px;
     height: 34px;
@@ -1213,3 +1220,4 @@ details p {
 .container {
     overflow: visible;
 }
+

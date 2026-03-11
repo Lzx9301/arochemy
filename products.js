@@ -94,19 +94,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   let activeCat = getCategoryFromURL();
 
   // 開關選單
-  catToggle.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  catToggle.addEventListener("mousedown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
 
-    const isOpen = catMenu.classList.contains("open");
-    catMenu.classList.toggle("open", !isOpen);
-    catToggle.setAttribute("aria-expanded", !isOpen ? "true" : "false");
-  });
+  const isOpen = catMenu.classList.contains("open");
+
+  if (isOpen) {
+    catMenu.classList.remove("open");
+    catToggle.setAttribute("aria-expanded", "false");
+  } else {
+    catMenu.classList.add("open");
+    catToggle.setAttribute("aria-expanded", "true");
+  }
+});
 
   // 點選單內不關閉
-  catMenu.addEventListener("click", (e) => {
-    e.stopPropagation();
-  });
+  catMenu.addEventListener("mousedown", (e) => {
+  e.stopPropagation();
+});
 
   // 點分類
   catItems.forEach((item) => {
@@ -126,17 +132,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // 點外面關閉
-  document.addEventListener("click", (e) => {
-    if (!catMenu.classList.contains("open")) return;
+  document.addEventListener("mousedown", (e) => {
+  if (!catMenu.classList.contains("open")) return;
 
-    const insideMenu = catMenu.contains(e.target);
-    const insideToggle = catToggle.contains(e.target);
+  const insideMenu = catMenu.contains(e.target);
+  const insideToggle = catToggle.contains(e.target);
 
-    if (!insideMenu && !insideToggle) {
-      catMenu.classList.remove("open");
-      catToggle.setAttribute("aria-expanded", "false");
-    }
-  });
+  if (!insideMenu && !insideToggle) {
+    catMenu.classList.remove("open");
+    catToggle.setAttribute("aria-expanded", "false");
+  }
+});
 
   // ESC 關閉
   document.addEventListener("keydown", (e) => {

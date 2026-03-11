@@ -1,143 +1,137 @@
-async function loadProducts() {
-    const res = await fetch("/arochemy/products.json", {
-        cache: "no-store"
-    });
-    if (!res.ok) throw new Error("products.json 讀取失敗");
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Arochemy｜精油與香氛</title>
+  <meta name="description" content="天然精油與香氛生活。探索精選精油、客製香氛服務與芳療文章。" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
 
-    const data = await res.json();
-    return data.products || [];
-}
+<body>
 
-function fmtPrice(n) {
-    return `NT$ ${Number(n).toLocaleString("zh-Hant-TW")}`;
-}
+  <!-- Sticky Header -->
+  <header class="header" id="top">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="回到首頁">
+        <span class="brand-badge">A</span>
+        <span class="brand-name">Arochemy</span>
+      </a>
 
-function cardHTML(p) {
-    const minPrice = Math.min(...(p.variants || []).map(v => v.price));
-    const img = (p.images && p.images[0]) ? p.images[0]: "";
+      <nav class="nav">
+        <a href="brand.html">品牌故事</a>
+        <a href="products.html">產品</a>
+        <a href="service.html">服務</a>
+        <a href="articles.html">文章</a>
+        <a href="contact.html">聯絡</a>
+        <a href="faq.html">FAQ</a>
+      </nav>
 
-    return `
-    <a class="p-card" href="product.html?slug=${encodeURIComponent(p.slug)}">
-    <div class="p-media">
-    ${
-    img
-    ? `<img src="${img}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;display:block;">`: `<div class="p-img plant"></div>`
-    }
+      <div class="header-cta">
+        <button class="burger" id="burgerBtn" type="button" aria-label="開啟選單" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
     </div>
-    <div class="p-body">
-    <div class="p-name">${p.name}</div>
-    <div class="p-meta">${p.en || ""}</div>
-    <div class="p-meta">${fmtPrice(minPrice)} 起</div>
+  </header>
+
+  <!-- Mobile Drawer -->
+  <div class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
+    <div class="mobile-dropdown" role="dialog" aria-modal="true" aria-label="手機選單">
+      <nav class="mobile-nav">
+        <a href="brand.html">品牌故事</a>
+        <a href="products.html">產品</a>
+        <a href="service.html">服務</a>
+        <a href="articles.html">文章</a>
+        <a href="contact.html">聯絡</a>
+        <a href="faq.html">FAQ</a>
+      </nav>
+
+      <div class="mobile-panel-actions">
+        <a class="btn" href="products.html">探索精油</a>
+        <a class="btn primary" href="contact.html">立即聯絡</a>
+      </div>
     </div>
+  </div>
+
+  <main>
+    <!-- Category Hero -->
+    <section class="cat-hero">
+      <div class="container cat-hero-grid">
+        <div class="cat-hero-text">
+          <div class="kicker">Products</div>
+          <h1 class="cat-title">單方精油</h1>
+          <p class="cat-desc muted">
+            這裡放分類簡介（2–4 行即可），例如：以單方精油為主，提供清楚的用途、使用建議與注意事項，
+            並於產品頁提供 COA / SDS 下載參考。
+          </p>
+
+          <div class="cat-points">
+            <div class="point">
+              <div class="point-num">99%</div>
+              <div class="muted">天然來源（示意）</div>
+            </div>
+            <div class="point">
+              <div class="point-num">COA</div>
+              <div class="muted">檢驗文件（示意）</div>
+            </div>
+            <div class="point">
+              <div class="point-num">SDS</div>
+              <div class="muted">安全資料表（示意）</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cat-hero-media" aria-label="分類主視覺">
+          <div class="cat-hero-img" role="img" aria-label="分類圖片預留"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter / Category bar -->
+    <section class="section">
+      <div class="container">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <button class="toolbar-title-btn" id="catToggle" type="button" aria-expanded="false">
+              <span id="currentCat">全部商品</span>
+              <span class="chevron">▾</span>
+            </button>
+
+            <div class="toolbar-sub muted">
+              <span id="totalCount">0</span> items
+            </div>
+
+            <div class="cat-menu" id="catMenu" role="menu">
+              <button class="cat-item" type="button" data-cat="all">全部商品</button>
+              <button class="cat-item" type="button" data-cat="single-oil">單方精油</button>
+              <button class="cat-item" type="button" data-cat="blend">複方精油</button>
+              <button class="cat-item" type="button" data-cat="spray">噴霧</button>
+              <button class="cat-item" type="button" data-cat="massage">按摩油</button>
+              <button class="cat-item" type="button" data-cat="eyemask">眼罩</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 商品列表：只保留這一個 -->
+        <div class="product-grid" id="productGrid"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Floating Social Buttons -->
+  <div class="social-fab">
+    <a class="fab ig" href="https://instagram.com/你的帳號" aria-label="Instagram" target="_blank" rel="noopener">
+      <span class="fab-text">IG</span>
     </a>
-    `;
-}
 
-const CAT_LABEL = {
-    all: "全部商品",
-    "single-oil": "單方精油",
-    blend: "複方精油",
-    spray: "噴霧",
-    massage: "按摩油",
-    eyemask: "眼罩"
-};
+    <a class="fab line" href="https://line.me/R/ti/p/@yourlineid" aria-label="LINE" target="_blank" rel="noopener">
+      <span class="fab-text">LINE</span>
+    </a>
+  </div>
 
-function getCategoryFromURL() {
-    const params = new URLSearchParams(window.location.search);
-    return params.get("category") || "all";
-}
+  <script src="./main.js"></script>
+  <script src="./products.js"></script>
+</body>
+</html>
 
-function updateURL(cat) {
-    const url = new URL(window.location.href);
-    if (cat === "all") {
-        url.searchParams.delete("category");
-    } else {
-        url.searchParams.set("category", cat);
-    }
-    history.replaceState(null, "", url.toString());
-}
-
-function filterProducts(products, cat) {
-    if (cat === "all") return products;
-    return products.filter(p => p.category === cat);
-}
-
-(async function initProductsPage() {
-    const grid = document.getElementById("productGrid");
-    const catToggle = document.getElementById("catToggle");
-    const catMenu = document.getElementById("catMenu");
-    const currentCat = document.getElementById("currentCat");
-    const totalCount = document.getElementById("totalCount");
-    const catItems = document.querySelectorAll(".cat-item");
-
-    if (!grid) return;
-
-    let allProducts = [];
-
-    try {
-        allProducts = await loadProducts();
-
-        let activeCat = getCategoryFromURL();
-        let filtered = filterProducts(allProducts, activeCat);
-
-        currentCat.textContent = CAT_LABEL[activeCat] || "全部商品";
-        totalCount.textContent = filtered.length;
-        grid.innerHTML = filtered.map(cardHTML).join("");
-
-        // 開關選單
-        catToggle?.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            const willOpen = !catMenu.classList.contains("open");
-            catMenu.classList.toggle("open", willOpen);
-            catToggle.setAttribute("aria-expanded", willOpen ? "true": "false");
-        });
-
-        // 點分類
-        catItems.forEach(item => {
-            item.addEventListener("click", () => {
-                const cat = item.dataset.cat || "all";
-                const filtered = filterProducts(allProducts, cat);
-
-                currentCat.textContent = CAT_LABEL[cat] || "全部商品";
-                totalCount.textContent = filtered.length;
-                grid.innerHTML = filtered.map(cardHTML).join("");
-
-                updateURL(cat);
-
-                catMenu.classList.remove("open");
-                catToggle.setAttribute("aria-expanded", "false");
-            });
-        });
-
-        catMenu?.addEventListener("click", (e) => {
-            e.stopPropagation();
-        });
-
-        // 點外面關閉
-        document.addEventListener("click", (e) => {
-            if (!catMenu.classList.contains("open")) return;
-
-            const insideMenu = catMenu.contains(e.target);
-            const insideToggle = catToggle.contains(e.target);
-
-            if (!insideMenu && !insideToggle) {
-                catMenu.classList.remove("open");
-                catToggle.setAttribute("aria-expanded", "false");
-            }
-        });
-
-        // ESC 關閉
-        document.addEventListener("keydown", (e) => {
-            if (e.key === "Escape") {
-                catMenu.classList.remove("open");
-                catToggle.setAttribute("aria-expanded", "false");
-            }
-        });
-
-    } catch (err) {
-        console.error(err);
-        grid.innerHTML = `<p class="muted">商品載入失敗：${err.message}</p>`;
-    }
-})();

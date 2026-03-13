@@ -91,7 +91,10 @@ a {
     display: block;
 }
 
-
+.brand{
+    display:flex;
+    align-items:center;
+}
 
 .-badge {
     width: 34px;
@@ -1227,6 +1230,7 @@ details p {
 .container {
     overflow: visible;
 }
+
 
 
 

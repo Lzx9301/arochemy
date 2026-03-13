@@ -256,7 +256,7 @@ h1 {
 
 .hero-grid {
     display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
+    grid-template-columns: 1.1fr 0.9fr;
     gap: 26px;
     align-items: center;
 }
@@ -1231,6 +1231,7 @@ details p {
 .container {
     overflow: visible;
 }
+
 
 
 

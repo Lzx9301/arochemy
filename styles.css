@@ -1217,9 +1217,6 @@ details p {
     .cat-dropdown {
         width: 100%;
     }
-    
-}
-@media (max-width:768px){
     .brand-logo{
         height:36px;
     }
@@ -1228,11 +1225,13 @@ details p {
     }
 }
 
+
 .toolbar,
 .section,
 .container {
     overflow: visible;
 }
+
 
 
 

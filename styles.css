@@ -111,8 +111,8 @@ a {
     margin-left: auto;
     display: flex;
     align-items: center;
-    gap: 16px;
-    font-weight: 600;
+    gap: 24px;
+    font-weight: 700;
     color: rgba(0, 0, 0, 0.78);
 }
 
@@ -1230,6 +1230,7 @@ details p {
 .container {
     overflow: visible;
 }
+
 
 
 

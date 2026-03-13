@@ -306,7 +306,7 @@ h1 {
     height:100%;
     object-fit:cover;
     border-radius:20px;
-    display:block
+    display:block;
     object-position:left center;;
 }
 
@@ -1242,6 +1242,7 @@ details p {
 .container {
     overflow: visible;
 }
+
 
 
 

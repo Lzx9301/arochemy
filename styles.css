@@ -62,7 +62,7 @@ a {
     position: sticky;
     top: 0;
     z-index: 1000;
-    height: 84px;
+    height: 78px;
     display: flex;
     align-items: center;
     background: rgba(255, 255, 255, 0.85);
@@ -86,7 +86,7 @@ a {
 }
 
 .brand-logo {
-    height: 54px;
+    height: 50px;
     width: auto;
     display: block;
 }
@@ -1230,6 +1230,7 @@ details p {
 .container {
     overflow: visible;
 }
+
 
 
 

@@ -85,11 +85,13 @@ a {
     letter-spacing: 0.3px;
 }
 
-.-logo{
+.brand-logo{
     height: 48px;
     width: auto;
     display: block;
 }
+
+
 
 .-badge {
     width: 34px;
@@ -1225,5 +1227,6 @@ details p {
 .container {
     overflow: visible;
 }
+
 
 

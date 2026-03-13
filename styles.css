@@ -62,7 +62,7 @@ a {
     position: sticky;
     top: 0;
     z-index: 1000;
-    height: var(--header-h);
+    height: 84px;
     display: flex;
     align-items: center;
     background: rgba(255, 255, 255, 0.85);
@@ -85,8 +85,8 @@ a {
     letter-spacing: 0.3px;
 }
 
-.brand-logo{
-    height: 48px;
+.brand-logo {
+    height: 54px;
     width: auto;
     display: block;
 }
@@ -1230,6 +1230,7 @@ details p {
 .container {
     overflow: visible;
 }
+
 
 
 

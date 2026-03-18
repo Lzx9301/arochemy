@@ -1233,7 +1233,35 @@ details p {
 }
 
 
+.product-image {
+    height: 220px;
+    overflow: hidden;
+    background: #f7f4ef;
+}
 
+.product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.product-image-fallback {
+    width: 100%;
+    height: 100%;
+    background:
+        radial-gradient(circle at 30% 30%, rgba(0, 0, 0, 0.05), transparent 50%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.01));
+}
+
+.product-desc {
+    margin-top: 6px;
+}
+
+.product-price {
+    margin-top: 10px;
+    font-weight: 800;
+}
 
 
 

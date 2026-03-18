@@ -32,11 +32,7 @@
         { "label": "10 ml", "price": 1166 },
         { "label": "30 ml", "price": 2666 }
       ],
-      "images": [
-        "assets/products/taiwania/1.jpg",
-        "assets/products/taiwania/2.jpg",
-        "assets/products/taiwania/3.jpg"
-      ],
+      "images": [],
       "overview": {
         "科屬": "柏科臺灣杉屬",
         "萃取部位": "木材",

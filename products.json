@@ -21,6 +21,8 @@
     {
       "slug": "taiwania",
       "name": "臺灣杉",
+      "featured": true,
+      "salesCount": 0,
       "en": "Taiwania",
       "latin": "Taiwania cryptomerioides Hayata",
       "category": "single-oil",

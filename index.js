@@ -1,9 +1,18 @@
 async function loadProducts() {
-  const res = await fetch("/arochemy/products.json", { cache: "no-store" });
-  if (!res.ok) throw new Error("products.json 讀取失敗");
+  const snapshot = await window.getDocs(
+    window.collection(window.db, "products")
+  );
 
-  const data = await res.json();
-  return data.products || [];
+  const products = [];
+
+  snapshot.forEach((doc) => {
+    products.push({
+      id: doc.id,
+      ...doc.data()
+    });
+  });
+
+  return products;
 }
 
 function fmtPrice(n) {

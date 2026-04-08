@@ -318,11 +318,10 @@
     </div>
 
 
-    <script type="module">
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",
   authDomain: "trying-89dc6.firebaseapp.com",
@@ -336,67 +335,76 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-//  抓網址 slug（例如 ?slug=taiwania）
 const params = new URLSearchParams(window.location.search);
 const slug = params.get("slug");
 
-//  主程式
 async function loadProduct() {
-  if (!slug) return;
-
-  // 1️⃣ 讀商品
-  const productRef = doc(db, "products", slug);
-  const productSnap = await getDoc(productRef);
-
-  if (!productSnap.exists()) {
-    console.log("商品不存在");
+  if (!slug) {
+    console.log("沒有 slug");
     return;
   }
 
-  const product = productSnap.data();
+  try {
+    const productRef = doc(db, "products", slug);
+    const productSnap = await getDoc(productRef);
 
-  //  讀預設內容
-  const defaultRef = doc(db, "site_settings", "product_defaults");
-  const defaultSnap = await getDoc(defaultRef);
+    if (!productSnap.exists()) {
+      console.log("商品不存在");
+      return;
+    }
 
-  const defaults = defaultSnap.exists() ? defaultSnap.data() : {};
+    const product = productSnap.data();
 
-  //  渲染（先簡單印出）
-  console.log("商品:", product);
-  console.log("預設:", defaults);
+    const defaultRef = doc(db, "site_settings", "product_defaults");
+    const defaultSnap = await getDoc(defaultRef);
 
-  renderProduct(product, defaults);
+    const defaults = defaultSnap.exists() ? defaultSnap.data() : {};
+
+    console.log("商品:", product);
+    console.log("預設:", defaults);
+
+    renderProduct(product, defaults);
+  } catch (error) {
+    console.error("讀取商品失敗：", error);
+  }
 }
 
 loadProduct();
 
-//  簡單 render（之後可以改漂亮）
 function renderProduct(product, defaults) {
-  document.getElementById("title").textContent = product.name;
-
-  // variants
+  const titleEl = document.getElementById("title");
   const variantEl = document.getElementById("variants");
-  variantEl.innerHTML = product.variants
-    .map(v => `<li>${v.label} - $${v.price}</li>`)
-    .join("");
-
-  // storage（用 defaults）
   const storageEl = document.getElementById("storage");
-  storageEl.innerHTML = defaults.storage
-    .map(s => `<li>${s}</li>`)
-    .join("");
-
-  // usage
   const usageEl = document.getElementById("usage");
-  usageEl.innerHTML = defaults.usage
-    .map(s => `<li>${s}</li>`)
-    .join("");
-
-  // caution
   const cautionEl = document.getElementById("caution");
-  cautionEl.innerHTML = defaults.caution
-    .map(s => `<li>${s}</li>`)
-    .join("");
+
+  if (titleEl) {
+    titleEl.textContent = product.name || "";
+  }
+
+  if (variantEl) {
+    variantEl.innerHTML = (product.variants || [])
+      .map(v => `<li>${v.label} - NT$ ${v.price}</li>`)
+      .join("");
+  }
+
+  if (storageEl) {
+    storageEl.innerHTML = (defaults.storage || [])
+      .map(s => `<li>${s}</li>`)
+      .join("");
+  }
+
+  if (usageEl) {
+    usageEl.innerHTML = (defaults.usage || [])
+      .map(s => `<li>${s}</li>`)
+      .join("");
+  }
+
+  if (cautionEl) {
+    cautionEl.innerHTML = (defaults.caution || [])
+      .map(s => `<li>${s}</li>`)
+      .join("");
+  }
 }
 </script>
     <script src="./main.js"></script>

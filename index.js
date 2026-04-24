@@ -6,7 +6,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  // 貼你的 Firebase 設定
+  apiKey: "AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",
+  authDomain: "trying-89dc6.firebaseapp.com",
+  projectId: "trying-89dc6",
+  storageBucket: "trying-89dc6.firebasestorage.app",
+  messagingSenderId: "115559148124",
+  appId: "1:115559148124:web:ac37b9c249183a919b5499",
+  measurementId: "G-KHR4PVKJCK"
 };
 
 const app = initializeApp(firebaseConfig);

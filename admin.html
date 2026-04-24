@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>商品後台｜Arochemy</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .admin-page {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 24px;
+    }
+
+    .admin-form {
+      display: grid;
+      gap: 16px;
+    }
+
+    .admin-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .admin-field label {
+      font-weight: 700;
+    }
+
+    .admin-field input,
+    .admin-field textarea,
+    .admin-field select {
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      font-size: 16px;
+    }
+
+    .admin-field textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .admin-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .admin-check {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .admin-btn {
+      padding: 14px 20px;
+      border: none;
+      border-radius: 999px;
+      background: #111;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .admin-msg {
+      margin-top: 16px;
+      color: #456b55;
+      font-weight: 700;
+    }
+
+    @media (max-width: 640px) {
+      .admin-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="admin-page">
+    <h1>新增商品</h1>
+    <p class="muted">這是簡易商品後台，送出後會新增到 Firebase Firestore。</p>
+
+    <form class="admin-form" id="productForm">
+      <div class="admin-row">
+        <div class="admin-field">
+          <label for="name">商品中文名稱</label>
+          <input id="name" required placeholder="例如：臺灣杉" />
+        </div>
+
+        <div class="admin-field">
+          <label for="en">英文名稱</label>
+          <input id="en" placeholder="例如：Taiwania" />
+        </div>
+      </div>
+
+      <div class="admin-row">
+        <div class="admin-field">
+          <label for="slug">Slug</label>
+          <input id="slug" required placeholder="例如：taiwania" />
+        </div>
+
+        <div class="admin-field">
+          <label for="category">分類</label>
+          <select id="category">
+            <option value="single-oil">單方精油</option>
+            <option value="blend-oil">複方精油</option>
+            <option value="spray">噴霧</option>
+            <option value="massage-oil">按摩油</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="admin-field">
+        <label for="latin">拉丁學名</label>
+        <input id="latin" placeholder="例如：Taiwania cryptomerioides Hayata" />
+      </div>
+
+      <div class="admin-row">
+        <div class="admin-field">
+          <label for="price5">5 ml 價格</label>
+          <input id="price5" type="number" min="0" placeholder="666" />
+        </div>
+
+        <div class="admin-field">
+          <label for="price10">10 ml 價格</label>
+          <input id="price10" type="number" min="0" placeholder="1166" />
+        </div>
+      </div>
+
+      <div class="admin-field">
+        <label for="price30">30 ml 價格</label>
+        <input id="price30" type="number" min="0" placeholder="2666" />
+      </div>
+
+      <div class="admin-field">
+        <label for="imageUrl">圖片網址</label>
+        <input id="imageUrl" placeholder="目前沒有圖片可留空" />
+      </div>
+
+      <div class="admin-field">
+        <label for="aroma">香氣概述</label>
+        <input id="aroma" placeholder="例如：油潤柔和的木質香調" />
+      </div>
+
+      <div class="admin-row">
+        <div class="admin-field">
+          <label for="plantOrigin">植物產地</label>
+          <input id="plantOrigin" placeholder="例如：臺灣" />
+        </div>
+
+        <div class="admin-field">
+          <label for="extractPart">萃取部位</label>
+          <input id="extractPart" placeholder="例如：木材" />
+        </div>
+      </div>
+
+      <div class="admin-row">
+        <div class="admin-field">
+          <label for="extractMethod">萃取方法</label>
+          <input id="extractMethod" placeholder="例如：蒸餾" />
+        </div>
+
+        <div class="admin-field">
+          <label for="family">科屬</label>
+          <input id="family" placeholder="例如：柏科臺灣杉屬" />
+        </div>
+      </div>
+
+      <div class="admin-field">
+        <label for="description">商品說明</label>
+        <textarea id="description" placeholder="每一段請換行，系統會自動轉成 description 陣列"></textarea>
+      </div>
+
+      <label class="admin-check">
+        <input id="featured" type="checkbox" checked />
+        設為精選商品
+      </label>
+
+      <button class="admin-btn" type="submit">新增商品</button>
+
+      <div class="admin-msg" id="msg"></div>
+    </form>
+  </main>
+
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

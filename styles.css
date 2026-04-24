@@ -1353,4 +1353,45 @@ details p {
   display: none;
 }
 
+.cart-toast {
+  position: fixed;
+  right: 24px;
+  top: 96px;
+  width: 280px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  box-shadow: 0 18px 50px rgba(0,0,0,.12);
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(-12px);
+  pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+}
 
+.cart-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.cart-toast strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.cart-toast span {
+  display: block;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.cart-toast a {
+  display: inline-block;
+  margin-top: 10px;
+  color: #111;
+  font-weight: 700;
+  text-decoration: none;
+}

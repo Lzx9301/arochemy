@@ -77,11 +77,37 @@
 </head>
 
 <body>
-  <main class="admin-page">
-    <h1>新增商品</h1>
-    <p class="muted">這是簡易商品後台，送出後會新增到 Firebase Firestore。</p>
 
-    <form class="admin-form" id="productForm">
+  <main class="admin-page">
+
+    <!-- 🔐 登入區 -->
+    <section id="loginBox">
+      <h1>管理員登入</h1>
+
+      <div class="admin-form">
+        <div class="admin-field">
+          <label>Email</label>
+          <input id="adminEmail" type="email" />
+        </div>
+
+        <div class="admin-field">
+          <label>密碼</label>
+          <input id="adminPassword" type="password" />
+        </div>
+
+        <button class="admin-btn" id="loginBtn" type="button">登入</button>
+
+        <div class="admin-msg" id="loginMsg"></div>
+      </div>
+    </section>
+
+    <!-- 🛠 後台區 -->
+    <section id="adminBox" style="display:none;">
+       <h1>商品後台</h1>
+
+      <button class="admin-btn" id="logoutBtn" type="button">登出</button>
+
+      <form class="admin-form" id="productForm">
       <div class="admin-row">
         <div class="admin-field">
           <label for="name">商品中文名稱</label>
@@ -190,8 +216,11 @@
 
       <button class="admin-btn" type="submit">新增商品</button>
 
-      <div class="admin-msg" id="msg"></div>
-    </form>
+        <div class="admin-msg" id="msg"></div>
+
+      </form>
+    </section>
+
   </main>
 
   <script type="module" src="js/admin.js"></script>

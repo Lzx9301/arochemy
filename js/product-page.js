@@ -280,7 +280,6 @@ function mountActions() {
 (async function init() {
   try {
     const slug = getSlug();
-const slug = getSlug();
 
 if (!slug) {
   throw new Error("網址缺少 slug");

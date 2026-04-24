@@ -303,7 +303,8 @@ document.getElementById("btnCart")?.addEventListener("click", () => {
 
   localStorage.setItem(CART_KEY, JSON.stringify(cart));
 
-  alert(`已加入購物車：${product.name} ${v.label} x ${qty}`);
+  showCartToast(`${product.name} ${v.label} x ${qty}`);
+updateCartCount();
 });;
 
   document.getElementById("btnBuy")?.addEventListener("click", () => {
@@ -346,3 +347,30 @@ siteDefaults = await loadProductDefaults();
       `<p class="muted">商品載入失敗：${err.message}</p>`;
   }
 })();
+function showCartToast(text) {
+  const toast = document.getElementById("cartToast");
+  const toastText = document.getElementById("cartToastText");
+
+  if (!toast || !toastText) return;
+
+  toastText.textContent = text;
+  toast.classList.add("show");
+
+  clearTimeout(window.__cartToastTimer);
+  window.__cartToastTimer = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2600);
+}
+
+function updateCartCount() {
+  const el = document.getElementById("cartCount");
+  if (!el) return;
+
+  const cart = JSON.parse(localStorage.getItem("arochemy_cart") || "[]");
+  const count = cart.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+
+  el.textContent = String(count);
+  el.style.display = count > 0 ? "block" : "none";
+}
+
+updateCartCount();

@@ -119,9 +119,25 @@ $("loginBtn")?.addEventListener("click", async () => {
     msg.textContent = "登入成功";
     window.location.href = "index.html";
   } catch (err) {
-    console.error(err);
-    msg.textContent = "登入失敗，請確認 Email 或密碼";
+  console.error(err);
+
+  switch (err.code) {
+    case "auth/user-not-found":
+      msg.textContent = "此帳號尚未註冊";
+      break;
+
+    case "auth/wrong-password":
+      msg.textContent = "密碼錯誤";
+      break;
+
+    case "auth/invalid-credential":
+      msg.textContent = "Email 或密碼錯誤";
+      break;
+
+    default:
+      msg.textContent = "登入失敗，請稍後再試";
   }
+}
 });
 
 $("logoutBtn")?.addEventListener("click", async () => {

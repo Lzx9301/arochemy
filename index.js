@@ -14,7 +14,6 @@ const db = getFirestore(app);
 
 async function loadProducts() {
 getDocs(collection(db, "products"));
-  );
 
   const products = [];
 

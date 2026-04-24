@@ -1,9 +1,32 @@
-async function loadProducts() {
-  const res = await fetch("/arochemy/products.json", { cache: "no-store" });
-  if (!res.ok) throw new Error("products.json 讀取失敗");
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  const data = await res.json();
-  return data.products || [];
+const firebaseConfig = {
+  apiKey: "AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",
+  authDomain: "trying-89dc6.firebaseapp.com",
+  projectId: "trying-89dc6",
+  storageBucket: "trying-89dc6.firebasestorage.app",
+  messagingSenderId: "115559148124",
+  appId: "1:115559148124:web:ac37b9c249183a919b5499",
+  measurementId: "G-KHR4PVKJCK"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function loadProducts() {
+  const snapshot = await getDocs(collection(db, "products"));
+
+  return snapshot.docs
+    .map((doc) => ({
+      id: doc.id,
+      ...doc.data()
+    }))
+    .filter((p) => p.status === "active");
 }
 
 function fmtPrice(n) {

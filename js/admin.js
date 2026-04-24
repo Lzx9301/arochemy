@@ -3,7 +3,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getFirestore,
   doc,
-  setDoc
+  setDoc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
@@ -121,6 +122,62 @@ function makeVariants() {
 
   return variants;
 }
+
+$("loadProductBtn")?.addEventListener("click", async () => {
+  const slug = $("editSlug").value.trim();
+  const editMsg = $("editMsg");
+
+  if (!slug) {
+    editMsg.textContent = "請輸入商品 slug";
+    return;
+  }
+
+  editMsg.textContent = "載入中...";
+
+  try {
+    const ref = doc(db, "products", slug);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) {
+      editMsg.textContent = "找不到這個商品";
+      return;
+    }
+
+    const p = snap.data();
+
+    $("name").value = p.name || "";
+    $("en").value = p.en || "";
+    $("slug").value = p.slug || slug;
+    $("category").value = p.category || "single-oil";
+    $("latin").value = p.latin || "";
+
+    $("price5").value = p.variants?.find(v => v.label === "5 ml")?.price ?? "";
+    $("price10").value = p.variants?.find(v => v.label === "10 ml")?.price ?? "";
+    $("price30").value = p.variants?.find(v => v.label === "30 ml")?.price ?? "";
+
+    $("imageUrl").value = p.images?.[0] || "";
+
+    $("family").value = p.overview?.["科屬"] || "";
+    $("extractPart").value = p.overview?.["萃取部位"] || "";
+    $("extractMethod").value = p.overview?.["萃取方法"] || "";
+    $("plantOrigin").value = p.overview?.["植物產地"] || "";
+    $("aroma").value = p.overview?.["香氣概述"] || "";
+    $("usageOverview").value = p.overview?.["建議用途"] || "";
+
+    $("compositionText").value = (p.composition || [])
+      .map(c => `${c.name},${c.value}`)
+      .join("\n");
+
+    $("description").value = (p.description || []).join("\n");
+
+    $("featured").checked = p.featured === true;
+
+    editMsg.textContent = "商品資料已載入，可以修改後按下新增商品儲存";
+  } catch (err) {
+    console.error(err);
+    editMsg.textContent = `載入失敗：${err.message}`;
+  }
+});
 
 $("productForm").addEventListener("submit", async (e) => {
   e.preventDefault();

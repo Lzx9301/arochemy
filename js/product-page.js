@@ -276,10 +276,35 @@ function mountLongText() {
 function mountActions() {
   document.getElementById("btnFav")?.addEventListener("click", () => alert("（測試）已收藏"));
 
-  document.getElementById("btnCart")?.addEventListener("click", () => {
-    const v = product.variants?.[selectedVariantIndex];
-    alert(`（測試）加入購物車：${product.name} ${v?.label || ""} x ${qty}`);
-  });
+document.getElementById("btnCart")?.addEventListener("click", () => {
+  const v = product.variants?.[selectedVariantIndex];
+  if (!v) return;
+
+  const CART_KEY = "arochemy_cart";
+  const cart = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+
+  const itemKey = `${product.slug}_${v.label}`;
+
+  const existing = cart.find((item) => item.key === itemKey);
+
+  if (existing) {
+    existing.qty += qty;
+  } else {
+    cart.push({
+      key: itemKey,
+      slug: product.slug,
+      name: product.name,
+      variantLabel: v.label,
+      price: Number(v.price),
+      qty,
+      image: product.images?.[0] || ""
+    });
+  }
+
+  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+
+  alert(`已加入購物車：${product.name} ${v.label} x ${qty}`);
+});;
 
   document.getElementById("btnBuy")?.addEventListener("click", () => {
     const v = product.variants?.[selectedVariantIndex];

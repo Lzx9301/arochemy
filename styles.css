@@ -1306,7 +1306,9 @@ details p {
   text-overflow: ellipsis;
 }
 
-
+.nav-user:not(.logged-in) #userEmail {
+  display: none;
+}
 
 
 

@@ -6,7 +6,9 @@ import {
   collection,
   getDocs,
   query,
-  where
+  where,
+  doc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -42,6 +44,15 @@ async function loadProductBySlug(slug) {
     id: doc.id,
     ...doc.data()
   };
+}
+
+async function loadProductDefaults() {
+  const ref = doc(db, "site_settings", "product_defaults");
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) return null;
+
+  return snap.data();
 }
 
 function fmtPrice(n) {
@@ -291,7 +302,7 @@ if (!product) {
   throw new Error("找不到商品");
 }
 
-siteDefaults = null; // 先關掉（之後再接 Firebase）
+siteDefaults = await loadProductDefaults();
     if (!product) throw new Error("找不到任何商品資料");
 
     selectedVariantIndex = 0;

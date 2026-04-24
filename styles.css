@@ -1263,7 +1263,17 @@ details p {
     font-weight: 800;
 }
 
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
 
+.nav-user:hover {
+  opacity: 0.7;
+}
 
 
 

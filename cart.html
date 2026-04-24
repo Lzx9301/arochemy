@@ -8,18 +8,30 @@
 </head>
 
 <body>
-  <main class="container" style="padding:60px 20px;">
-    <h1>購物車</h1>
-
-    <div id="cartList"></div>
-
-    <div style="margin-top:32px; text-align:right;">
-      <h2 id="cartTotal">總計：NT$ 0</h2>
-      <button class="btn primary" id="checkoutBtn">前往結帳</button>
+  <main class="container cart-page">
+  <div class="cart-head">
+    <div>
+      <h1>購物車</h1>
+      <p class="muted">確認商品與數量後，即可進入結帳流程。</p>
     </div>
+    <a class="btn" href="products.html">繼續購物</a>
+  </div>
 
-    <p id="cartMsg" class="muted"></p>
-  </main>
+  <div class="cart-layout">
+    <section id="cartList" class="cart-list"></section>
+
+    <aside class="cart-summary card">
+      <h2>訂單摘要</h2>
+      <div class="cart-summary-row">
+        <span>商品小計</span>
+        <strong id="cartTotal">NT$ 0</strong>
+      </div>
+      <p class="muted">運費與付款方式將於結帳頁計算。</p>
+      <button class="btn primary" id="checkoutBtn">前往結帳</button>
+      <p id="cartMsg" class="muted"></p>
+    </aside>
+  </div>
+</main>
 
   <script type="module" src="js/cart.js"></script>
 </body>

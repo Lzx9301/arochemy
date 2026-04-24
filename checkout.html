@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>結帳｜Arochemy</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <main class="container checkout-page">
+    <div class="checkout-head">
+      <h1>結帳</h1>
+      <p class="muted">請確認訂單內容並填寫收件資訊。</p>
+    </div>
+
+    <div class="checkout-layout">
+      <section class="checkout-form card">
+        <h2>收件資訊</h2>
+
+        <div class="checkout-field">
+          <label for="buyerName">姓名</label>
+          <input id="buyerName" placeholder="請輸入姓名" />
+        </div>
+
+        <div class="checkout-field">
+          <label for="buyerPhone">電話</label>
+          <input id="buyerPhone" placeholder="請輸入電話" />
+        </div>
+
+        <div class="checkout-field">
+          <label for="buyerEmail">Email</label>
+          <input id="buyerEmail" type="email" placeholder="請輸入 Email" />
+        </div>
+
+        <div class="checkout-field">
+          <label for="shippingMethod">配送方式</label>
+          <select id="shippingMethod">
+            <option value="711-cod">7-11 貨到付款</option>
+            <option value="711-card">7-11 刷卡付款</option>
+            <option value="family-cod">全家 貨到付款</option>
+            <option value="family-card">全家 刷卡付款</option>
+            <option value="home-card">宅配 刷卡付款</option>
+          </select>
+        </div>
+
+        <div class="checkout-field">
+          <label for="address">收件地址 / 門市資訊</label>
+          <textarea id="address" placeholder="宅配請填地址；超商請先填門市名稱或備註"></textarea>
+        </div>
+
+        <div class="checkout-field">
+          <label for="note">訂單備註</label>
+          <textarea id="note" placeholder="可留空"></textarea>
+        </div>
+
+        <button class="btn primary" id="placeOrderBtn">送出訂單</button>
+        <p id="checkoutMsg" class="muted"></p>
+      </section>
+
+      <aside class="checkout-summary card">
+        <h2>訂單摘要</h2>
+        <div id="checkoutItems"></div>
+
+        <div class="checkout-total">
+          <span>商品小計</span>
+          <strong id="checkoutTotal">NT$ 0</strong>
+        </div>
+
+        <p class="muted">目前為測試版，送出後會建立訂單資料，尚未串接綠界付款。</p>
+      </aside>
+    </div>
+  </main>
+
+  <script type="module" src="js/checkout.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>會員登入 / 註冊｜Arochemy</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <main class="admin-page" style="max-width:480px;">
+
+    <h1>會員登入 / 註冊</h1>
+
+    <div class="admin-form">
+
+      <div class="admin-field">
+        <label for="name">姓名（註冊時填寫）</label>
+        <input id="name" placeholder="請輸入姓名" />
+      </div>
+
+      <div class="admin-field">
+        <label for="phone">電話（註冊時填寫）</label>
+        <input id="phone" placeholder="請輸入電話" />
+      </div>
+
+      <div class="admin-field">
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="請輸入 Email" />
+      </div>
+
+      <div class="admin-field">
+        <label for="password">密碼</label>
+        <input id="password" type="password" placeholder="請輸入密碼" />
+      </div>
+
+      <label class="admin-check">
+        <input id="newsletterSubscribed" type="checkbox" />
+        訂閱電子報
+      </label>
+
+      <button class="admin-btn" id="registerBtn" type="button">註冊會員</button>
+      <button class="admin-btn" id="loginBtn" type="button">會員登入</button>
+      <button class="admin-btn" id="logoutBtn" type="button" style="display:none;">登出</button>
+
+      <p id="msg" class="admin-msg"></p>
+
+    </div>
+  </main>
+
+  <script type="module" src="js/auth.js"></script>
+</body>
+</html>

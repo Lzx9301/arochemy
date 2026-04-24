@@ -32,6 +32,22 @@ function splitLines(text) {
     .filter(Boolean);
 }
 
+function parseComposition(text) {
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [name, value] = line.split(",").map((x) => x.trim());
+
+      return {
+        name: name || "",
+        value: Number(value) || 0
+      };
+    })
+    .filter((item) => item.name);
+}
+
 function makeVariants() {
   const variants = [];
 
@@ -92,7 +108,7 @@ $("productForm").addEventListener("submit", async (e) => {
   "建議用途": $("usageOverview").value.trim()
 },
 
-    composition: [],
+    composition: parseComposition($("compositionText").value),
 
     docs: {
       coa: "",

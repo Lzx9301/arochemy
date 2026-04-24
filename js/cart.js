@@ -32,29 +32,29 @@ function renderCart() {
     total += subtotal;
 
     return `
-      <div class="card" style="padding:20px;margin-bottom:16px;display:grid;grid-template-columns:90px 1fr auto;gap:16px;align-items:center;">
-        <div style="width:90px;height:90px;border-radius:16px;background:#f3f3f3;overflow:hidden;">
-          ${
-            item.image
-              ? `<img src="${item.image}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;">`
-              : ""
-          }
-        </div>
+  <div class="card cart-item">
+    <div class="cart-item-img">
+      ${
+        item.image
+          ? `<img src="${item.image}" alt="${item.name}">`
+          : ""
+      }
+    </div>
 
-        <div>
-          <h3 style="margin:0 0 6px;">${item.name}</h3>
-          <p class="muted" style="margin:0;">${item.variantLabel}</p>
-          <p style="margin:8px 0 0;">${fmtPrice(item.price)}</p>
-        </div>
+    <div>
+      <div class="cart-item-name">${item.name}</div>
+      <p class="muted">${item.variantLabel}</p>
+      <p>${fmtPrice(item.price)}</p>
+    </div>
 
-        <div style="display:flex;align-items:center;gap:10px;">
-          <button data-action="minus" data-index="${index}">−</button>
-          <span>${item.qty}</span>
-          <button data-action="plus" data-index="${index}">＋</button>
-          <button data-action="remove" data-index="${index}">刪除</button>
-        </div>
-      </div>
-    `;
+    <div class="cart-qty">
+      <button data-action="minus" data-index="${index}">−</button>
+      <span>${item.qty}</span>
+      <button data-action="plus" data-index="${index}">＋</button>
+      <button class="cart-remove" data-action="remove" data-index="${index}">刪除</button>
+    </div>
+  </div>
+`;
   }).join("");
 
   totalEl.textContent = `總計：${fmtPrice(total)}`;

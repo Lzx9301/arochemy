@@ -83,13 +83,14 @@ $("productForm").addEventListener("submit", async (e) => {
 
     variants: makeVariants(),
 
-    overview: {
-      "科屬": $("family").value.trim(),
-      "萃取部位": $("extractPart").value.trim(),
-      "萃取方法": $("extractMethod").value.trim(),
-      "植物產地": $("plantOrigin").value.trim(),
-      "香氣概述": $("aroma").value.trim()
-    },
+  overview: {
+  "科屬": $("family").value.trim(),
+  "萃取部位": $("extractPart").value.trim(),
+  "萃取方法": $("extractMethod").value.trim(),
+  "植物產地": $("plantOrigin").value.trim(),
+  "香氣概述": $("aroma").value.trim(),
+  "建議用途": $("usageOverview").value.trim()
+},
 
     composition: [],
 

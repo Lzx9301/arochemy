@@ -28,6 +28,9 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 const ADMIN_EMAIL = "nicoliu930226@gmail.com";
+
+const $ = (id) => document.getElementById(id);
+
 const loginBox = $("loginBox");
 const adminBox = $("adminBox");
 const loginBtn = $("loginBtn");

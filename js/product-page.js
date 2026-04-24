@@ -1,14 +1,47 @@
 // product-page.js (final)
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  query,
+  where
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",
+  authDomain: "trying-89dc6.firebaseapp.com",
+  projectId: "trying-89dc6",
+  storageBucket: "trying-89dc6.firebasestorage.app",
+  messagingSenderId: "115559148124",
+  appId: "1:115559148124:web:ac37b9c249183a919b5499",
+  measurementId: "G-KHR4PVKJCK"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 function getSlug() {
   return new URLSearchParams(location.search).get("slug");
 }
 
-async function loadData() {
-  // GitHub Pages 專案頁：一定要加 /arochemy/
-  const res = await fetch("/arochemy/products.json", { cache: "no-store" });
-  if (!res.ok) throw new Error("products.json 讀取失敗");
-  return await res.json(); // { siteDefaults, products }
+async function loadProductBySlug(slug) {
+  const q = query(
+    collection(db, "products"),
+    where("slug", "==", slug)
+  );
+
+  const snapshot = await getDocs(q);
+
+  if (snapshot.empty) return null;
+
+  const doc = snapshot.docs[0];
+
+  return {
+    id: doc.id,
+    ...doc.data()
+  };
 }
 
 function fmtPrice(n) {
@@ -247,12 +280,19 @@ function mountActions() {
 (async function init() {
   try {
     const slug = getSlug();
-    const data = await loadData();
+const slug = getSlug();
 
-    siteDefaults = data.siteDefaults || null;
+if (!slug) {
+  throw new Error("網址缺少 slug");
+}
 
-    const products = data.products || [];
-    product = products.find(p => p.slug === slug) || products[0];
+product = await loadProductBySlug(slug);
+
+if (!product) {
+  throw new Error("找不到商品");
+}
+
+siteDefaults = null; // 先關掉（之後再接 Firebase）
     if (!product) throw new Error("找不到任何商品資料");
 
     selectedVariantIndex = 0;

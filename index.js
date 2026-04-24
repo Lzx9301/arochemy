@@ -19,7 +19,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 async function loadProducts() {
-getDocs(collection(db, "products"));
+  const snapshot = await getDocs(collection(db, "products"));
 
   const products = [];
 

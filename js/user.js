@@ -24,23 +24,23 @@ onAuthStateChanged(auth, (user) => {
   if (!userArea) return;
 
   if (user) {
-    // 已登入
+    userArea.classList.add("logged-in");
     userEmail.textContent = user.email;
-    userEmail.style.display = "inline";
 
-    userArea.onclick = async () => {
+    userArea.onclick = async (e) => {
+      e.preventDefault();
       const confirmLogout = confirm("要登出嗎？");
       if (confirmLogout) {
         await signOut(auth);
         location.reload();
       }
     };
-
   } else {
-    // 未登入
-    userEmail.style.display = "none";
+    userArea.classList.remove("logged-in");
+    userEmail.textContent = "";
 
-    userArea.onclick = () => {
+    userArea.onclick = (e) => {
+      e.preventDefault();
       window.location.href = "login.html";
     };
   }

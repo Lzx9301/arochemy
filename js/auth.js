@@ -80,9 +80,25 @@ $("registerBtn")?.addEventListener("click", async () => {
     msg.textContent = "註冊成功，已登入";
     window.location.href = "index.html";
   } catch (err) {
-    console.error(err);
-    msg.textContent = `註冊失敗：${err.message}`;
+  console.error(err);
+
+  switch (err.code) {
+    case "auth/email-already-in-use":
+      msg.textContent = "此 Email 已註冊，請直接登入";
+      break;
+
+    case "auth/invalid-email":
+      msg.textContent = "Email 格式不正確";
+      break;
+
+    case "auth/weak-password":
+      msg.textContent = "密碼至少需要 6 個字元";
+      break;
+
+    default:
+      msg.textContent = "註冊失敗，請稍後再試";
   }
+}
 });
 
 $("loginBtn")?.addEventListener("click", async () => {

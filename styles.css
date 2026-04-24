@@ -1493,3 +1493,78 @@ details p {
     grid-column: 1 / -1;
   }
 }
+
+.checkout-page {
+  padding: 72px 20px;
+}
+
+.checkout-head {
+  margin-bottom: 28px;
+}
+
+.checkout-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 24px;
+  align-items: start;
+}
+
+.checkout-form,
+.checkout-summary {
+  padding: 28px;
+}
+
+.checkout-field {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.checkout-field label {
+  font-weight: 700;
+}
+
+.checkout-field input,
+.checkout-field select,
+.checkout-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 15px;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  font-size: 16px;
+  background: #fff;
+}
+
+.checkout-field textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.checkout-item {
+  padding: 14px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.checkout-item-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.checkout-item-meta {
+  color: #666;
+  font-size: 14px;
+}
+
+.checkout-total {
+  display: flex;
+  justify-content: space-between;
+  margin: 24px 0;
+  font-size: 18px;
+}
+
+@media (max-width: 860px) {
+  .checkout-layout {
+    grid-template-columns: 1fr;
+  }
+}

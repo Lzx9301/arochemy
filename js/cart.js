@@ -94,7 +94,7 @@ $("checkoutBtn")?.addEventListener("click", () => {
     return;
   }
 
-  $("cartMsg").textContent = "結帳功能下一步製作。";
+  window.location.href = "checkout.html";
 });
 
 renderCart();

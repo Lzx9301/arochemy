@@ -1264,64 +1264,47 @@ details p {
 }
 
 .nav-user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.nav-user:hover {
-  opacity: 0.7;
-}
-
-.nav-user {
-  width: 38px;
-  height: 38px;
-  border: 1px solid #e5e5e5;
+  width: 34px;
+  height: 34px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: #111;
   text-decoration: none;
-  background: #fff;
-  transition: opacity .2s ease, transform .2s ease;
+  background: transparent;
+  transition: background .2s ease, opacity .2s ease;
 }
 
 .nav-user:hover {
-  opacity: .72;
-  transform: translateY(-1px);
+  background: rgba(0,0,0,.05);
 }
 
 .user-icon {
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.8;
+  stroke-width: 1.7;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
 .nav-user.logged-in {
   width: auto;
-  padding: 0 14px;
+  padding: 0 12px;
   gap: 8px;
+  border: 1px solid #eee;
+  background: #fff;
 }
 
 .nav-user.logged-in #userEmail {
   font-size: 13px;
-  max-width: 130px;
+  max-width: 120px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-
-
-
-
 
 
 

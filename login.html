@@ -5,47 +5,180 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>會員登入 / 註冊｜Arochemy</title>
   <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    .auth-page {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 40px 20px;
+      background: #fafafa;
+    }
+
+    .auth-card {
+      width: min(100%, 460px);
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 28px;
+      padding: 36px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.06);
+    }
+
+    .auth-logo {
+      display: block;
+      width: 220px;
+      margin: 0 auto 28px;
+    }
+
+    .auth-title {
+      font-size: 32px;
+      margin: 0 0 8px;
+      letter-spacing: .04em;
+    }
+
+    .auth-subtitle {
+      color: #666;
+      margin: 0 0 28px;
+      line-height: 1.7;
+    }
+
+    .auth-field {
+      margin-bottom: 16px;
+    }
+
+    .auth-field label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .auth-field input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px 16px;
+      border: 1px solid #ddd;
+      border-radius: 999px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .auth-field input:focus {
+      border-color: #111;
+    }
+
+    .auth-check {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin: 10px 0 22px;
+      color: #555;
+    }
+
+    .auth-actions {
+      display: grid;
+      gap: 12px;
+    }
+
+    .auth-btn {
+      width: 100%;
+      border: none;
+      border-radius: 999px;
+      padding: 14px 18px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .auth-btn.primary {
+      background: #111;
+      color: #fff;
+    }
+
+    .auth-btn.secondary {
+      background: #fff;
+      color: #111;
+      border: 1px solid #ddd;
+    }
+
+    .auth-btn.light {
+      background: transparent;
+      color: #555;
+      border: none;
+      padding: 8px;
+    }
+
+    .auth-msg {
+      margin-top: 18px;
+      color: #456b55;
+      font-weight: 700;
+      line-height: 1.6;
+    }
+
+    .auth-back {
+      display: inline-block;
+      margin-top: 22px;
+      color: #555;
+      text-decoration: none;
+    }
+
+    @media (max-width: 520px) {
+      .auth-card {
+        padding: 28px 22px;
+        border-radius: 22px;
+      }
+
+      .auth-title {
+        font-size: 28px;
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <main class="admin-page" style="max-width:480px;">
+  <main class="auth-page">
+    <section class="auth-card">
+      <img class="auth-logo" src="./images/head-logo.png" alt="Arochemy Essential Oil">
 
-    <h1>會員登入 / 註冊</h1>
+      <h1 class="auth-title">會員登入 / 註冊</h1>
+      <p class="auth-subtitle">
+        登入會員後可查看訂單紀錄，未來也能快速帶入常用地址與購買資訊。
+      </p>
 
-    <div class="admin-form">
-
-      <div class="admin-field">
+      <div class="auth-field">
         <label for="name">姓名（註冊時填寫）</label>
         <input id="name" placeholder="請輸入姓名" />
       </div>
 
-      <div class="admin-field">
+      <div class="auth-field">
         <label for="phone">電話（註冊時填寫）</label>
         <input id="phone" placeholder="請輸入電話" />
       </div>
 
-      <div class="admin-field">
+      <div class="auth-field">
         <label for="email">Email</label>
         <input id="email" type="email" placeholder="請輸入 Email" />
       </div>
 
-      <div class="admin-field">
+      <div class="auth-field">
         <label for="password">密碼</label>
         <input id="password" type="password" placeholder="請輸入密碼" />
       </div>
 
-      <label class="admin-check">
+      <label class="auth-check">
         <input id="newsletterSubscribed" type="checkbox" />
-        訂閱電子報
+        訂閱電子報，接收新品與活動資訊
       </label>
 
-      <button class="admin-btn" id="registerBtn" type="button">註冊會員</button>
-      <button class="admin-btn" id="loginBtn" type="button">會員登入</button>
-      <button class="admin-btn" id="logoutBtn" type="button" style="display:none;">登出</button>
+      <div class="auth-actions">
+        <button class="auth-btn primary" id="loginBtn" type="button">會員登入</button>
+        <button class="auth-btn secondary" id="registerBtn" type="button">註冊會員</button>
+        <button class="auth-btn light" id="logoutBtn" type="button" style="display:none;">登出</button>
+      </div>
 
-      <p id="msg" class="admin-msg"></p>
+      <p id="msg" class="auth-msg"></p>
 
-    </div>
+      <a class="auth-back" href="index.html">← 回到首頁</a>
+    </section>
   </main>
 
   <script type="module" src="js/auth.js"></script>

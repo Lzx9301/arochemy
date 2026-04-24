@@ -1,9 +1,17 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
 import {
   getFirestore,
   doc,
   setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",
@@ -17,8 +25,49 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-const $ = (id) => document.getElementById(id);
+const ADMIN_EMAIL = "nicoliu930226@gmail.com";
+const loginBox = $("loginBox");
+const adminBox = $("adminBox");
+const loginBtn = $("loginBtn");
+const logoutBtn = $("logoutBtn");
+const loginMsg = $("loginMsg");
+
+loginBtn?.addEventListener("click", async () => {
+  loginMsg.textContent = "登入中...";
+
+  try {
+    await signInWithEmailAndPassword(
+      auth,
+      $("adminEmail").value.trim(),
+      $("adminPassword").value
+    );
+  } catch (err) {
+    console.error(err);
+    loginMsg.textContent = "登入失敗，請確認 Email 或密碼";
+  }
+});
+
+logoutBtn?.addEventListener("click", async () => {
+  await signOut(auth);
+});
+
+onAuthStateChanged(auth, (user) => {
+  if (user && user.email === ADMIN_EMAIL) {
+    loginBox.style.display = "none";
+    adminBox.style.display = "block";
+    loginMsg.textContent = "";
+  } else {
+    loginBox.style.display = "block";
+    adminBox.style.display = "none";
+
+    if (user && user.email !== ADMIN_EMAIL) {
+      loginMsg.textContent = "此帳號沒有管理員權限";
+      signOut(auth);
+    }
+  }
+});
 
 function toNumber(value) {
   const n = Number(value);

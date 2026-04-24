@@ -31,6 +31,7 @@ onAuthStateChanged(auth, (user) => {
   if (user) {
     userArea.classList.add("logged-in");
     userEmail.textContent = user.email;
+    userEmail.style.display = "inline";
 
     userArea.onclick = async (e) => {
       e.preventDefault();
@@ -43,6 +44,7 @@ onAuthStateChanged(auth, (user) => {
   } else {
     userArea.classList.remove("logged-in");
     userEmail.textContent = "";
+    userEmail.style.display = "none";
 
     userArea.onclick = (e) => {
       e.preventDefault();

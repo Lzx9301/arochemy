@@ -102,10 +102,26 @@
     </section>
 
     <!-- 🛠 後台區 -->
+
+    
     <section id="adminBox" style="display:none;">
        <h1>商品後台</h1>
 
       <button class="admin-btn" id="logoutBtn" type="button">登出</button>
+      <hr style="margin:32px 0;">
+
+<h2>編輯商品</h2>
+
+<div class="admin-field">
+  <label for="editSlug">輸入要編輯的商品 Slug</label>
+  <input id="editSlug" placeholder="例如：taiwania" />
+</div>
+
+<button class="admin-btn" id="loadProductBtn" type="button">
+  載入商品資料
+</button>
+
+<div class="admin-msg" id="editMsg"></div>
 
       <form class="admin-form" id="productForm">
       <div class="admin-row">

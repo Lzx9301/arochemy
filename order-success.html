@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>訂單完成｜Arochemy</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <main class="container" style="padding:90px 20px; max-width:720px;">
+    <div class="card" style="padding:40px; text-align:center;">
+      <h1>訂單已建立</h1>
+      <p class="muted">感謝您的訂購，我們已收到您的訂單資料。</p>
+
+      <p id="orderIdText" style="margin-top:20px;"></p>
+
+      <div style="margin-top:32px;">
+        <a class="btn primary" href="products.html">繼續逛商品</a>
+        <a class="btn" href="index.html">回到首頁</a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const orderId = params.get("orderId");
+
+    if (orderId) {
+      document.getElementById("orderIdText").textContent =
+        `訂單編號：${orderId}`;
+    }
+  </script>
+</body>
+</html>

@@ -81,13 +81,13 @@
             background: #fff;
         }
 
-        .admin-nav{
-            max-width:1100px;
-            margin:0 auto;
-            padding:16px 24px;
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
+        .admin-nav {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .admin-logo {
@@ -150,61 +150,70 @@
         }
 
         .admin-menu .admin-tab {
-          border: none;
-          background: transparent;
-          border-radius: 0;
-          padding: 0;
-          color: #555;
-          text-decoration: none;
-          font-size: 15px;
-          font-weight: 500;
+            border: none;
+            background: transparent;
+            border-radius: 0;
+            padding: 0;
+            color: #555;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
         }
-        
+
         .admin-menu .admin-tab:hover {
-          color: #111;
+            color: #111;
         }
-        
+
         .admin-menu .admin-tab.active {
-          color: #111;
-          font-weight: 700;
+            color: #111;
+            font-weight: 700;
         }
-        
+
         .admin-menu .admin-tab.active::after {
-          content: "";
-          display: block;
-          height: 2px;
-          background: #111;
-          margin-top: 6px;
+            content: "";
+            display: block;
+            height: 2px;
+            background: #111;
+            margin-top: 6px;
         }
 
         .admin-status-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 12px;
-  align-items: end;
-  margin: 16px 0;
-}
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 12px;
+            align-items: end;
+            margin: 16px 0;
+        }
 
-.admin-status-row label {
-  display: grid;
-  gap: 6px;
-  font-weight: 700;
-}
+        .admin-status-row label {
+            display: grid;
+            gap: 6px;
+            font-weight: 700;
+        }
 
-.admin-status-row select {
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  font-size: 15px;
-}
+        .admin-status-row select {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 15px;
+        }
 
 @media (max-width: 720px) {
-  .admin-status-row {
-    grid-template-columns: 1fr;
-  }
-}
+            .admin-status-row {
+                grid-template-columns: 1fr;
+            }
+        }
 
-        
+        #previewImage {
+            display: none;
+            width: 160px;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 18px;
+            border: 1px solid #eee;
+            margin-top: 12px;
+            background: #f5f5f5;
+        }
     </style>
 </head>
 
@@ -212,12 +221,12 @@
     <header class="admin-header">
         <div class="admin-nav">
             <a href="admin.html" class="admin-logo">Arochemy Admin</a>
-            
-        <nav class="admin-menu">
-          <a href="#" class="admin-tab active" data-panel="productsPanel">商品</a>
-          <a href="#" class="admin-tab" data-panel="usersPanel">會員</a>
-          <a href="#" class="admin-tab" data-panel="ordersPanel">訂單</a>
-        </nav>
+
+            <nav class="admin-menu">
+                <a href="#" class="admin-tab active" data-panel="productsPanel">商品</a>
+                <a href="#" class="admin-tab" data-panel="usersPanel">會員</a>
+                <a href="#" class="admin-tab" data-panel="ordersPanel">訂單</a>
+            </nav>
 
             <button id="logoutBtn" class="admin-logout">登出</button>
         </div>

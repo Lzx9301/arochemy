@@ -208,48 +208,48 @@
         }
 
         #previewImage {
-          display: none;
-          width: 300px;
-          height: 300px;
-          object-fit: cover;
-          border-radius: 20px;
-          border: 1px solid #ddd;
+            display: none;
+            width: 300px;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 20px;
+            border: 1px solid #ddd;
         }
 
         .order-tools {
-          display: grid;
-          gap: 14px;
-          margin: 18px 0 22px;
+            display: grid;
+            gap: 14px;
+            margin: 18px 0 22px;
         }
-        
+
         .order-filter-tabs {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
         }
-        
+
         .order-filter {
-          border: 1px solid #ddd;
-          background: #fff;
-          border-radius: 999px;
-          padding: 8px 14px;
-          cursor: pointer;
-          font-weight: 700;
+            border: 1px solid #ddd;
+            background: #fff;
+            border-radius: 999px;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-weight: 700;
         }
-        
+
         .order-filter.active {
-          background: #111;
-          color: #fff;
-          border-color: #111;
+            background: #111;
+            color: #fff;
+            border-color: #111;
         }
-        
+
         .order-search {
-          width: 100%;
-          box-sizing: border-box;
-          padding: 12px 14px;
-          border: 1px solid #ddd;
-          border-radius: 14px;
-          font-size: 15px;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px 14px;
+            border: 1px solid #ddd;
+            border-radius: 14px;
+            font-size: 15px;
         }
     </style>
 </head>
@@ -437,24 +437,24 @@
             </section>
 
             <section id="ordersPanel" class="admin-panel">
-              <h2>訂單管理</h2>
-            
-              <div class="order-tools">
-                <div class="order-filter-tabs">
-                  <button type="button" class="order-filter active" data-filter="all">全部</button>
-                  <button type="button" class="order-filter" data-filter="pending">待處理</button>
-                  <button type="button" class="order-filter" data-filter="paid_not_shipped">待出貨</button>
-                  <button type="button" class="order-filter" data-filter="shipped">已出貨</button>
-                  <button type="button" class="order-filter" data-filter="completed">已完成</button>
-                  <button type="button" class="order-filter" data-filter="cancelled">已取消</button>
+                <h2>訂單管理</h2>
+
+                <div class="order-tools">
+                    <div class="order-filter-tabs">
+                        <button type="button" class="order-filter active" data-filter="all">全部</button>
+                        <button type="button" class="order-filter" data-filter="pending">待處理</button>
+                        <button type="button" class="order-filter" data-filter="paid_not_shipped">待出貨</button>
+                        <button type="button" class="order-filter" data-filter="shipped">已出貨</button>
+                        <button type="button" class="order-filter" data-filter="completed">已完成</button>
+                        <button type="button" class="order-filter" data-filter="cancelled">已取消</button>
+                    </div>
+
+                    <input id="orderSearch" class="order-search" placeholder="搜尋姓名、Email、電話、訂單編號" />
+
+                    <button type="button" class="admin-btn" id="loadOrdersBtn">重新整理訂單資料</button>
                 </div>
-            
-                <input id="orderSearch" class="order-search" placeholder="搜尋姓名、Email、電話、訂單編號" />
-            
-                <button type="button" class="admin-btn" id="loadOrdersBtn">重新整理訂單資料</button>
-              </div>
-            
-              <div id="ordersList" class="admin-list"></div>
+
+                <div id="ordersList" class="admin-list"></div>
             </section>
         </section>
 

@@ -572,6 +572,129 @@ async function loadProductsList() {
             `商品列表載入失敗：${err.message}`;
     }
 }
+// 商品搜尋
+function matchProductSearch(productItem, keyword){
+
+    if(!keyword) return true;
+
+    const p = productItem.data;
+
+    const text = [
+        p.name,
+        p.en,
+        p.slug
+    ]
+    .join(" ")
+    .toLowerCase();
+
+    return text.includes(
+        keyword.toLowerCase()
+    );
+}
+// 商品列表渲染
+function renderProductsList(){
+
+    const box = $("productsList");
+
+    const filtered = allProducts.filter(
+        (item) =>
+        matchProductSearch(
+            item,
+            currentProductSearch
+        )
+    );
+
+    if(!filtered.length){
+
+        box.innerHTML =
+            `<p class="muted">找不到商品</p>`;
+
+        return;
+    }
+
+    box.innerHTML = filtered.map((item)=>{
+
+        const p = item.data;
+
+        return `
+        <div class="admin-data-card">
+
+            <h3>${p.name}</h3>
+
+            <p>${p.en || ""}</p>
+
+            <p>
+            狀態：
+            ${
+                p.status === "active"
+                ? "上架中"
+                : "已下架"
+            }
+            </p>
+
+            <p>
+            ${p.featured ? "精選商品" : ""}
+            </p>
+
+            <button
+                class="admin-btn edit-product-btn"
+                data-slug="${p.slug}"
+            >
+                編輯商品
+            </button>
+
+        </div>
+        `;
+
+    }).join("");
+}
+
+// 載入列表按鈕
+$("loadProductsListBtn")
+?.addEventListener(
+    "click",
+    loadProductsList
+);
+
+// 搜尋框
+$("productSearch")
+?.addEventListener(
+    "input",
+    (e)=>{
+
+        currentProductSearch =
+            e.target.value.trim();
+
+        renderProductsList();
+
+    }
+);
+
+// 一鍵編輯商品
+document.addEventListener(
+    "click",
+    async (e)=>{
+
+    const btn =
+        e.target.closest(
+            ".edit-product-btn"
+        );
+
+    if(!btn) return;
+
+    const slug =
+        btn.dataset.slug;
+
+    $("editSlug").value = slug;
+
+    $("loadProductBtn").click();
+
+    window.scrollTo({
+        top:0,
+        behavior:"smooth"
+    });
+
+});
 /* 新增或更新商品 */
 $("productForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();

@@ -619,60 +619,105 @@ function matchProductSearch(productItem, keyword) {
 }
 // 商品列表渲染
 function renderProductsList() {
+  const box = $("productsList");
 
-    const box = $("productsList");
+  const filtered = allProducts.filter((item) =>
+    matchProductSearch(item, currentProductSearch)
+  );
 
-    const filtered = allProducts.filter(
-        (item) =>
-        matchProductSearch(
-            item,
-            currentProductSearch
-        )
-    );
+  if (!filtered.length) {
+    box.innerHTML = `<p class="muted">找不到商品</p>`;
+    return;
+  }
 
-    if (!filtered.length) {
+  box.innerHTML = filtered.map((item) => {
+    const p = item.data;
 
-        box.innerHTML =
-        `<p class="muted">找不到商品</p>`;
-
-        return;
-    }
-
-    box.innerHTML = filtered.map((item)=> {
-
-        const p = item.data;
-
-        return `
-        <div class="admin-data-card">
-
-        <h3>${p.name}</h3>
-
+    return `
+      <div class="admin-data-card">
+        <h3>${p.name || "未命名商品"}</h3>
         <p>${p.en || ""}</p>
 
-        <p>
-        狀態：
-        ${
-        p.status === "active"
-        ? "上架中": "已下架"
-        }
-        </p>
+        <div class="product-card-actions">
+          <label>
+            商品狀態
+            <select class="product-status-select" data-slug="${p.slug}">
+              <option value="active" ${p.status === "active" ? "selected" : ""}>上架</option>
+              <option value="inactive" ${p.status === "inactive" ? "selected" : ""}>下架</option>
+            </select>
+          </label>
 
-        <p>
-        ${p.featured ? "精選商品": ""}
-        </p>
+          <label class="product-featured-toggle">
+            <input
+              type="checkbox"
+              class="product-featured-check"
+              data-slug="${p.slug}"
+              ${p.featured ? "checked" : ""}
+            >
+            精選商品
+          </label>
+        </div>
 
-        <button
-        class="admin-btn edit-product-btn"
-        data-slug="${p.slug}"
-        >
-        編輯商品
+        <button class="admin-btn edit-product-btn" data-slug="${p.slug}">
+          編輯商品
         </button>
 
-        </div>
-        `;
-
-    }).join("");
+        <p class="admin-msg" id="productMsg-${p.slug}"></p>
+      </div>
+    `;
+  }).join("");
 }
+
+// 商品狀態
+document.addEventListener("change", async (e) => {
+  const statusSelect = e.target.closest(".product-status-select");
+  if (!statusSelect) return;
+
+  const slug = statusSelect.dataset.slug;
+  const newStatus = statusSelect.value;
+  const msg = document.getElementById(`productMsg-${slug}`);
+
+  if (msg) msg.textContent = "更新中...";
+
+  try {
+    await updateDoc(doc(db, "products", slug), {
+      status: newStatus
+    });
+
+    const target = allProducts.find((item) => item.data.slug === slug);
+    if (target) target.data.status = newStatus;
+
+    if (msg) msg.textContent = "商品狀態已更新";
+  } catch (err) {
+    console.error(err);
+    if (msg) msg.textContent = `更新失敗：${err.message}`;
+  }
+});
+// 精選商品
+document.addEventListener("change", async (e) => {
+  const featuredCheck = e.target.closest(".product-featured-check");
+  if (!featuredCheck) return;
+
+  const slug = featuredCheck.dataset.slug;
+  const isFeatured = featuredCheck.checked;
+  const msg = document.getElementById(`productMsg-${slug}`);
+
+  if (msg) msg.textContent = "更新中...";
+
+  try {
+    await updateDoc(doc(db, "products", slug), {
+      featured: isFeatured
+    });
+
+    const target = allProducts.find((item) => item.data.slug === slug);
+    if (target) target.data.featured = isFeatured;
+
+    if (msg) msg.textContent = "精選狀態已更新";
+  } catch (err) {
+    console.error(err);
+    if (msg) msg.textContent = `更新失敗：${err.message}`;
+  }
+});
 
 // 載入列表按鈕
 $("loadProductsListBtn")
@@ -743,64 +788,6 @@ document.addEventListener("change", async (e) => {
         console.error(err);
         if (msg) msg.textContent = `更新失敗：${err.message}`;
     }
-
-    // 商品狀態
-    document.addEventListener("change", async (e) => {
-        const statusSelect = e.target.closest(".product-status-select");
-        if (!statusSelect) return;
-
-        const slug = statusSelect.dataset.slug;
-        const newStatus = statusSelect.value;
-        const msg = document.getElementById(`productMsg-${slug}`);
-
-        if (msg) msg.textContent = "更新中...";
-
-        try {
-            await updateDoc(doc(db, "products", slug), {
-                status: newStatus
-            });
-
-            const target = allProducts.find((item) => item.data.slug === slug);
-
-            if (target) {
-                target.data.status = newStatus;
-            }
-
-            if (msg) msg.textContent = "商品狀態已更新";
-        } catch (err) {
-            console.error(err);
-            if (msg) msg.textContent = `更新失敗：${err.message}`;
-        }
-    });
-
-    // 精選商品
-    document.addEventListener("change", async (e) => {
-        const featuredCheck = e.target.closest(".product-featured-check");
-        if (!featuredCheck) return;
-
-        const slug = featuredCheck.dataset.slug;
-        const isFeatured = featuredCheck.checked;
-        const msg = document.getElementById(`productMsg-${slug}`);
-
-        if (msg) msg.textContent = "更新中...";
-
-        try {
-            await updateDoc(doc(db, "products", slug), {
-                featured: isFeatured
-            });
-
-            const target = allProducts.find((item) => item.data.slug === slug);
-
-            if (target) {
-                target.data.featured = isFeatured;
-            }
-
-            if (msg) msg.textContent = "精選狀態已更新";
-        } catch (err) {
-            console.error(err);
-            if (msg) msg.textContent = `更新失敗：${err.message}`;
-        }
-    });
 
     /* 新增或更新商品 */
     $("productForm")?.addEventListener("submit", async (e) => {

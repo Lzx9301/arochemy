@@ -1,367 +1,367 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>商品後台｜Arochemy</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="icon" type="image/png" href="./images/logo.png" />
-  <link rel="apple-touch-icon" href="./images/logo.png" />
-  <style>
-    .admin-page {
-      max-width: 900px;
-      margin: 40px auto;
-      padding: 24px;
-    }
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>商品後台｜Arochemy</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/png" href="./images/logo.png" />
+    <link rel="apple-touch-icon" href="./images/logo.png" />
+    <style>
+        .admin-page {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 24px;
+        }
 
-    .admin-form {
-      display: grid;
-      gap: 16px;
-    }
+        .admin-form {
+            display: grid;
+            gap: 16px;
+        }
 
-    .admin-field {
-      display: grid;
-      gap: 6px;
-    }
+        .admin-field {
+            display: grid;
+            gap: 6px;
+        }
 
-    .admin-field label {
-      font-weight: 700;
-    }
+        .admin-field label {
+            font-weight: 700;
+        }
 
-    .admin-field input,
-    .admin-field textarea,
-    .admin-field select {
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      font-size: 16px;
-    }
+        .admin-field input,
+        .admin-field textarea,
+        .admin-field select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 16px;
+        }
 
-    .admin-field textarea {
-      min-height: 120px;
-      resize: vertical;
-    }
+        .admin-field textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
 
-    .admin-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
+        .admin-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
 
-    .admin-check {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
+        .admin-check {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
 
-    .admin-btn {
-      padding: 14px 20px;
-      border: none;
-      border-radius: 999px;
-      background: #111;
-      color: white;
-      font-weight: 700;
-      cursor: pointer;
-    }
+        .admin-btn {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 999px;
+            background: #111;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+        }
 
-    .admin-msg {
-      margin-top: 16px;
-      color: #456b55;
-      font-weight: 700;
-    }
+        .admin-msg {
+            margin-top: 16px;
+            color: #456b55;
+            font-weight: 700;
+        }
 
-    @media (max-width: 640px) {
-      .admin-row {
-        grid-template-columns: 1fr;
-      }
-      
-    }
-    .admin-header {
-  border-bottom: 1px solid #eee;
-  background: #fff;
-}
+@media (max-width: 640px) {
+            .admin-row {
+                grid-template-columns: 1fr;
+            }
 
-.admin-nav {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 14px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+        }
+        .admin-header {
+            border-bottom: 1px solid #eee;
+            background: #fff;
+        }
 
-.admin-logo {
-  font-weight: 700;
-  text-decoration: none;
-  color: #111;
-}
+        .admin-nav {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
 
-.admin-menu {
-  display: flex;
-  gap: 20px;
-}
+        .admin-logo {
+            font-weight: 700;
+            text-decoration: none;
+            color: #111;
+        }
 
-.admin-menu a {
-  text-decoration: none;
-  color: #555;
-  font-size: 14px;
-}
+        .admin-menu {
+            display: flex;
+            gap: 20px;
+        }
 
-.admin-menu a:hover {
-  color: #111;
-}
+        .admin-menu a {
+            text-decoration: none;
+            color: #555;
+            font-size: 14px;
+        }
 
-.admin-logout {
-  border: 1px solid #ddd;
-  background: #fff;
-  border-radius: 999px;
-  padding: 6px 14px;
-  cursor: pointer;
-}
+        .admin-menu a:hover {
+            color: #111;
+        }
 
-    .admin-tabs {
-  display: flex;
-  gap: 12px;
-  margin: 28px 0;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 12px;
-}
+        .admin-logout {
+            border: 1px solid #ddd;
+            background: #fff;
+            border-radius: 999px;
+            padding: 6px 14px;
+            cursor: pointer;
+        }
 
-.admin-tab {
-  border: 1px solid #ddd;
-  background: #fff;
-  border-radius: 999px;
-  padding: 10px 18px;
-  cursor: pointer;
-  font-weight: 700;
-}
+        .admin-tabs {
+            display: flex;
+            gap: 12px;
+            margin: 28px 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 12px;
+        }
 
-.admin-tab.active {
-  background: #111;
-  color: #fff;
-  border-color: #111;
-}
+        .admin-tab {
+            border: 1px solid #ddd;
+            background: #fff;
+            border-radius: 999px;
+            padding: 10px 18px;
+            cursor: pointer;
+            font-weight: 700;
+        }
 
-.admin-panel {
-  display: none;
-}
+        .admin-tab.active {
+            background: #111;
+            color: #fff;
+            border-color: #111;
+        }
 
-.admin-panel.active {
-  display: block;
-}
+        .admin-panel {
+            display: none;
+        }
 
-.admin-list {
-  display: grid;
-  gap: 14px;
-  margin-top: 20px;
-}
+        .admin-panel.active {
+            display: block;
+        }
 
-.admin-data-card {
-  border: 1px solid #eee;
-  border-radius: 20px;
-  padding: 18px;
-  background: #fff;
-}
+        .admin-list {
+            display: grid;
+            gap: 14px;
+            margin-top: 20px;
+        }
 
-.admin-data-card h3 {
-  margin: 0 0 8px;
-}
+        .admin-data-card {
+            border: 1px solid #eee;
+            border-radius: 20px;
+            padding: 18px;
+            background: #fff;
+        }
 
-.admin-data-card p {
-  margin: 4px 0;
-  color: #555;
-}
-  </style>
+        .admin-data-card h3 {
+            margin: 0 0 8px;
+        }
+
+        .admin-data-card p {
+            margin: 4px 0;
+            color: #555;
+        }
+    </style>
 </head>
 
 <body>
-<header class="admin-header">
-  <div class="admin-nav">
-    <a href="admin.html" class="admin-logo">Arochemy Admin</a>
+    <header class="admin-header">
+        <div class="admin-nav">
+            <a href="admin.html" class="admin-logo">Arochemy Admin</a>
 
-    <nav class="admin-menu">
-      <a href="admin.html">商品</a>
-      <a href="#">會員</a>
-      <a href="#">訂單</a>
-    </nav>
+            <nav class="admin-menu">
+                <a href="admin.html">商品</a>
+                <a href="#">會員</a>
+                <a href="#">訂單</a>
+            </nav>
 
-    <button id="logoutBtn" class="admin-logout">登出</button>
-  </div>
-</header>
-  <main class="admin-page">
-
-    <!-- 🔐 登入區 -->
-    <section id="loginBox">
-      <h1>管理員登入</h1>
-
-      <div class="admin-form">
-        <div class="admin-field">
-          <label>Email</label>
-          <input id="adminEmail" type="email" />
+            <button id="logoutBtn" class="admin-logout">登出</button>
         </div>
+    </header>
+    <main class="admin-page">
 
-        <div class="admin-field">
-          <label>密碼</label>
-          <input id="adminPassword" type="password" />
-        </div>
+        <!-- 🔐 登入區 -->
+        <section id="loginBox">
+            <h1>管理員登入</h1>
 
-        <button class="admin-btn" id="loginBtn" type="button">登入</button>
+            <div class="admin-form">
+                <div class="admin-field">
+                    <label>Email</label>
+                    <input id="adminEmail" type="email" />
+                </div>
 
-        <div class="admin-msg" id="loginMsg"></div>
-      </div>
-    </section>
+                <div class="admin-field">
+                    <label>密碼</label>
+                    <input id="adminPassword" type="password" />
+                </div>
 
-    <!-- 🛠 後台區 -->
+                <button class="admin-btn" id="loginBtn" type="button">登入</button>
 
-    
-    <section id="adminBox" style="display:none;">
-       <h1>商品後台</h1>
+                <div class="admin-msg" id="loginMsg"></div>
+            </div>
+        </section>
 
-      <button class="admin-btn" id="logoutBtn" type="button">登出</button>
-      <hr style="margin:32px 0;">
-<section id="productsPanel" class="admin-panel active">
-  <h2>編輯商品</h2>
-
-<div class="admin-field">
-  <label for="editSlug">輸入要編輯的商品 Slug</label>
-  <input id="editSlug" placeholder="例如：taiwania" />
-</div>
-
-<button class="admin-btn" id="loadProductBtn" type="button">
-  載入商品資料
-</button>
-
-<div class="admin-msg" id="editMsg"></div>
-
-      <form class="admin-form" id="productForm">
-      <div class="admin-row">
-        <div class="admin-field">
-          <label for="name">商品中文名稱</label>
-          <input id="name" required placeholder="例如：臺灣杉" />
-        </div>
-
-        <div class="admin-field">
-          <label for="en">英文名稱</label>
-          <input id="en" placeholder="例如：Taiwania" />
-        </div>
-      </div>
-
-      <div class="admin-row">
-        <div class="admin-field">
-          <label for="slug">Slug</label>
-          <input id="slug" required placeholder="例如：taiwania" />
-        </div>
-
-        <div class="admin-field">
-          <label for="category">分類</label>
-          <select id="category">
-            <option value="single-oil">單方精油</option>
-            <option value="blend-oil">複方精油</option>
-            <option value="spray">噴霧</option>
-            <option value="massage-oil">按摩油</option>
-            <option value="other">其他</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="admin-field">
-        <label for="latin">拉丁學名</label>
-        <input id="latin" placeholder="例如：Taiwania cryptomerioides Hayata" />
-      </div>
-
-      <div class="admin-row">
-        <div class="admin-field">
-          <label for="price5">5 ml 價格</label>
-          <input id="price5" type="number" min="0" placeholder="666" />
-        </div>
-
-        <div class="admin-field">
-          <label for="price10">10 ml 價格</label>
-          <input id="price10" type="number" min="0" placeholder="1166" />
-        </div>
-      </div>
-
-      <div class="admin-field">
-        <label for="price30">30 ml 價格</label>
-        <input id="price30" type="number" min="0" placeholder="2666" />
-      </div>
-
-      <div class="admin-field">
-  <label for="productImage">商品圖片</label>
-  <input id="productImage" type="file" accept="image/*" />
-</div>
-
-      <div class="admin-field">
-        <label for="aroma">香氣概述</label>
-        <input id="aroma" placeholder="例如：油潤柔和的木質香調" />
-      </div>
-
-      <div class="admin-row">
-        <div class="admin-field">
-          <label for="plantOrigin">植物產地</label>
-          <input id="plantOrigin" placeholder="例如：臺灣" />
-        </div>
-
-        <div class="admin-field">
-          <label for="extractPart">萃取部位</label>
-          <input id="extractPart" placeholder="例如：木材" />
-        </div>
-      </div>
-
-      <div class="admin-row">
-        <div class="admin-field">
-          <label for="extractMethod">萃取方法</label>
-          <input id="extractMethod" placeholder="例如：蒸餾" />
-        </div>
-
-        <div class="admin-field">
-          <label for="family">科屬</label>
-          <input id="family" placeholder="例如：柏科臺灣杉屬" />
-        </div>
-      </div>
-
-      <div class="admin-field">
-  <label for="usageOverview">建議用途（概述）</label>
-  <input id="usageOverview" placeholder="例如：芳香療法、製作香水、擴香" />
-</div>
+        <!-- 🛠 後台區 -->
 
 
-      <div class="admin-field">
-  <label for="compositionText">成分總覽</label>
-  <textarea id="compositionText" placeholder="每行一個成分，格式：名稱,百分比&#10;例如：倍半萜類-醇類,51.2&#10;倍半萜類,34.7&#10;其他,14.1"></textarea>
-</div>
-      <div class="admin-field">
-        <label for="description">商品說明</label>
-        <textarea id="description" placeholder="每一段請換行，系統會自動轉成 description 陣列"></textarea>
-      </div>
+        <section id="adminBox" style="display:none;">
+            <h1>商品後台</h1>
 
-      <label class="admin-check">
-        <input id="featured" type="checkbox" checked />
-        設為精選商品
-      </label>
+            <button class="admin-btn" id="logoutBtn" type="button">登出</button>
+            <hr style="margin:32px 0;">
+            <section id="productsPanel" class="admin-panel active">
+                <h2>編輯商品</h2>
 
-      <button class="admin-btn" type="submit">儲存商品</button>
+                <div class="admin-field">
+                    <label for="editSlug">輸入要編輯的商品 Slug</label>
+                    <input id="editSlug" placeholder="例如：taiwania" />
+                </div>
 
-        <div class="admin-msg" id="msg"></div>
+                <button class="admin-btn" id="loadProductBtn" type="button">
+                    載入商品資料
+                </button>
 
-      </form>
-    </section>
-      
-<section id="usersPanel" class="admin-panel">
-  <h2>會員資料</h2>
-  <button type="button" class="admin-btn" id="loadUsersBtn">載入會員資料</button>
-  <div id="usersList" class="admin-list"></div>
-</section>
+                <div class="admin-msg" id="editMsg"></div>
 
-<section id="ordersPanel" class="admin-panel">
-  <h2>訂單管理</h2>
-  <button type="button" class="admin-btn" id="loadOrdersBtn">載入訂單資料</button>
-  <div id="ordersList" class="admin-list"></div>
-</section>
-</section>
+                <form class="admin-form" id="productForm">
+                    <div class="admin-row">
+                        <div class="admin-field">
+                            <label for="name">商品中文名稱</label>
+                            <input id="name" required placeholder="例如：臺灣杉" />
+                        </div>
 
-  </main>
-  <script src="js/cart-badge.js"></script>
-  <script type="module" src="js/admin.js"></script>
+                        <div class="admin-field">
+                            <label for="en">英文名稱</label>
+                            <input id="en" placeholder="例如：Taiwania" />
+                        </div>
+                    </div>
+
+                    <div class="admin-row">
+                        <div class="admin-field">
+                            <label for="slug">Slug</label>
+                            <input id="slug" required placeholder="例如：taiwania" />
+                        </div>
+
+                        <div class="admin-field">
+                            <label for="category">分類</label>
+                            <select id="category">
+                                <option value="single-oil">單方精油</option>
+                                <option value="blend-oil">複方精油</option>
+                                <option value="spray">噴霧</option>
+                                <option value="massage-oil">按摩油</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="admin-field">
+                        <label for="latin">拉丁學名</label>
+                        <input id="latin" placeholder="例如：Taiwania cryptomerioides Hayata" />
+                    </div>
+
+                    <div class="admin-row">
+                        <div class="admin-field">
+                            <label for="price5">5 ml 價格</label>
+                            <input id="price5" type="number" min="0" placeholder="666" />
+                        </div>
+
+                        <div class="admin-field">
+                            <label for="price10">10 ml 價格</label>
+                            <input id="price10" type="number" min="0" placeholder="1166" />
+                        </div>
+                    </div>
+
+                    <div class="admin-field">
+                        <label for="price30">30 ml 價格</label>
+                        <input id="price30" type="number" min="0" placeholder="2666" />
+                    </div>
+
+                    <div class="admin-field">
+                        <label for="productImage">商品圖片</label>
+                        <input id="productImage" type="file" accept="image/*" />
+                    </div>
+
+                    <div class="admin-field">
+                        <label for="aroma">香氣概述</label>
+                        <input id="aroma" placeholder="例如：油潤柔和的木質香調" />
+                    </div>
+
+                    <div class="admin-row">
+                        <div class="admin-field">
+                            <label for="plantOrigin">植物產地</label>
+                            <input id="plantOrigin" placeholder="例如：臺灣" />
+                        </div>
+
+                        <div class="admin-field">
+                            <label for="extractPart">萃取部位</label>
+                            <input id="extractPart" placeholder="例如：木材" />
+                        </div>
+                    </div>
+
+                    <div class="admin-row">
+                        <div class="admin-field">
+                            <label for="extractMethod">萃取方法</label>
+                            <input id="extractMethod" placeholder="例如：蒸餾" />
+                        </div>
+
+                        <div class="admin-field">
+                            <label for="family">科屬</label>
+                            <input id="family" placeholder="例如：柏科臺灣杉屬" />
+                        </div>
+                    </div>
+
+                    <div class="admin-field">
+                        <label for="usageOverview">建議用途（概述）</label>
+                        <input id="usageOverview" placeholder="例如：芳香療法、製作香水、擴香" />
+                    </div>
+
+
+                    <div class="admin-field">
+                        <label for="compositionText">成分總覽</label>
+                        <textarea id="compositionText" placeholder="每行一個成分，格式：名稱,百分比&#10;例如：倍半萜類-醇類,51.2&#10;倍半萜類,34.7&#10;其他,14.1"></textarea>
+                    </div>
+                    <div class="admin-field">
+                        <label for="description">商品說明</label>
+                        <textarea id="description" placeholder="每一段請換行，系統會自動轉成 description 陣列"></textarea>
+                    </div>
+
+                    <label class="admin-check">
+                        <input id="featured" type="checkbox" checked />
+                        設為精選商品
+                    </label>
+
+                    <button class="admin-btn" type="submit">儲存商品</button>
+
+                    <div class="admin-msg" id="msg"></div>
+
+                </form>
+            </section>
+
+            <section id="usersPanel" class="admin-panel">
+                <h2>會員資料</h2>
+                <button type="button" class="admin-btn" id="loadUsersBtn">載入會員資料</button>
+                <div id="usersList" class="admin-list"></div>
+            </section>
+
+            <section id="ordersPanel" class="admin-panel">
+                <h2>訂單管理</h2>
+                <button type="button" class="admin-btn" id="loadOrdersBtn">載入訂單資料</button>
+                <div id="ordersList" class="admin-list"></div>
+            </section>
+        </section>
+
+    </main>
+    <script src="js/cart-badge.js"></script>
+    <script type="module" src="js/admin.js"></script>
 </body>
 </html>

@@ -116,7 +116,7 @@ onAuthStateChanged(auth, (user) => {
         loginBox.style.display = "none";
         adminBox.style.display = "block";
 
-    loadProductsList();
+        loadProductsList();
     } else {
         loginBox.style.display = "block";
         adminBox.style.display = "none";
@@ -489,70 +489,70 @@ document.addEventListener("click", async (e) => {
 
 /* 載入商品資料 */
 async function loadProductBySlug(slug) {
-  const editMsg = $("editMsg");
+    const editMsg = $("editMsg");
 
-  if (!slug) {
-    editMsg.textContent = "請輸入商品 slug";
-    return;
-  }
-
-  editMsg.textContent = "載入中...";
-
-  try {
-    const productRef = doc(db, "products", slug);
-    const snap = await getDoc(productRef);
-
-    if (!snap.exists()) {
-      editMsg.textContent = "找不到這個商品";
-      return;
+    if (!slug) {
+        editMsg.textContent = "請輸入商品 slug";
+        return;
     }
 
-    const p = snap.data();
+    editMsg.textContent = "載入中...";
 
-    currentImages = p.images || [];
-    updatePreviewImage(currentImages[0] || "");
+    try {
+        const productRef = doc(db, "products", slug);
+        const snap = await getDoc(productRef);
 
-    $("name").value = p.name || "";
-    $("en").value = p.en || "";
-    $("slug").value = p.slug || slug;
-    $("category").value = p.category || "single-oil";
-    $("productStatus").value = p.status || "active";
-    $("latin").value = p.latin || "";
+        if (!snap.exists()) {
+            editMsg.textContent = "找不到這個商品";
+            return;
+        }
 
-    $("price5").value =
-      p.variants?.find((v) => v.label === "5 ml")?.price ?? "";
+        const p = snap.data();
 
-    $("price10").value =
-      p.variants?.find((v) => v.label === "10 ml")?.price ?? "";
+        currentImages = p.images || [];
+        updatePreviewImage(currentImages[0] || "");
 
-    $("price30").value =
-      p.variants?.find((v) => v.label === "30 ml")?.price ?? "";
+        $("name").value = p.name || "";
+        $("en").value = p.en || "";
+        $("slug").value = p.slug || slug;
+        $("category").value = p.category || "single-oil";
+        $("productStatus").value = p.status || "active";
+        $("latin").value = p.latin || "";
 
-    $("family").value = p.overview?.["科屬"] || "";
-    $("extractPart").value = p.overview?.["萃取部位"] || "";
-    $("extractMethod").value = p.overview?.["萃取方法"] || "";
-    $("plantOrigin").value = p.overview?.["植物產地"] || "";
-    $("aroma").value = p.overview?.["香氣概述"] || "";
-    $("usageOverview").value = p.overview?.["建議用途"] || "";
+        $("price5").value =
+        p.variants?.find((v) => v.label === "5 ml")?.price ?? "";
 
-    $("compositionText").value = (p.composition || [])
-      .map((c) => `${c.name},${c.value}`)
-      .join("\n");
+        $("price10").value =
+        p.variants?.find((v) => v.label === "10 ml")?.price ?? "";
 
-    $("description").value = (p.description || []).join("\n");
+        $("price30").value =
+        p.variants?.find((v) => v.label === "30 ml")?.price ?? "";
 
-    $("featured").checked = p.featured === true;
+        $("family").value = p.overview?.["科屬"] || "";
+        $("extractPart").value = p.overview?.["萃取部位"] || "";
+        $("extractMethod").value = p.overview?.["萃取方法"] || "";
+        $("plantOrigin").value = p.overview?.["植物產地"] || "";
+        $("aroma").value = p.overview?.["香氣概述"] || "";
+        $("usageOverview").value = p.overview?.["建議用途"] || "";
 
-    editMsg.textContent = "商品資料已載入，可以修改後儲存";
-  } catch (err) {
-    console.error(err);
-    editMsg.textContent = `載入失敗：${err.message}`;
-  }
+        $("compositionText").value = (p.composition || [])
+        .map((c) => `${c.name},${c.value}`)
+        .join("\n");
+
+        $("description").value = (p.description || []).join("\n");
+
+        $("featured").checked = p.featured === true;
+
+        editMsg.textContent = "商品資料已載入，可以修改後儲存";
+    } catch (err) {
+        console.error(err);
+        editMsg.textContent = `載入失敗：${err.message}`;
+    }
 }
 
 $("loadProductBtn")?.addEventListener("click", async () => {
-  const slug = $("slug").value.trim();
-  await loadProductBySlug(slug);
+    const slug = $("slug").value.trim();
+    await loadProductBySlug(slug);
 });
 
 async function loadProductsList() {
@@ -579,29 +579,29 @@ async function loadProductsList() {
         console.error(err);
 
         box.innerHTML =
-            `商品列表載入失敗：${err.message}`;
+        `商品列表載入失敗：${err.message}`;
     }
 }
 // 新增商品按鈕
 $("newProductBtn")?.addEventListener("click", () => {
-  $("productForm")?.reset();
-  currentImages = [];
-  updatePreviewImage("");
+    $("productForm")?.reset();
+    currentImages = [];
+    updatePreviewImage("");
 
-  $("featured").checked = true;
-  $("productStatus").value = "active";
-  $("msg").textContent = "";
-  $("editMsg").textContent = "正在新增商品";
+    $("featured").checked = true;
+    $("productStatus").value = "active";
+    $("msg").textContent = "";
+    $("editMsg").textContent = "正在新增商品";
 
-  $("productForm")?.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
+    $("productForm")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
 });
 // 商品搜尋
-function matchProductSearch(productItem, keyword){
+function matchProductSearch(productItem, keyword) {
 
-    if(!keyword) return true;
+    if (!keyword) return true;
 
     const p = productItem.data;
 
@@ -618,7 +618,7 @@ function matchProductSearch(productItem, keyword){
     );
 }
 // 商品列表渲染
-function renderProductsList(){
+function renderProductsList() {
 
     const box = $("productsList");
 
@@ -630,44 +630,43 @@ function renderProductsList(){
         )
     );
 
-    if(!filtered.length){
+    if (!filtered.length) {
 
         box.innerHTML =
-            `<p class="muted">找不到商品</p>`;
+        `<p class="muted">找不到商品</p>`;
 
         return;
     }
 
-    box.innerHTML = filtered.map((item)=>{
+    box.innerHTML = filtered.map((item)=> {
 
         const p = item.data;
 
         return `
         <div class="admin-data-card">
 
-            <h3>${p.name}</h3>
+        <h3>${p.name}</h3>
 
-            <p>${p.en || ""}</p>
+        <p>${p.en || ""}</p>
 
-            <p>
-            狀態：
-            ${
-                p.status === "active"
-                ? "上架中"
-                : "已下架"
-            }
-            </p>
+        <p>
+        狀態：
+        ${
+        p.status === "active"
+        ? "上架中": "已下架"
+        }
+        </p>
 
-            <p>
-            ${p.featured ? "精選商品" : ""}
-            </p>
+        <p>
+        ${p.featured ? "精選商品": ""}
+        </p>
 
-            <button
-                class="admin-btn edit-product-btn"
-                data-slug="${p.slug}"
-            >
-                編輯商品
-            </button>
+        <button
+        class="admin-btn edit-product-btn"
+        data-slug="${p.slug}"
+        >
+        編輯商品
+        </button>
 
         </div>
         `;
@@ -686,10 +685,10 @@ $("loadProductsListBtn")
 $("productSearch")
 ?.addEventListener(
     "input",
-    (e)=>{
+    (e)=> {
 
         currentProductSearch =
-            e.target.value.trim();
+        e.target.value.trim();
 
         renderProductsList();
 
@@ -699,89 +698,174 @@ $("productSearch")
 // 一鍵編輯商品
 document.addEventListener(
     "click",
-    async (e)=>{
+    async (e)=> {
 
-    const btn =
+        const btn =
         e.target.closest(
             ".edit-product-btn"
         );
 
-    if(!btn) return;
+        if (!btn) return;
 
-    const slug = btn.dataset.slug;
+        const slug = btn.dataset.slug;
 
-await loadProductBySlug(slug);
+        await loadProductBySlug(slug);
 
-    $("productForm")?.scrollIntoView({
-  behavior: "smooth",
-  block: "start"
-});
+        $("productForm")?.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
 
-});
-/* 新增或更新商品 */
-$("productForm")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
+    });
+document.addEventListener("change", async (e) => {
+    const statusSelect = e.target.closest(".product-status-select");
+    if (!statusSelect) return;
 
-    const msg = $("msg");
-    msg.textContent = "儲存中...";
+    const slug = statusSelect.dataset.slug;
+    const newStatus = statusSelect.value;
+    const msg = document.getElementById(`productMsg-${slug}`);
 
-    const slug = $("slug").value.trim();
-
-    if (!slug) {
-        msg.textContent = "請填寫 slug";
-        return;
-    }
+    if (msg) msg.textContent = "更新中...";
 
     try {
-        const uploadedImageUrl = await uploadProductImage(slug);
-        const images = uploadedImageUrl ? [uploadedImageUrl]: currentImages;
+        await updateDoc(doc(db, "products", slug), {
+            status: newStatus
+        });
 
-        const product = {
-            slug,
-            name: $("name").value.trim(),
-            en: $("en").value.trim(),
-            latin: $("latin").value.trim(),
-            category: $("category").value,
+        const target = allProducts.find((item) => item.data.slug === slug);
 
-            status: $("productStatus").value,
-            featured: $("featured").checked,
-            salesCount: 0,
+        if (target) {
+            target.data.status = newStatus;
+        }
 
-            images,
-
-            variants: makeVariants(),
-
-            overview: {
-                "科屬": $("family").value.trim(),
-                "萃取部位": $("extractPart").value.trim(),
-                "萃取方法": $("extractMethod").value.trim(),
-                "植物產地": $("plantOrigin").value.trim(),
-                "香氣概述": $("aroma").value.trim(),
-                "建議用途": $("usageOverview").value.trim()
-            },
-
-            composition: parseComposition($("compositionText").value),
-
-            docs: {
-                coa: "",
-                sds: "",
-                eu: ""
-            },
-
-            description: splitLines($("description").value)
-        };
-
-        await setDoc(doc(db, "products", slug), product);
-
-        currentImages = images;
-
-        msg.textContent = `儲存成功：${product.name}`;
-        e.target.reset();
-        $("featured").checked = true;
-        currentImages = [];
-        updatePreviewImage("");
+        if (msg) msg.textContent = "商品狀態已更新";
     } catch (err) {
         console.error(err);
-        msg.textContent = `儲存失敗：${err.message}`;
+        if (msg) msg.textContent = `更新失敗：${err.message}`;
     }
-});
+
+    // 商品狀態
+    document.addEventListener("change", async (e) => {
+        const statusSelect = e.target.closest(".product-status-select");
+        if (!statusSelect) return;
+
+        const slug = statusSelect.dataset.slug;
+        const newStatus = statusSelect.value;
+        const msg = document.getElementById(`productMsg-${slug}`);
+
+        if (msg) msg.textContent = "更新中...";
+
+        try {
+            await updateDoc(doc(db, "products", slug), {
+                status: newStatus
+            });
+
+            const target = allProducts.find((item) => item.data.slug === slug);
+
+            if (target) {
+                target.data.status = newStatus;
+            }
+
+            if (msg) msg.textContent = "商品狀態已更新";
+        } catch (err) {
+            console.error(err);
+            if (msg) msg.textContent = `更新失敗：${err.message}`;
+        }
+    });
+
+    // 精選商品
+    document.addEventListener("change", async (e) => {
+        const featuredCheck = e.target.closest(".product-featured-check");
+        if (!featuredCheck) return;
+
+        const slug = featuredCheck.dataset.slug;
+        const isFeatured = featuredCheck.checked;
+        const msg = document.getElementById(`productMsg-${slug}`);
+
+        if (msg) msg.textContent = "更新中...";
+
+        try {
+            await updateDoc(doc(db, "products", slug), {
+                featured: isFeatured
+            });
+
+            const target = allProducts.find((item) => item.data.slug === slug);
+
+            if (target) {
+                target.data.featured = isFeatured;
+            }
+
+            if (msg) msg.textContent = "精選狀態已更新";
+        } catch (err) {
+            console.error(err);
+            if (msg) msg.textContent = `更新失敗：${err.message}`;
+        }
+    });
+
+    /* 新增或更新商品 */
+    $("productForm")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const msg = $("msg");
+        msg.textContent = "儲存中...";
+
+        const slug = $("slug").value.trim();
+
+        if (!slug) {
+            msg.textContent = "請填寫 slug";
+            return;
+        }
+
+        try {
+            const uploadedImageUrl = await uploadProductImage(slug);
+            const images = uploadedImageUrl ? [uploadedImageUrl]: currentImages;
+
+            const product = {
+                slug,
+                name: $("name").value.trim(),
+                en: $("en").value.trim(),
+                latin: $("latin").value.trim(),
+                category: $("category").value,
+
+                status: $("productStatus").value,
+                featured: $("featured").checked,
+                salesCount: 0,
+
+                images,
+
+                variants: makeVariants(),
+
+                overview: {
+                    "科屬": $("family").value.trim(),
+                    "萃取部位": $("extractPart").value.trim(),
+                    "萃取方法": $("extractMethod").value.trim(),
+                    "植物產地": $("plantOrigin").value.trim(),
+                    "香氣概述": $("aroma").value.trim(),
+                    "建議用途": $("usageOverview").value.trim()
+                },
+
+                composition: parseComposition($("compositionText").value),
+
+                docs: {
+                    coa: "",
+                    sds: "",
+                    eu: ""
+                },
+
+                description: splitLines($("description").value)
+            };
+
+            await setDoc(doc(db, "products", slug), product);
+
+            currentImages = images;
+
+            msg.textContent = `儲存成功：${product.name}`;
+            e.target.reset();
+            $("featured").checked = true;
+            currentImages = [];
+            updatePreviewImage("");
+        } catch (err) {
+            console.error(err);
+            msg.textContent = `儲存失敗：${err.message}`;
+        }
+    });

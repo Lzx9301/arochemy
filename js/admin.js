@@ -21,6 +21,7 @@ import {
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
+/* 精油網站 Firebase：Firestore / Auth */
 const firebaseConfig = {
   apiKey: "AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",
   authDomain: "trying-89dc6.firebaseapp.com",
@@ -31,42 +32,30 @@ const firebaseConfig = {
   measurementId: "G-KHR4PVKJCK"
 };
 
+/* 舊學生專案 Firebase：暫時只拿來放商品圖片 */
 const storageConfig = {
   apiKey: "AIzaSyAdS--elaCvzQOAPhMDPByLoTRXGibC9Rc",
   authDomain: "octo-7c190.firebaseapp.com",
   projectId: "octo-7c190",
   storageBucket: "octo-7c190.firebasestorage.app",
   messagingSenderId: "351002657731",
-  appId: "1:351002657731:web:9db320ed4723e74a2a7376",
+  appId: "1:351002657731:web:9db320ed4723e74a2a7376"
 };
 
-import { initializeApp } from
-"https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-
 const app = initializeApp(firebaseConfig);
+const storageApp = initializeApp(storageConfig, "storageApp");
 
-const storageApp = initializeApp(
-  storageConfig,
-  "storageApp"
-);
-
-// const storage = getStorage(app);
-
-import {
-  getStorage
-} from
-"https://www.gstatic.com/firebasejs/12.3.0/firebase-storage.js";
-
-const storage = getStorage(storageApp);
-
-// const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const storage = getStorage(storageApp);
 
 const ADMIN_EMAIL = "nicoliu930226@gmail.com";
-
 const $ = (id) => document.getElementById(id);
 
+/* 編輯商品時，用來保留原本圖片 */
+let currentImages = [];
+
+/* 登入相關 */
 const loginBox = $("loginBox");
 const adminBox = $("adminBox");
 const loginBtn = $("loginBtn");
@@ -108,6 +97,7 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
+/* 工具函式 */
 function toNumber(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
@@ -158,6 +148,7 @@ function makeVariants() {
   return variants;
 }
 
+/* 上傳商品圖片到舊專案 Storage */
 async function uploadProductImage(slug) {
   const fileInput = $("productImage");
   const file = fileInput?.files?.[0];
@@ -165,14 +156,17 @@ async function uploadProductImage(slug) {
   if (!file) return "";
 
   const ext = file.name.split(".").pop();
-  const filePath = `products/${slug}-${Date.now()}.${ext}`;
+  const safeSlug = slug.replace(/[^\w-]/g, "-");
+  const filePath = `products/${safeSlug}-${Date.now()}.${ext}`;
 
   const storageRef = ref(storage, filePath);
+
   await uploadBytes(storageRef, file);
 
   return await getDownloadURL(storageRef);
 }
 
+/* 載入商品資料到表單 */
 $("loadProductBtn")?.addEventListener("click", async () => {
   const slug = $("editSlug").value.trim();
   const editMsg = $("editMsg");
@@ -185,8 +179,8 @@ $("loadProductBtn")?.addEventListener("click", async () => {
   editMsg.textContent = "載入中...";
 
   try {
-    const ref = doc(db, "products", slug);
-    const snap = await getDoc(ref);
+    const productRef = doc(db, "products", slug);
+    const snap = await getDoc(productRef);
 
     if (!snap.exists()) {
       editMsg.textContent = "找不到這個商品";
@@ -195,17 +189,22 @@ $("loadProductBtn")?.addEventListener("click", async () => {
 
     const p = snap.data();
 
+    currentImages = p.images || [];
+
     $("name").value = p.name || "";
     $("en").value = p.en || "";
     $("slug").value = p.slug || slug;
     $("category").value = p.category || "single-oil";
     $("latin").value = p.latin || "";
 
-    $("price5").value = p.variants?.find(v => v.label === "5 ml")?.price ?? "";
-    $("price10").value = p.variants?.find(v => v.label === "10 ml")?.price ?? "";
-    $("price30").value = p.variants?.find(v => v.label === "30 ml")?.price ?? "";
+    $("price5").value =
+      p.variants?.find((v) => v.label === "5 ml")?.price ?? "";
 
-    $("imageUrl").value = p.images?.[0] || "";
+    $("price10").value =
+      p.variants?.find((v) => v.label === "10 ml")?.price ?? "";
+
+    $("price30").value =
+      p.variants?.find((v) => v.label === "30 ml")?.price ?? "";
 
     $("family").value = p.overview?.["科屬"] || "";
     $("extractPart").value = p.overview?.["萃取部位"] || "";
@@ -215,25 +214,26 @@ $("loadProductBtn")?.addEventListener("click", async () => {
     $("usageOverview").value = p.overview?.["建議用途"] || "";
 
     $("compositionText").value = (p.composition || [])
-      .map(c => `${c.name},${c.value}`)
+      .map((c) => `${c.name},${c.value}`)
       .join("\n");
 
     $("description").value = (p.description || []).join("\n");
 
     $("featured").checked = p.featured === true;
 
-    editMsg.textContent = "商品資料已載入，可以修改後按下新增商品儲存";
+    editMsg.textContent = "商品資料已載入，可以修改後儲存";
   } catch (err) {
     console.error(err);
     editMsg.textContent = `載入失敗：${err.message}`;
   }
 });
 
-$("productForm").addEventListener("submit", async (e) => {
+/* 新增或更新商品 */
+$("productForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const msg = $("msg");
-  msg.textContent = "新增中...";
+  msg.textContent = "儲存中...";
 
   const slug = $("slug").value.trim();
 
@@ -242,50 +242,57 @@ $("productForm").addEventListener("submit", async (e) => {
     return;
   }
 
-  const imageUrl = await uploadProductImage(slug);
-
-  const product = {
-    slug,
-    name: $("name").value.trim(),
-    en: $("en").value.trim(),
-    latin: $("latin").value.trim(),
-    category: $("category").value,
-    status: "active",
-    featured: $("featured").checked,
-    salesCount: 0,
-
-    images: imageUrl ? [imageUrl] : [],
-
-    variants: makeVariants(),
-
-  overview: {
-  "科屬": $("family").value.trim(),
-  "萃取部位": $("extractPart").value.trim(),
-  "萃取方法": $("extractMethod").value.trim(),
-  "植物產地": $("plantOrigin").value.trim(),
-  "香氣概述": $("aroma").value.trim(),
-  "建議用途": $("usageOverview").value.trim()
-},
-
-    composition: parseComposition($("compositionText").value),
-
-    docs: {
-      coa: "",
-      sds: "",
-      eu: ""
-    },
-
-    description: splitLines($("description").value)
-  };
-
   try {
+    const uploadedImageUrl = await uploadProductImage(slug);
+
+    /* 如果有新上傳圖片，就使用新圖片；沒有上傳就保留舊圖片 */
+    const images = uploadedImageUrl ? [uploadedImageUrl] : currentImages;
+
+    const product = {
+      slug,
+      name: $("name").value.trim(),
+      en: $("en").value.trim(),
+      latin: $("latin").value.trim(),
+      category: $("category").value,
+
+      status: "active",
+      featured: $("featured").checked,
+      salesCount: 0,
+
+      images,
+
+      variants: makeVariants(),
+
+      overview: {
+        "科屬": $("family").value.trim(),
+        "萃取部位": $("extractPart").value.trim(),
+        "萃取方法": $("extractMethod").value.trim(),
+        "植物產地": $("plantOrigin").value.trim(),
+        "香氣概述": $("aroma").value.trim(),
+        "建議用途": $("usageOverview").value.trim()
+      },
+
+      composition: parseComposition($("compositionText").value),
+
+      docs: {
+        coa: "",
+        sds: "",
+        eu: ""
+      },
+
+      description: splitLines($("description").value)
+    };
+
     await setDoc(doc(db, "products", slug), product);
 
-    msg.textContent = `新增成功：${product.name}`;
+    currentImages = images;
+
+    msg.textContent = `儲存成功：${product.name}`;
     e.target.reset();
     $("featured").checked = true;
+    currentImages = [];
   } catch (err) {
     console.error(err);
-    msg.textContent = `新增失敗：${err.message}`;
+    msg.textContent = `儲存失敗：${err.message}`;
   }
 });

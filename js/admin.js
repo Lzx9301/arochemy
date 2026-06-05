@@ -4,7 +4,11 @@ import {
   getFirestore,
   doc,
   setDoc,
-  getDoc
+  getDoc,
+  collection,
+  getDocs,
+  query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
@@ -94,6 +98,97 @@ onAuthStateChanged(auth, (user) => {
       loginMsg.textContent = "此帳號沒有管理員權限";
       signOut(auth);
     }
+  }
+});
+
+document.querySelectorAll(".admin-tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    const target = tab.dataset.panel;
+
+    document.querySelectorAll(".admin-tab").forEach((btn) => {
+      btn.classList.remove("active");
+    });
+
+    document.querySelectorAll(".admin-panel").forEach((panel) => {
+      panel.classList.remove("active");
+    });
+
+    tab.classList.add("active");
+    document.getElementById(target)?.classList.add("active");
+  });
+});
+
+$("loadUsersBtn")?.addEventListener("click", async () => {
+  const box = $("usersList");
+  box.innerHTML = `<p class="muted">載入中...</p>`;
+
+  try {
+    const snapshot = await getDocs(collection(db, "users"));
+
+    if (snapshot.empty) {
+      box.innerHTML = `<p class="muted">目前沒有會員資料。</p>`;
+      return;
+    }
+
+    box.innerHTML = snapshot.docs.map((docSnap) => {
+      const u = docSnap.data();
+
+      return `
+        <div class="admin-data-card">
+          <h3>${u.name || "未填姓名"}</h3>
+          <p>Email：${u.email || ""}</p>
+          <p>電話：${u.phone || ""}</p>
+          <p>電子報：${u.newsletterSubscribed ? "已訂閱" : "未訂閱"}</p>
+          <p>角色：${u.role || "customer"}</p>
+        </div>
+      `;
+    }).join("");
+  } catch (err) {
+    console.error(err);
+    box.innerHTML = `<p class="muted">會員資料載入失敗：${err.message}</p>`;
+  }
+});
+
+$("loadOrdersBtn")?.addEventListener("click", async () => {
+  const box = $("ordersList");
+  box.innerHTML = `<p class="muted">載入中...</p>`;
+
+  try {
+    const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      box.innerHTML = `<p class="muted">目前沒有訂單。</p>`;
+      return;
+    }
+
+    box.innerHTML = snapshot.docs.map((docSnap) => {
+      const o = docSnap.data();
+      const items = o.items || [];
+
+      return `
+        <div class="admin-data-card">
+          <h3>訂單：${docSnap.id}</h3>
+          <p>姓名：${o.customer?.name || ""}</p>
+          <p>電話：${o.customer?.phone || ""}</p>
+          <p>Email：${o.customer?.email || ""}</p>
+          <p>配送方式：${o.shipping?.methodLabel || ""}</p>
+          <p>收件資訊：${o.shipping?.address || ""}</p>
+          <p>付款狀態：${o.payment?.status || ""}</p>
+          <p>訂單狀態：${o.status || ""}</p>
+          <p>總金額：NT$ ${Number(o.total || 0).toLocaleString("zh-Hant-TW")}</p>
+          <p>商品：</p>
+          <ul>
+            ${items.map((item) => `
+              <li>${item.name}｜${item.variantLabel} × ${item.qty}</li>
+            `).join("")}
+          </ul>
+        </div>
+      `;
+    }).join("");
+  } catch (err) {
+    console.error(err);
+    box.innerHTML = `<p class="muted">訂單資料載入失敗：${err.message}</p>`;
   }
 });
 

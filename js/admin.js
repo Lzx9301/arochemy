@@ -582,6 +582,22 @@ async function loadProductsList() {
             `商品列表載入失敗：${err.message}`;
     }
 }
+// 新增商品按鈕
+$("newProductBtn")?.addEventListener("click", () => {
+  $("productForm")?.reset();
+  currentImages = [];
+  updatePreviewImage("");
+
+  $("featured").checked = true;
+  $("productStatus").value = "active";
+  $("msg").textContent = "";
+  $("editMsg").textContent = "正在新增商品";
+
+  $("productForm")?.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+});
 // 商品搜尋
 function matchProductSearch(productItem, keyword){
 
@@ -696,10 +712,10 @@ document.addEventListener(
 
 await loadProductBySlug(slug);
 
-    window.scrollTo({
-        top:0,
-        behavior:"smooth"
-    });
+    $("productForm")?.scrollIntoView({
+  behavior: "smooth",
+  block: "start"
+});
 
 });
 /* 新增或更新商品 */

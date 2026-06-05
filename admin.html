@@ -176,6 +176,35 @@
           background: #111;
           margin-top: 6px;
         }
+
+        .admin-status-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+  margin: 16px 0;
+}
+
+.admin-status-row label {
+  display: grid;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.admin-status-row select {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 15px;
+}
+
+@media (max-width: 720px) {
+  .admin-status-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+        
     </style>
 </head>
 

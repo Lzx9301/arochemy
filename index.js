@@ -29,8 +29,8 @@ async function loadProducts() {
       ...doc.data()
     });
   });
-  .filter((p) => p.status === "active");
-  return products;
+
+  return products.filter((p) => p.status === "active");
 }
 
 function fmtPrice(n) {

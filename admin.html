@@ -251,16 +251,16 @@
             border-radius: 14px;
             font-size: 15px;
         }
-        .product-tools{
-          display:flex;
-          gap:12px;
-          margin-top:16px;
-          margin-bottom:24px;
+        .product-tools {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            margin-bottom: 24px;
         }
-        
-        .product-tools .admin-btn{
-          width:auto;
-          min-width:180px;
+
+        .product-tools .admin-btn {
+            width: auto;
+            min-width: 180px;
         }
 
         .product-search {
@@ -269,15 +269,44 @@
             border: 1px solid #ddd;
             border-radius: 14px;
         }
-        .admin-btn.primary{
-          background:#111;
-          color:#fff;
+        .admin-btn.primary {
+            background: #111;
+            color: #fff;
         }
-        
-        .admin-btn.secondary{
-          background:#fff;
-          color:#111;
-          border:1px solid #ddd;
+
+        .admin-btn.secondary {
+            background: #fff;
+            color: #111;
+            border: 1px solid #ddd;
+        }
+        .product-card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            align-items: center;
+            margin: 14px 0;
+        }
+
+        .product-card-actions label {
+            display: grid;
+            gap: 6px;
+            font-weight: 700;
+        }
+
+        .product-card-actions select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+
+        .product-featured-toggle {
+            display: flex !important;
+            grid-template-columns: none !important;
+            flex-direction: row;
+            gap: 8px !important;
+            align-items: center;
+            margin-top: 22px;
         }
 
     </style>
@@ -330,20 +359,45 @@
             <section id="productsPanel" class="admin-panel active">
                 <h2>編輯商品</h2>
                 <div class="product-tools">
-                  <input
+                    <input
                     id="productSearch"
                     class="product-search"
                     placeholder="搜尋商品名稱、英文名稱、slug"
-                  >
-                <div class="product-tools">
-                  <button id="loadProductsListBtn" class="admin-btn secondary">
-                    載入商品列表
-                  </button>
-                
-                  <button id="newProductBtn" class="admin-btn">
-                    新增商品
-                  </button>
-                </div>
+                    >
+                    <div class="product-tools">
+                        <div class="product-card-actions">
+                            <label>
+                                商品狀態
+                                <select class="product-status-select" data-slug="${p.slug}">
+                                    <option value="active" ${p.status==="active" ? "selected" : ""}>上架</option>
+                                    <option value="inactive" ${p.status==="inactive" ? "selected" : ""}>下架</option>
+                                </select>
+                            </label>
+
+                            <label class="product-featured-toggle">
+                                <input
+                                type="checkbox"
+                                class="product-featured-check"
+                                data-slug="${p.slug}"
+                                ${p.featured ? "checked" : ""}
+                                >
+                                精選商品
+                            </label>
+                        </div>
+
+                        <button
+                            class="admin-btn edit-product-btn"
+                            data-slug="${p.slug}"
+                            >
+                            編輯商品
+                        </button>
+
+                        <p class="admin-msg" id="productMsg-${p.slug}"></p>
+
+                        <button id="newProductBtn" class="admin-btn">
+                            新增商品
+                        </button>
+                    </div>
                 </div>
 
                 <div id="productsList" class="admin-list"></div>

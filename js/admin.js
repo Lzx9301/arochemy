@@ -65,6 +65,7 @@ let ordersLoaded = false;
 let allOrders = [];
 let currentOrderFilter = "all";
 let currentOrderSearch = "";
+let allOrders = [];
 
 const PAYMENT_STATUS_LABELS = {
     pending: "未付款",
@@ -544,7 +545,33 @@ $("loadProductBtn")?.addEventListener("click", async () => {
         editMsg.textContent = `載入失敗：${err.message}`;
     }
 });
+async function loadProductsList() {
 
+    const box = $("productsList");
+
+    box.innerHTML = "載入中...";
+
+    try {
+
+        const snapshot = await getDocs(
+            collection(db, "products")
+        );
+
+        allProducts = snapshot.docs.map((docSnap) => ({
+            id: docSnap.id,
+            data: docSnap.data()
+        }));
+
+        renderProductsList();
+
+    } catch(err) {
+
+        console.error(err);
+
+        box.innerHTML =
+            `商品列表載入失敗：${err.message}`;
+    }
+}
 /* 新增或更新商品 */
 $("productForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();

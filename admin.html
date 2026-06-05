@@ -178,12 +178,12 @@
     <header class="admin-header">
         <div class="admin-nav">
             <a href="admin.html" class="admin-logo">Arochemy Admin</a>
-
-            <nav class="admin-menu">
-                <a href="admin.html">商品</a>
-                <a href="#">會員</a>
-                <a href="#">訂單</a>
-            </nav>
+            
+        <nav class="admin-menu">
+          <a href="#" class="admin-tab active" data-panel="productsPanel">商品</a>
+          <a href="#" class="admin-tab" data-panel="usersPanel">會員</a>
+          <a href="#" class="admin-tab" data-panel="ordersPanel">訂單</a>
+        </nav>
 
             <button id="logoutBtn" class="admin-logout">登出</button>
         </div>
@@ -216,11 +216,6 @@
 
         <section id="adminBox" style="display:none;">
             <h1>商品後台</h1>
-            <div class="admin-tabs">
-              <button type="button" class="admin-tab active" data-panel="productsPanel">商品管理</button>
-              <button type="button" class="admin-tab" data-panel="usersPanel">會員資料</button>
-              <button type="button" class="admin-tab" data-panel="ordersPanel">訂單管理</button>
-            </div>
 
             <hr style="margin:32px 0;">
             <section id="productsPanel" class="admin-panel active">

@@ -60,6 +60,8 @@ const $ = (id) => document.getElementById(id);
 
 /* 編輯商品時，用來保留原本圖片 */
 let currentImages = [];
+let usersLoaded = false;
+let ordersLoaded = false;
 
 /* 登入相關 */
 const loginBox = $("loginBox");
@@ -104,7 +106,9 @@ onAuthStateChanged(auth, (user) => {
 });
 
 document.querySelectorAll(".admin-tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
+    tab.addEventListener("click", async (e) => {
+        e.preventDefault();
+
         const target = tab.dataset.panel;
 
         document.querySelectorAll(".admin-tab").forEach((btn) => {
@@ -117,10 +121,22 @@ document.querySelectorAll(".admin-tab").forEach((tab) => {
 
         tab.classList.add("active");
         document.getElementById(target)?.classList.add("active");
+
+        // 切到會員資料時，自動載入會員
+        if (target === "usersPanel" && !usersLoaded) {
+            await loadUsers();
+            usersLoaded = true;
+        }
+
+        // 切到訂單管理時，自動載入訂單
+        if (target === "ordersPanel" && !ordersLoaded) {
+            await loadOrders();
+            ordersLoaded = true;
+        }
     });
 });
 
-$("loadUsersBtn")?.addEventListener("click", async () => {
+async function loadUsers() {
     const box = $("usersList");
     box.innerHTML = `<p class="muted">載入中...</p>`;
 
@@ -136,22 +152,27 @@ $("loadUsersBtn")?.addEventListener("click", async () => {
             const u = docSnap.data();
 
             return `
-            <div class="admin-data-card">
-            <h3>${u.name || "未填姓名"}</h3>
-            <p>Email：${u.email || ""}</p>
-            <p>電話：${u.phone || ""}</p>
-            <p>電子報：${u.newsletterSubscribed ? "已訂閱": "未訂閱"}</p>
-            <p>角色：${u.role || "customer"}</p>
-            </div>
+                <div class="admin-data-card">
+                    <h3>${u.name || "未填姓名"}</h3>
+                    <p>Email：${u.email || ""}</p>
+                    <p>電話：${u.phone || ""}</p>
+                    <p>電子報：${u.newsletterSubscribed ? "已訂閱" : "未訂閱"}</p>
+                    <p>角色：${u.role || "customer"}</p>
+                </div>
             `;
         }).join("");
     } catch (err) {
         console.error(err);
         box.innerHTML = `<p class="muted">會員資料載入失敗：${err.message}</p>`;
     }
+}
+
+$("loadUsersBtn")?.addEventListener("click", async () => {
+    await loadUsers();
+    usersLoaded = true;
 });
 
-$("loadOrdersBtn")?.addEventListener("click", async () => {
+async function loadOrders() {
     const box = $("ordersList");
     box.innerHTML = `<p class="muted">載入中...</p>`;
 
@@ -169,29 +190,34 @@ $("loadOrdersBtn")?.addEventListener("click", async () => {
             const items = o.items || [];
 
             return `
-            <div class="admin-data-card">
-            <h3>訂單：${docSnap.id}</h3>
-            <p>姓名：${o.customer?.name || ""}</p>
-            <p>電話：${o.customer?.phone || ""}</p>
-            <p>Email：${o.customer?.email || ""}</p>
-            <p>配送方式：${o.shipping?.methodLabel || ""}</p>
-            <p>收件資訊：${o.shipping?.address || ""}</p>
-            <p>付款狀態：${o.payment?.status || ""}</p>
-            <p>訂單狀態：${o.status || ""}</p>
-            <p>總金額：NT$ ${Number(o.total || 0).toLocaleString("zh-Hant-TW")}</p>
-            <p>商品：</p>
-            <ul>
-            ${items.map((item) => `
-                <li>${item.name}｜${item.variantLabel} × ${item.qty}</li>
-                `).join("")}
-            </ul>
-            </div>
+                <div class="admin-data-card">
+                    <h3>訂單：${docSnap.id}</h3>
+                    <p>姓名：${o.customer?.name || ""}</p>
+                    <p>電話：${o.customer?.phone || ""}</p>
+                    <p>Email：${o.customer?.email || ""}</p>
+                    <p>配送方式：${o.shipping?.methodLabel || ""}</p>
+                    <p>收件資訊：${o.shipping?.address || ""}</p>
+                    <p>付款狀態：${o.payment?.status || ""}</p>
+                    <p>訂單狀態：${o.status || ""}</p>
+                    <p>總金額：NT$ ${Number(o.total || 0).toLocaleString("zh-Hant-TW")}</p>
+                    <p>商品：</p>
+                    <ul>
+                        ${items.map((item) => `
+                            <li>${item.name}｜${item.variantLabel} × ${item.qty}</li>
+                        `).join("")}
+                    </ul>
+                </div>
             `;
         }).join("");
     } catch (err) {
         console.error(err);
         box.innerHTML = `<p class="muted">訂單資料載入失敗：${err.message}</p>`;
     }
+}
+
+$("loadOrdersBtn")?.addEventListener("click", async () => {
+    await loadOrders();
+    ordersLoaded = true;
 });
 
 /* 工具函式 */

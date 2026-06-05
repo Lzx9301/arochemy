@@ -60,12 +60,16 @@ const ADMIN_EMAIL = "nicoliu930226@gmail.com";
 const $ = (id) => document.getElementById(id);
 
 let currentImages = [];
+
 let usersLoaded = false;
 let ordersLoaded = false;
+
 let allOrders = [];
 let currentOrderFilter = "all";
 let currentOrderSearch = "";
-let allOrders = [];
+
+let allProducts = [];
+let currentProductSearch = "";
 
 const PAYMENT_STATUS_LABELS = {
     pending: "未付款",
@@ -111,7 +115,8 @@ onAuthStateChanged(auth, (user) => {
     if (user && user.email === ADMIN_EMAIL) {
         loginBox.style.display = "none";
         adminBox.style.display = "block";
-        loginMsg.textContent = "";
+
+    loadProductsList();
     } else {
         loginBox.style.display = "block";
         adminBox.style.display = "none";
@@ -483,68 +488,73 @@ document.addEventListener("click", async (e) => {
 
 
 /* 載入商品資料 */
+async function loadProductBySlug(slug) {
+  const editMsg = $("editMsg");
+
+  if (!slug) {
+    editMsg.textContent = "請輸入商品 slug";
+    return;
+  }
+
+  editMsg.textContent = "載入中...";
+
+  try {
+    const productRef = doc(db, "products", slug);
+    const snap = await getDoc(productRef);
+
+    if (!snap.exists()) {
+      editMsg.textContent = "找不到這個商品";
+      return;
+    }
+
+    const p = snap.data();
+
+    currentImages = p.images || [];
+    updatePreviewImage(currentImages[0] || "");
+
+    $("name").value = p.name || "";
+    $("en").value = p.en || "";
+    $("slug").value = p.slug || slug;
+    $("category").value = p.category || "single-oil";
+    $("productStatus").value = p.status || "active";
+    $("latin").value = p.latin || "";
+
+    $("price5").value =
+      p.variants?.find((v) => v.label === "5 ml")?.price ?? "";
+
+    $("price10").value =
+      p.variants?.find((v) => v.label === "10 ml")?.price ?? "";
+
+    $("price30").value =
+      p.variants?.find((v) => v.label === "30 ml")?.price ?? "";
+
+    $("family").value = p.overview?.["科屬"] || "";
+    $("extractPart").value = p.overview?.["萃取部位"] || "";
+    $("extractMethod").value = p.overview?.["萃取方法"] || "";
+    $("plantOrigin").value = p.overview?.["植物產地"] || "";
+    $("aroma").value = p.overview?.["香氣概述"] || "";
+    $("usageOverview").value = p.overview?.["建議用途"] || "";
+
+    $("compositionText").value = (p.composition || [])
+      .map((c) => `${c.name},${c.value}`)
+      .join("\n");
+
+    $("description").value = (p.description || []).join("\n");
+
+    $("featured").checked = p.featured === true;
+
+    editMsg.textContent = "商品資料已載入，可以修改後儲存";
+  } catch (err) {
+    console.error(err);
+    editMsg.textContent = `載入失敗：${err.message}`;
+  }
+}
+
 $("loadProductBtn")?.addEventListener("click", async () => {
-    const slug = $("editSlug").value.trim();
-    const editMsg = $("editMsg");
-
-    if (!slug) {
-        editMsg.textContent = "請輸入商品 slug";
-        return;
-    }
-
-    editMsg.textContent = "載入中...";
-
-    try {
-        const productRef = doc(db, "products", slug);
-        const snap = await getDoc(productRef);
-
-        if (!snap.exists()) {
-            editMsg.textContent = "找不到這個商品";
-            return;
-        }
-
-        const p = snap.data();
-
-        currentImages = p.images || [];
-        updatePreviewImage(currentImages[0] || "");
-
-        $("name").value = p.name || "";
-        $("en").value = p.en || "";
-        $("slug").value = p.slug || slug;
-        $("category").value = p.category || "single-oil";
-        $("productStatus").value = p.status || "active";
-        $("latin").value = p.latin || "";
-
-        $("price5").value =
-        p.variants?.find((v) => v.label === "5 ml")?.price ?? "";
-
-        $("price10").value =
-        p.variants?.find((v) => v.label === "10 ml")?.price ?? "";
-
-        $("price30").value =
-        p.variants?.find((v) => v.label === "30 ml")?.price ?? "";
-
-        $("family").value = p.overview?.["科屬"] || "";
-        $("extractPart").value = p.overview?.["萃取部位"] || "";
-        $("extractMethod").value = p.overview?.["萃取方法"] || "";
-        $("plantOrigin").value = p.overview?.["植物產地"] || "";
-        $("aroma").value = p.overview?.["香氣概述"] || "";
-        $("usageOverview").value = p.overview?.["建議用途"] || "";
-
-        $("compositionText").value = (p.composition || [])
-        .map((c) => `${c.name},${c.value}`)
-        .join("\n");
-
-        $("description").value = (p.description || []).join("\n");
-
-        $("featured").checked = p.featured === true;
-
-        editMsg.textContent = "商品資料已載入，可以修改後儲存";
-    } catch (err) {
-        console.error(err);
-        editMsg.textContent = `載入失敗：${err.message}`;
-    }
+  const slug = $("slug").value.trim();
+  await loadProductBySlug(slug);
 });
+
 async function loadProductsList() {
 
     const box = $("productsList");
@@ -682,12 +692,9 @@ document.addEventListener(
 
     if(!btn) return;
 
-    const slug =
-        btn.dataset.slug;
+    const slug = btn.dataset.slug;
 
-    $("editSlug").value = slug;
-
-    $("loadProductBtn").click();
+await loadProductBySlug(slug);
 
     window.scrollTo({
         top:0,

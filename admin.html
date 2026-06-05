@@ -251,19 +251,19 @@
             border-radius: 14px;
             font-size: 15px;
         }
-        .product-tools{
-    display:grid;
-    gap:12px;
-    margin-bottom:20px;
-}
+        .product-tools {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
 
-.product-search{
-    width:100%;
-    padding:12px 14px;
-    border:1px solid #ddd;
-    border-radius:14px;
-}
-        
+        .product-search {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #ddd;
+            border-radius: 14px;
+        }
+
     </style>
 </head>
 
@@ -313,26 +313,28 @@
             <hr style="margin:32px 0;">
             <section id="productsPanel" class="admin-panel active">
                 <h2>編輯商品</h2>
-
+                <button type="button" class="admin-btn" id="newProductBtn">
+                    新增商品
+                </button>
                 <div class="product-tools">
 
-  <input
-    id="productSearch"
-    class="product-search"
-    placeholder="搜尋商品名稱、英文名稱、slug"
-  >
+                    <input
+                    id="productSearch"
+                    class="product-search"
+                    placeholder="搜尋商品名稱、英文名稱、slug"
+                    >
 
-  <button
-    type="button"
-    class="admin-btn"
-    id="loadProductsListBtn"
-  >
-    載入商品列表
-  </button>
+                    <button
+                        type="button"
+                        class="admin-btn"
+                        id="loadProductsListBtn"
+                        >
+                        載入商品列表
+                    </button>
 
-</div>
+                </div>
 
-<div id="productsList" class="admin-list"></div>
+                <div id="productsList" class="admin-list"></div>
 
                 <button class="admin-btn" id="loadProductBtn" type="button">
                     載入商品資料
@@ -371,11 +373,11 @@
                         </div>
                     </div>
                     <div class="admin-field">
-                      <label for="productStatus">商品狀態</label>
-                      <select id="productStatus">
-                        <option value="active">上架</option>
-                        <option value="inactive">下架</option>
-                      </select>
+                        <label for="productStatus">商品狀態</label>
+                        <select id="productStatus">
+                            <option value="active">上架</option>
+                            <option value="inactive">下架</option>
+                        </select>
                     </div>
 
                     <div class="admin-field">

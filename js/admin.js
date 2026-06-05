@@ -10,7 +10,8 @@ import {
     collection,
     getDocs,
     query,
-    orderBy
+    orderBy,
+    updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
@@ -190,30 +191,92 @@ async function loadOrders() {
             const items = o.items || [];
 
             return `
-                <div class="admin-data-card">
-                    <h3>訂單：${docSnap.id}</h3>
-                    <p>姓名：${o.customer?.name || ""}</p>
-                    <p>電話：${o.customer?.phone || ""}</p>
-                    <p>Email：${o.customer?.email || ""}</p>
-                    <p>配送方式：${o.shipping?.methodLabel || ""}</p>
-                    <p>收件資訊：${o.shipping?.address || ""}</p>
-                    <p>付款狀態：${o.payment?.status || ""}</p>
-                    <p>訂單狀態：${o.status || ""}</p>
-                    <p>總金額：NT$ ${Number(o.total || 0).toLocaleString("zh-Hant-TW")}</p>
-                    <p>商品：</p>
-                    <ul>
-                        ${items.map((item) => `
-                            <li>${item.name}｜${item.variantLabel} × ${item.qty}</li>
-                        `).join("")}
-                    </ul>
-                </div>
-            `;
+  <div class="admin-data-card">
+    <h3>訂單：${docSnap.id}</h3>
+
+    <p>姓名：${o.customer?.name || ""}</p>
+    <p>電話：${o.customer?.phone || ""}</p>
+    <p>Email：${o.customer?.email || ""}</p>
+    <p>配送方式：${o.shipping?.methodLabel || ""}</p>
+    <p>收件資訊：${o.shipping?.address || ""}</p>
+    <p>總金額：NT$ ${Number(o.total || 0).toLocaleString("zh-Hant-TW")}</p>
+
+    <div class="admin-status-row">
+      <label>
+        付款狀態
+        <select class="payment-status-select" data-order-id="${docSnap.id}">
+          ${Object.entries(PAYMENT_STATUS_LABELS).map(([value, label]) => `
+            <option value="${value}" ${o.payment?.status === value ? "selected" : ""}>
+              ${label}
+            </option>
+          `).join("")}
+        </select>
+      </label>
+
+      <label>
+        訂單狀態
+        <select class="order-status-select" data-order-id="${docSnap.id}">
+          ${Object.entries(ORDER_STATUS_LABELS).map(([value, label]) => `
+            <option value="${value}" ${o.status === value ? "selected" : ""}>
+              ${label}
+            </option>
+          `).join("")}
+        </select>
+      </label>
+
+      <button class="admin-btn save-order-status-btn" type="button" data-order-id="${docSnap.id}">
+        儲存狀態
+      </button>
+    </div>
+
+    <p>商品：</p>
+    <ul>
+      ${items.map((item) => `
+        <li>${item.name}｜${item.variantLabel} × ${item.qty}</li>
+      `).join("")}
+    </ul>
+
+    <p class="admin-msg" id="orderMsg-${docSnap.id}"></p>
+  </div>
+`;
         }).join("");
     } catch (err) {
         console.error(err);
         box.innerHTML = `<p class="muted">訂單資料載入失敗：${err.message}</p>`;
     }
 }
+
+document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".save-order-status-btn");
+    if (!btn) return;
+
+    const orderId = btn.dataset.orderId;
+    const msg = document.getElementById(`orderMsg-${orderId}`);
+
+    const paymentSelect = document.querySelector(
+        `.payment-status-select[data-order-id="${orderId}"]`
+    );
+
+    const orderSelect = document.querySelector(
+        `.order-status-select[data-order-id="${orderId}"]`
+    );
+
+    if (!paymentSelect || !orderSelect) return;
+
+    msg.textContent = "儲存中...";
+
+    try {
+        await updateDoc(doc(db, "orders", orderId), {
+            "payment.status": paymentSelect.value,
+            status: orderSelect.value
+        });
+
+        msg.textContent = "狀態已更新";
+    } catch (err) {
+        console.error(err);
+        msg.textContent = `更新失敗：${err.message}`;
+    }
+});
 
 $("loadOrdersBtn")?.addEventListener("click", async () => {
     await loadOrders();
@@ -276,6 +339,20 @@ function makeVariants() {
 
     return variants;
 }
+
+const PAYMENT_STATUS_LABELS = {
+    pending: "未付款",
+    paid: "已付款",
+    refunding: "退款中",
+    refunded: "已退款"
+};
+
+const ORDER_STATUS_LABELS = {
+    pending: "處理中",
+    shipped: "已出貨",
+    completed: "已完成",
+    cancelled: "已取消"
+};
 
 /* 上傳商品圖片到舊專案 Storage */
 async function uploadProductImage(slug) {

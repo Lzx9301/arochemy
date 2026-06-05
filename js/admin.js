@@ -32,7 +32,7 @@ const firebaseConfig = {
   measurementId: "G-KHR4PVKJCK"
 };
 
-/* 舊學生專案 Firebase：暫時只拿來放商品圖片 */
+/* Firebase：只拿來放商品圖片 */
 const storageConfig = {
   apiKey: "AIzaSyAdS--elaCvzQOAPhMDPByLoTRXGibC9Rc",
   authDomain: "octo-7c190.firebaseapp.com",

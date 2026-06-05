@@ -14,6 +14,13 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",
   authDomain: "trying-89dc6.firebaseapp.com",
@@ -24,7 +31,35 @@ const firebaseConfig = {
   measurementId: "G-KHR4PVKJCK"
 };
 
+const storageConfig = {
+  apiKey: "AIzaSyAdS--elaCvzQOAPhMDPByLoTRXGibC9Rc",
+  authDomain: "octo-7c190.firebaseapp.com",
+  projectId: "octo-7c190",
+  storageBucket: "octo-7c190.firebasestorage.app",
+  messagingSenderId: "351002657731",
+  appId: "1:351002657731:web:9db320ed4723e74a2a7376",
+};
+
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+
 const app = initializeApp(firebaseConfig);
+
+const storageApp = initializeApp(
+  storageConfig,
+  "storageApp"
+);
+
+// const storage = getStorage(app);
+
+import {
+  getStorage
+} from
+"https://www.gstatic.com/firebasejs/12.3.0/firebase-storage.js";
+
+const storage = getStorage(storageApp);
+
+// const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
@@ -123,6 +158,21 @@ function makeVariants() {
   return variants;
 }
 
+async function uploadProductImage(slug) {
+  const fileInput = $("productImage");
+  const file = fileInput?.files?.[0];
+
+  if (!file) return "";
+
+  const ext = file.name.split(".").pop();
+  const filePath = `products/${slug}-${Date.now()}.${ext}`;
+
+  const storageRef = ref(storage, filePath);
+  await uploadBytes(storageRef, file);
+
+  return await getDownloadURL(storageRef);
+}
+
 $("loadProductBtn")?.addEventListener("click", async () => {
   const slug = $("editSlug").value.trim();
   const editMsg = $("editMsg");
@@ -192,7 +242,7 @@ $("productForm").addEventListener("submit", async (e) => {
     return;
   }
 
-  const imageUrl = $("imageUrl").value.trim();
+  const imageUrl = await uploadProductImage(slug);
 
   const product = {
     slug,

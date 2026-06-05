@@ -211,6 +211,19 @@ function updatePreviewImage(url) {
   }
 }
 
+$("productImage")?.addEventListener("change", (e) => {
+  const file = e.target.files?.[0];
+
+  if (!file) {
+    updatePreviewImage("");
+    return;
+  }
+
+  const previewUrl = URL.createObjectURL(file);
+
+  updatePreviewImage(previewUrl);
+});
+
 /* 上傳商品圖片 */
 async function uploadProductImage(slug) {
   const fileInput = $("productImage");

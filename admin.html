@@ -309,6 +309,38 @@
             margin-top: 22px;
         }
 
+        .dashboard-cards {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 14px;
+          margin: 24px 0;
+        }
+        
+        .dashboard-card {
+          border: 1px solid #eee;
+          border-radius: 20px;
+          background: #fff;
+          padding: 18px;
+        }
+        
+        .dashboard-card span {
+          display: block;
+          color: #666;
+          font-size: 14px;
+          margin-bottom: 8px;
+        }
+        
+        .dashboard-card strong {
+          font-size: 30px;
+          color: #111;
+        }
+        
+        @media (max-width: 800px) {
+          .dashboard-cards {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
     </style>
 </head>
 
@@ -354,7 +386,27 @@
 
         <section id="adminBox" style="display:none;">
             <h1>後台管理</h1>
-
+            <section class="dashboard-cards">
+              <div class="dashboard-card">
+                <span>商品總數</span>
+                <strong id="statProducts">0</strong>
+              </div>
+            
+              <div class="dashboard-card">
+                <span>會員總數</span>
+                <strong id="statUsers">0</strong>
+              </div>
+            
+              <div class="dashboard-card">
+                <span>待處理訂單</span>
+                <strong id="statPendingOrders">0</strong>
+              </div>
+            
+              <div class="dashboard-card">
+                <span>已付款待出貨</span>
+                <strong id="statPaidNotShipped">0</strong>
+              </div>
+            </section>
             <hr style="margin:32px 0;">
             <section id="productsPanel" class="admin-panel active">
                 <h2>編輯商品</h2>

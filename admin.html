@@ -359,47 +359,21 @@
             <section id="productsPanel" class="admin-panel active">
                 <h2>編輯商品</h2>
                 <div class="product-tools">
-                    <input
+                  <input
                     id="productSearch"
                     class="product-search"
                     placeholder="搜尋商品名稱、英文名稱、slug"
-                    >
-                    <div class="product-tools">
-                        <div class="product-card-actions">
-                            <label>
-                                商品狀態
-                                <select class="product-status-select" data-slug="${p.slug}">
-                                    <option value="active" ${p.status==="active" ? "selected" : ""}>上架</option>
-                                    <option value="inactive" ${p.status==="inactive" ? "selected" : ""}>下架</option>
-                                </select>
-                            </label>
-
-                            <label class="product-featured-toggle">
-                                <input
-                                type="checkbox"
-                                class="product-featured-check"
-                                data-slug="${p.slug}"
-                                ${p.featured ? "checked" : ""}
-                                >
-                                精選商品
-                            </label>
-                        </div>
-
-                        <button
-                            class="admin-btn edit-product-btn"
-                            data-slug="${p.slug}"
-                            >
-                            編輯商品
-                        </button>
-
-                        <p class="admin-msg" id="productMsg-${p.slug}"></p>
-
-                        <button id="newProductBtn" class="admin-btn">
-                            新增商品
-                        </button>
-                    </div>
+                  >
+                
+                  <button id="loadProductsListBtn" class="admin-btn secondary" type="button">
+                    重新整理
+                  </button>
+                
+                  <button id="newProductBtn" class="admin-btn primary" type="button">
+                    新增商品
+                  </button>
                 </div>
-
+                
                 <div id="productsList" class="admin-list"></div>
 
                 <button class="admin-btn" id="loadProductBtn" type="button">

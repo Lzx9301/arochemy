@@ -332,6 +332,8 @@
         
         .dashboard-card strong {
           font-size: 30px;
+          font-size: 36px;
+          font-weight: 800;
           color: #111;
         }
         
@@ -339,6 +341,14 @@
           .dashboard-cards {
             grid-template-columns: repeat(2, 1fr);
           }
+        }
+
+        .dashboard-card {
+          transition: 0.2s;
+        }
+        
+        .dashboard-card:hover {
+          transform: translateY(-2px);
         }
 
     </style>

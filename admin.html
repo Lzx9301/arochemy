@@ -403,6 +403,14 @@
             <section id="ordersPanel" class="admin-panel">
                 <h2>訂單管理</h2>
                 <button type="button" class="admin-btn" id="loadOrdersBtn">重新整理訂單資料</button>
+                <select id="orderQuickFilter">
+                  <option value="all">全部訂單</option>
+                  <option value="need_process">待處理訂單</option>
+                  <option value="paid_not_shipped">已付款未出貨</option>
+                  <option value="shipped">已出貨</option>
+                  <option value="completed">已完成</option>
+                  <option value="cancelled">已取消</option>
+                </select>
                 <div id="ordersList" class="admin-list"></div>
             </section>
         </section>

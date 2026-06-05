@@ -29,7 +29,7 @@ async function loadProducts() {
       ...doc.data()
     });
   });
-
+  .filter((p) => p.status === "active");
   return products;
 }
 

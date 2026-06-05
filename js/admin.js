@@ -511,6 +511,7 @@ $("loadProductBtn")?.addEventListener("click", async () => {
         $("en").value = p.en || "";
         $("slug").value = p.slug || slug;
         $("category").value = p.category || "single-oil";
+        $("productStatus").value = p.status || "active";
         $("latin").value = p.latin || "";
 
         $("price5").value =
@@ -569,7 +570,7 @@ $("productForm")?.addEventListener("submit", async (e) => {
             latin: $("latin").value.trim(),
             category: $("category").value,
 
-            status: "active",
+            status: $("productStatus").value,
             featured: $("featured").checked,
             salesCount: 0,
 

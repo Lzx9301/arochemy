@@ -216,7 +216,11 @@
 
         <section id="adminBox" style="display:none;">
             <h1>商品後台</h1>
-
+            <div class="admin-tabs">
+              <button type="button" class="admin-tab active" data-panel="productsPanel">商品管理</button>
+              <button type="button" class="admin-tab" data-panel="usersPanel">會員資料</button>
+              <button type="button" class="admin-tab" data-panel="ordersPanel">訂單管理</button>
+            </div>
             <button class="admin-btn" id="logoutBtn" type="button">登出</button>
             <hr style="margin:32px 0;">
             <section id="productsPanel" class="admin-panel active">

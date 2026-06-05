@@ -390,6 +390,22 @@ document.addEventListener("click", async (e) => {
   }
 });
 
+
+function matchOrderFilter(order, filter) {
+  const paymentStatus = order.payment?.status || "pending";
+  const orderStatus = order.status || "pending";
+
+  if (filter === "all") return true;
+  if (filter === "need_process") return orderStatus === "pending";
+  if (filter === "paid_not_shipped") {
+    return paymentStatus === "paid" && orderStatus === "pending";
+  }
+  if (filter === "shipped") return orderStatus === "shipped";
+  if (filter === "completed") return orderStatus === "completed";
+  if (filter === "cancelled") return orderStatus === "cancelled";
+
+  return true;
+}
 /* 載入商品資料 */
 $("loadProductBtn")?.addEventListener("click", async () => {
   const slug = $("editSlug").value.trim();

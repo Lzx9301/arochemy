@@ -266,6 +266,10 @@ async function uploadProductImage(slug) {
 
     await uploadBytes(storageRef, file);
 
+    if(currentImages.length){
+   $("previewImage").src = currentImages[0];
+}
+    
     return await getDownloadURL(storageRef);
 }
 

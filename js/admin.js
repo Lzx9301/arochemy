@@ -116,6 +116,7 @@ onAuthStateChanged(auth, async (user) => {
     loginMsg.textContent = "";
 
     await loadProductsList();
+    await loadDashboardStats();
   } else {
     loginBox.style.display = "block";
     adminBox.style.display = "none";
@@ -476,6 +477,7 @@ document.addEventListener("click", async (e) => {
     }
 
     msg.textContent = "狀態已更新";
+    await loadDashboardStats();
   } catch (err) {
     console.error(err);
     msg.textContent = `更新失敗：${err.message}`;
@@ -550,6 +552,36 @@ $("loadProductBtn")?.addEventListener("click", async () => {
   await loadProductBySlug(slug);
 });
 
+// 統計
+async function loadDashboardStats() {
+  try {
+    const [productsSnap, usersSnap, ordersSnap] = await Promise.all([
+      getDocs(collection(db, "products")),
+      getDocs(collection(db, "users")),
+      getDocs(collection(db, "orders"))
+    ]);
+
+    const orders = ordersSnap.docs.map((docSnap) => docSnap.data());
+
+    const pendingOrders = orders.filter((order) => {
+      return (order.status || "pending") === "pending";
+    }).length;
+
+    const paidNotShipped = orders.filter((order) => {
+      return (
+        order.payment?.status === "paid" &&
+        (order.status || "pending") === "pending"
+      );
+    }).length;
+
+    $("statProducts").textContent = String(productsSnap.size);
+    $("statUsers").textContent = String(usersSnap.size);
+    $("statPendingOrders").textContent = String(pendingOrders);
+    $("statPaidNotShipped").textContent = String(paidNotShipped);
+  } catch (err) {
+    console.error("Dashboard 統計載入失敗", err);
+  }
+}
 /* 商品列表 */
 async function loadProductsList() {
   const box = $("productsList");
@@ -797,6 +829,7 @@ $("productForm")?.addEventListener("submit", async (e) => {
     updatePreviewImage("");
 
     await loadProductsList();
+    await loadDashboardStats();
   } catch (err) {
     console.error(err);
     msg.textContent = `儲存失敗：${err.message}`;

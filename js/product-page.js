@@ -328,6 +328,10 @@ if (!product) {
   throw new Error("找不到商品");
 }
 
+if (product.status !== "active") {
+  throw new Error("此商品目前未上架");
+}
+    
 siteDefaults = await loadProductDefaults();
     if (!product) throw new Error("找不到任何商品資料");
 

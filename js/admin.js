@@ -3,15 +3,16 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
-    getFirestore,
-    doc,
-    setDoc,
-    getDoc,
-    collection,
-    getDocs,
-    query,
-    orderBy,
-    updateDoc
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  updateDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
@@ -27,10 +28,6 @@ import {
     uploadBytes,
     getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-
-import {
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* Firebase 設定：主專案負責 Firestore / Auth */
 const firebaseConfig = {
@@ -468,56 +465,60 @@ $("orderSearch")?.addEventListener("input", (e) => {
 
 /* 儲存訂單狀態 */
 document.addEventListener("click", async (e) => {
-    const btn = e.target.closest(".save-order-status-btn");
-    if (!btn) return;
+  const btn = e.target.closest(".save-order-status-btn");
+  if (!btn) return;
 
-    const orderId = btn.dataset.orderId;
-    const msg = document.getElementById(`orderMsg-${orderId}`);
+  const orderId = btn.dataset.orderId;
+  const msg = document.getElementById(`orderMsg-${orderId}`);
 
-    const paymentSelect = document.querySelector(
-        `.payment-status-select[data-order-id="${orderId}"]`
-    );
+  const paymentSelect = document.querySelector(
+    `.payment-status-select[data-order-id="${orderId}"]`
+  );
 
-    const orderSelect = document.querySelector(
-        `.order-status-select[data-order-id="${orderId}"]`
-    );
+  const orderSelect = document.querySelector(
+    `.order-status-select[data-order-id="${orderId}"]`
+  );
 
-    if (!paymentSelect || !orderSelect) return;
+  if (!paymentSelect || !orderSelect) return;
 
-    msg.textContent = "儲存中...";
+  const paymentStatus = paymentSelect.value;
+  const orderStatus = orderSelect.value;
 
-    try {
-        const updateData = {
-          status: orderStatus
-        };
-        
-        if (orderStatus === "completed") {
-          updateData.completedAt = serverTimestamp();
-        }
-        
-        await updateDoc(
-          doc(db, "orders", orderId),
-          updateData
-        );
-        });
+  msg.textContent = "儲存中...";
 
-        const targetOrder = allOrders.find((item) => item.id === orderId);
+  try {
+    const updateData = {
+      "payment.status": paymentStatus,
+      status: orderStatus
+    };
 
-        if (targetOrder) {
-            targetOrder.data.payment = {
-                ...(targetOrder.data.payment || {}),
-                status: paymentSelect.value
-            };
-
-            targetOrder.data.status = orderSelect.value;
-        }
-
-        msg.textContent = "狀態已更新";
-        await loadDashboardStats();
-    } catch (err) {
-        console.error(err);
-        msg.textContent = `更新失敗：${err.message}`;
+    if (orderStatus === "completed") {
+      updateData.completedAt = serverTimestamp();
     }
+
+    await updateDoc(doc(db, "orders", orderId), updateData);
+
+    const targetOrder = allOrders.find((item) => item.id === orderId);
+
+    if (targetOrder) {
+      targetOrder.data.payment = {
+        ...(targetOrder.data.payment || {}),
+        status: paymentStatus
+      };
+
+      targetOrder.data.status = orderStatus;
+
+      if (orderStatus === "completed") {
+        targetOrder.data.completedAt = new Date();
+      }
+    }
+
+    msg.textContent = "狀態已更新";
+    await loadDashboardStats();
+  } catch (err) {
+    console.error(err);
+    msg.textContent = `更新失敗：${err.message}`;
+  }
 });
 
 // 新增展開/收合事件
@@ -650,10 +651,6 @@ async function loadDashboardStats() {
           completedAt.getMonth() === currentMonth
         );
 
-        return (
-          createdAt.getFullYear() === currentYear &&
-          createdAt.getMonth() === currentMonth
-        );
       })
       .reduce((sum, order) => {
         return sum + Number(order.total || 0);

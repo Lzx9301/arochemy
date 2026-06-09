@@ -328,65 +328,82 @@ function renderOrders() {
   const box = $("ordersList");
 
   const filtered = allOrders.filter((orderItem) => {
-    return `
-  <div class="admin-data-card">
-    <h3>訂單：${docId}</h3>
-
-    <p>姓名：${o.customer?.name || ""}</p>
-    <p>總金額：NT$ ${Number(o.total || 0).toLocaleString("zh-Hant-TW")}</p>
-
-    <div class="admin-status-row">
-      <label>
-        付款狀態
-        <select class="payment-status-select" data-order-id="${docId}">
-          ${Object.entries(PAYMENT_STATUS_LABELS).map(([value, label]) => `
-            <option value="${value}" ${o.payment?.status === value ? "selected" : ""}>
-              ${label}
-            </option>
-          `).join("")}
-        </select>
-      </label>
-
-      <label>
-        訂單狀態
-        <select class="order-status-select" data-order-id="${docId}">
-          ${Object.entries(ORDER_STATUS_LABELS).map(([value, label]) => `
-            <option value="${value}" ${o.status === value ? "selected" : ""}>
-              ${label}
-            </option>
-          `).join("")}
-        </select>
-      </label>
-
-      <button class="admin-btn save-order-status-btn" type="button" data-order-id="${docId}">
-        儲存狀態
-      </button>
-    </div>
-
-    <button class="admin-btn secondary order-detail-toggle" type="button">
-      查看詳情
-    </button>
-
-    <div class="order-detail-panel" style="display:none;">
-      <hr>
-
-      <p>電話：${o.customer?.phone || ""}</p>
-      <p>Email：${o.customer?.email || ""}</p>
-      <p>配送方式：${o.shipping?.methodLabel || ""}</p>
-      <p>收件資訊：${o.shipping?.address || ""}</p>
-
-      <p>商品明細：</p>
-      <ul>
-        ${items.map((item) => `
-          <li>${item.name}｜${item.variantLabel} × ${item.qty}</li>
-        `).join("")}
-      </ul>
-    </div>
-
-    <p class="admin-msg" id="orderMsg-${docId}"></p>
-  </div>
-`;
+    return (
+      matchOrderFilter(orderItem.data, currentOrderFilter) &&
+      matchOrderSearch(orderItem, currentOrderSearch)
+    );
   });
+
+  if (!filtered.length) {
+    box.innerHTML = `<p class="muted">目前沒有符合條件的訂單。</p>`;
+    return;
+  }
+
+  box.innerHTML = filtered.map((orderItem) => {
+    const docId = orderItem.id;
+    const o = orderItem.data;
+    const items = o.items || [];
+
+    return `
+      <div class="admin-data-card">
+        <h3>訂單：${docId}</h3>
+
+        <p>姓名：${o.customer?.name || ""}</p>
+        <p>總金額：NT$ ${Number(o.total || 0).toLocaleString("zh-Hant-TW")}</p>
+
+        <div class="admin-status-row">
+          <label>
+            付款狀態
+            <select class="payment-status-select" data-order-id="${docId}">
+              ${Object.entries(PAYMENT_STATUS_LABELS).map(([value, label]) => `
+                <option value="${value}" ${o.payment?.status === value ? "selected" : ""}>
+                  ${label}
+                </option>
+              `).join("")}
+            </select>
+          </label>
+
+          <label>
+            訂單狀態
+            <select class="order-status-select" data-order-id="${docId}">
+              ${Object.entries(ORDER_STATUS_LABELS).map(([value, label]) => `
+                <option value="${value}" ${o.status === value ? "selected" : ""}>
+                  ${label}
+                </option>
+              `).join("")}
+            </select>
+          </label>
+
+          <button class="admin-btn save-order-status-btn" type="button" data-order-id="${docId}">
+            儲存狀態
+          </button>
+        </div>
+
+        <button class="admin-btn secondary order-detail-toggle" type="button">
+          查看詳情
+        </button>
+
+        <div class="order-detail-panel" style="display:none;">
+          <hr>
+
+          <p>電話：${o.customer?.phone || ""}</p>
+          <p>Email：${o.customer?.email || ""}</p>
+          <p>配送方式：${o.shipping?.methodLabel || ""}</p>
+          <p>收件資訊：${o.shipping?.address || ""}</p>
+
+          <p>商品明細：</p>
+          <ul>
+            ${items.map((item) => `
+              <li>${item.name}｜${item.variantLabel} × ${item.qty}</li>
+            `).join("")}
+          </ul>
+        </div>
+
+        <p class="admin-msg" id="orderMsg-${docId}"></p>
+      </div>
+    `;
+  }).join("");
+}
 
   if (!filtered.length) {
     box.innerHTML = `<p class="muted">目前沒有符合條件的訂單。</p>`;

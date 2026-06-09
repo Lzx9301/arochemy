@@ -28,6 +28,10 @@ import {
     getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
+import {
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 /* Firebase 設定：主專案負責 Firestore / Auth */
 const firebaseConfig = {
     apiKey: "AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",
@@ -483,9 +487,18 @@ document.addEventListener("click", async (e) => {
     msg.textContent = "儲存中...";
 
     try {
-        await updateDoc(doc(db, "orders", orderId), {
-            "payment.status": paymentSelect.value,
-            status: orderSelect.value
+        const updateData = {
+          status: orderStatus
+        };
+        
+        if (orderStatus === "completed") {
+          updateData.completedAt = serverTimestamp();
+        }
+        
+        await updateDoc(
+          doc(db, "orders", orderId),
+          updateData
+        );
         });
 
         const targetOrder = allOrders.find((item) => item.id === orderId);
@@ -626,9 +639,16 @@ async function loadDashboardStats() {
 
     const monthlyRevenue = completedOrders
       .filter((order) => {
-        const createdAt = order.createdAt?.toDate
-          ? order.createdAt.toDate()
-          : new Date(order.createdAt);
+        const completedAt = order.completedAt?.toDate
+          ? order.completedAt.toDate()
+          : null;
+        
+        if (!completedAt) return false;
+        
+        return (
+          completedAt.getFullYear() === currentYear &&
+          completedAt.getMonth() === currentMonth
+        );
 
         return (
           createdAt.getFullYear() === currentYear &&

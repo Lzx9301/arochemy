@@ -310,11 +310,16 @@
         }
 
         .dashboard-cards {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 14px;
-          margin: 24px 0;
-        }
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin: 24px 0;
+}
+        @media (max-width: 520px) {
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+}
         
         .dashboard-card {
           border: 1px solid #eee;
@@ -370,6 +375,7 @@
           margin-top: 8px;
           padding-left: 20px;
         }
+        
 
     </style>
 </head>
@@ -436,8 +442,30 @@
                 <span>已付款待出貨</span>
                 <strong id="statPaidNotShipped">0</strong>
               </div>
-            </section>
+
+            <div class="dashboard-card">
+              <span>累積營收</span>
+              <strong id="statTotalRevenue">NT$ 0</strong>
+            </div>
+            
+            <div class="dashboard-card">
+              <span>本月營收</span>
+              <strong id="statMonthlyRevenue">NT$ 0</strong>
+            </div>
+            
+            <div class="dashboard-card">
+              <span>已完成訂單</span>
+              <strong id="statCompletedOrders">0</strong>
+            </div>
+            
+            <div class="dashboard-card">
+              <span>平均客單價</span>
+              <strong id="statAverageOrderValue">NT$ 0</strong>
+            </div>
             <hr style="margin:32px 0;">
+            </section>
+
+
             <section id="productsPanel" class="admin-panel active">
                 <h2>編輯商品</h2>
                 <div class="product-tools">

@@ -328,10 +328,64 @@ function renderOrders() {
   const box = $("ordersList");
 
   const filtered = allOrders.filter((orderItem) => {
-    return (
-      matchOrderFilter(orderItem.data, currentOrderFilter) &&
-      matchOrderSearch(orderItem, currentOrderSearch)
-    );
+    return `
+  <div class="admin-data-card">
+    <h3>訂單：${docId}</h3>
+
+    <p>姓名：${o.customer?.name || ""}</p>
+    <p>總金額：NT$ ${Number(o.total || 0).toLocaleString("zh-Hant-TW")}</p>
+
+    <div class="admin-status-row">
+      <label>
+        付款狀態
+        <select class="payment-status-select" data-order-id="${docId}">
+          ${Object.entries(PAYMENT_STATUS_LABELS).map(([value, label]) => `
+            <option value="${value}" ${o.payment?.status === value ? "selected" : ""}>
+              ${label}
+            </option>
+          `).join("")}
+        </select>
+      </label>
+
+      <label>
+        訂單狀態
+        <select class="order-status-select" data-order-id="${docId}">
+          ${Object.entries(ORDER_STATUS_LABELS).map(([value, label]) => `
+            <option value="${value}" ${o.status === value ? "selected" : ""}>
+              ${label}
+            </option>
+          `).join("")}
+        </select>
+      </label>
+
+      <button class="admin-btn save-order-status-btn" type="button" data-order-id="${docId}">
+        儲存狀態
+      </button>
+    </div>
+
+    <button class="admin-btn secondary order-detail-toggle" type="button">
+      查看詳情
+    </button>
+
+    <div class="order-detail-panel" style="display:none;">
+      <hr>
+
+      <p>電話：${o.customer?.phone || ""}</p>
+      <p>Email：${o.customer?.email || ""}</p>
+      <p>配送方式：${o.shipping?.methodLabel || ""}</p>
+      <p>收件資訊：${o.shipping?.address || ""}</p>
+
+      <p>商品明細：</p>
+      <ul>
+        ${items.map((item) => `
+          <li>${item.name}｜${item.variantLabel} × ${item.qty}</li>
+        `).join("")}
+      </ul>
+    </div>
+
+    <p class="admin-msg" id="orderMsg-${docId}"></p>
+  </div>
+`;
   });
 
   if (!filtered.length) {
@@ -484,6 +538,21 @@ document.addEventListener("click", async (e) => {
   }
 });
 
+// 新增展開/收合事件
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".order-detail-toggle");
+  if (!btn) return;
+
+  const card = btn.closest(".admin-data-card");
+  const panel = card?.querySelector(".order-detail-panel");
+
+  if (!panel) return;
+
+  const isOpen = panel.style.display === "block";
+
+  panel.style.display = isOpen ? "none" : "block";
+  btn.textContent = isOpen ? "查看詳情" : "收起詳情";
+});
 /* 商品資料 */
 async function loadProductBySlug(slug) {
   const editMsg = $("editMsg");

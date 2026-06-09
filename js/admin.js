@@ -1,50 +1,52 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
-  getFirestore,
-  doc,
-  setDoc,
-  getDoc,
-  collection,
-  getDocs,
-  query,
-  orderBy,
-  updateDoc
+    getFirestore,
+    doc,
+    setDoc,
+    getDoc,
+    collection,
+    getDocs,
+    query,
+    orderBy,
+    updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
-  getAuth,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
+    getAuth,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL
+    getStorage,
+    ref,
+    uploadBytes,
+    getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 /* Firebase 設定：主專案負責 Firestore / Auth */
 const firebaseConfig = {
-  apiKey: "AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",
-  authDomain: "trying-89dc6.firebaseapp.com",
-  projectId: "trying-89dc6",
-  storageBucket: "trying-89dc6.firebasestorage.app",
-  messagingSenderId: "115559148124",
-  appId: "1:115559148124:web:ac37b9c249183a919b5499",
-  measurementId: "G-KHR4PVKJCK"
+    apiKey: "AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",
+    authDomain: "trying-89dc6.firebaseapp.com",
+    projectId: "trying-89dc6",
+    storageBucket: "trying-89dc6.firebasestorage.app",
+    messagingSenderId: "115559148124",
+    appId: "1:115559148124:web:ac37b9c249183a919b5499",
+    measurementId: "G-KHR4PVKJCK"
 };
 
 /* 舊專案暫時負責商品圖片 Storage */
 const storageConfig = {
-  apiKey: "AIzaSyAdS--elaCvzQOAPhMDPByLoTRXGibC9Rc",
-  authDomain: "octo-7c190.firebaseapp.com",
-  projectId: "octo-7c190",
-  storageBucket: "octo-7c190.firebasestorage.app",
-  messagingSenderId: "351002657731",
-  appId: "1:351002657731:web:9db320ed4723e74a2a7376"
+    apiKey: "AIzaSyAdS--elaCvzQOAPhMDPByLoTRXGibC9Rc",
+    authDomain: "octo-7c190.firebaseapp.com",
+    projectId: "octo-7c190",
+    storageBucket: "octo-7c190.firebasestorage.app",
+    messagingSenderId: "351002657731",
+    appId: "1:351002657731:web:9db320ed4723e74a2a7376"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -70,17 +72,17 @@ let allProducts = [];
 let currentProductSearch = "";
 
 const PAYMENT_STATUS_LABELS = {
-  pending: "未付款",
-  paid: "已付款",
-  refunding: "退款中",
-  refunded: "已退款"
+    pending: "未付款",
+    paid: "已付款",
+    refunding: "退款中",
+    refunded: "已退款"
 };
 
 const ORDER_STATUS_LABELS = {
-  pending: "處理中",
-  shipped: "已出貨",
-  completed: "已完成",
-  cancelled: "已取消"
+    pending: "處理中",
+    shipped: "已出貨",
+    completed: "已完成",
+    cancelled: "已取消"
 };
 
 /* 管理員登入 */
@@ -91,833 +93,779 @@ const logoutBtn = $("logoutBtn");
 const loginMsg = $("loginMsg");
 
 loginBtn?.addEventListener("click", async () => {
-  loginMsg.textContent = "登入中...";
+    loginMsg.textContent = "登入中...";
 
-  try {
-    await signInWithEmailAndPassword(
-      auth,
-      $("adminEmail").value.trim(),
-      $("adminPassword").value
-    );
-  } catch (err) {
-    console.error(err);
-    loginMsg.textContent = "登入失敗，請確認 Email 或密碼";
-  }
+    try {
+        await signInWithEmailAndPassword(
+            auth,
+            $("adminEmail").value.trim(),
+            $("adminPassword").value
+        );
+    } catch (err) {
+        console.error(err);
+        loginMsg.textContent = "登入失敗，請確認 Email 或密碼";
+    }
 });
 
 logoutBtn?.addEventListener("click", async () => {
-  await signOut(auth);
+    await signOut(auth);
 });
 
 onAuthStateChanged(auth, async (user) => {
-  if (user && user.email === ADMIN_EMAIL) {
-    loginBox.style.display = "none";
-    adminBox.style.display = "block";
-    loginMsg.textContent = "";
+    if (user && user.email === ADMIN_EMAIL) {
+        loginBox.style.display = "none";
+        adminBox.style.display = "block";
+        loginMsg.textContent = "";
 
-    await loadProductsList();
-    await loadDashboardStats();
-  } else {
-    loginBox.style.display = "block";
-    adminBox.style.display = "none";
+        await loadProductsList();
+        await loadDashboardStats();
+    } else {
+        loginBox.style.display = "block";
+        adminBox.style.display = "none";
 
-    if (user && user.email !== ADMIN_EMAIL) {
-      loginMsg.textContent = "此帳號沒有管理員權限";
-      await signOut(auth);
+        if (user && user.email !== ADMIN_EMAIL) {
+            loginMsg.textContent = "此帳號沒有管理員權限";
+            await signOut(auth);
+        }
     }
-  }
 });
 
 /* 後台切換：商品 / 會員 / 訂單 */
 document.querySelectorAll(".admin-tab").forEach((tab) => {
-  tab.addEventListener("click", async (e) => {
-    e.preventDefault();
+    tab.addEventListener("click", async (e) => {
+        e.preventDefault();
 
-    const target = tab.dataset.panel;
+        const target = tab.dataset.panel;
 
-    document.querySelectorAll(".admin-tab").forEach((btn) => {
-      btn.classList.remove("active");
+        document.querySelectorAll(".admin-tab").forEach((btn) => {
+            btn.classList.remove("active");
+        });
+
+        document.querySelectorAll(".admin-panel").forEach((panel) => {
+            panel.classList.remove("active");
+        });
+
+        tab.classList.add("active");
+        document.getElementById(target)?.classList.add("active");
+
+        if (target === "usersPanel" && !usersLoaded) {
+            await loadUsers();
+            usersLoaded = true;
+        }
+
+        if (target === "ordersPanel" && !ordersLoaded) {
+            await loadOrders();
+            ordersLoaded = true;
+        }
     });
-
-    document.querySelectorAll(".admin-panel").forEach((panel) => {
-      panel.classList.remove("active");
-    });
-
-    tab.classList.add("active");
-    document.getElementById(target)?.classList.add("active");
-
-    if (target === "usersPanel" && !usersLoaded) {
-      await loadUsers();
-      usersLoaded = true;
-    }
-
-    if (target === "ordersPanel" && !ordersLoaded) {
-      await loadOrders();
-      ordersLoaded = true;
-    }
-  });
 });
 
 /* 工具函式 */
 function toNumber(value) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : 0;
+    const n = Number(value);
+    return Number.isFinite(n) ? n: 0;
 }
 
 function splitLines(text) {
-  return text
+    return text
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
 }
 
 function parseComposition(text) {
-  return text
+    return text
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
-      const [name, value] = line.split(",").map((x) => x.trim());
+        const [name, value] = line.split(",").map((x) => x.trim());
 
-      return {
-        name: name || "",
-        value: Number(value) || 0
-      };
+        return {
+            name: name || "",
+            value: Number(value) || 0
+        };
     })
     .filter((item) => item.name);
 }
 
 function makeVariants() {
-  const variants = [];
+    const variants = [];
 
-  const price5 = $("price5").value;
-  const price10 = $("price10").value;
-  const price30 = $("price30").value;
+    const price5 = $("price5").value;
+    const price10 = $("price10").value;
+    const price30 = $("price30").value;
 
-  if (price5 !== "") {
-    variants.push({ label: "5 ml", price: toNumber(price5) });
-  }
+    if (price5 !== "") {
+        variants.push({
+            label: "5 ml", price: toNumber(price5)
+        });
+    }
 
-  if (price10 !== "") {
-    variants.push({ label: "10 ml", price: toNumber(price10) });
-  }
+    if (price10 !== "") {
+        variants.push({
+            label: "10 ml", price: toNumber(price10)
+        });
+    }
 
-  if (price30 !== "") {
-    variants.push({ label: "30 ml", price: toNumber(price30) });
-  }
+    if (price30 !== "") {
+        variants.push({
+            label: "30 ml", price: toNumber(price30)
+        });
+    }
 
-  return variants;
+    return variants;
 }
 
 function updatePreviewImage(url) {
-  const preview = $("previewImage");
-  if (!preview) return;
+    const preview = $("previewImage");
+    if (!preview) return;
 
-  if (url) {
-    preview.src = url;
-    preview.style.display = "block";
-  } else {
-    preview.removeAttribute("src");
-    preview.style.display = "none";
-  }
+    if (url) {
+        preview.src = url;
+        preview.style.display = "block";
+    } else {
+        preview.removeAttribute("src");
+        preview.style.display = "none";
+    }
 }
 
 /* 選擇圖片後，立即顯示本機預覽 */
 $("productImage")?.addEventListener("change", (e) => {
-  const file = e.target.files?.[0];
+    const file = e.target.files?.[0];
 
-  if (!file) {
-    updatePreviewImage("");
-    return;
-  }
+    if (!file) {
+        updatePreviewImage("");
+        return;
+    }
 
-  const previewUrl = URL.createObjectURL(file);
-  updatePreviewImage(previewUrl);
+    const previewUrl = URL.createObjectURL(file);
+    updatePreviewImage(previewUrl);
 });
 
 /* 上傳商品圖片 */
 async function uploadProductImage(slug) {
-  const fileInput = $("productImage");
-  const file = fileInput?.files?.[0];
+    const fileInput = $("productImage");
+    const file = fileInput?.files?.[0];
 
-  if (!file) return "";
+    if (!file) return "";
 
-  const ext = file.name.split(".").pop();
-  const safeSlug = slug.replace(/[^\w-]/g, "-");
-  const filePath = `products/${safeSlug}-${Date.now()}.${ext}`;
+    const ext = file.name.split(".").pop();
+    const safeSlug = slug.replace(/[^\w-]/g, "-");
+    const filePath = `products/${safeSlug}-${Date.now()}.${ext}`;
 
-  const storageRef = ref(storage, filePath);
+    const storageRef = ref(storage, filePath);
 
-  await uploadBytes(storageRef, file);
+    await uploadBytes(storageRef, file);
 
-  return await getDownloadURL(storageRef);
+    return await getDownloadURL(storageRef);
 }
 
 /* 會員資料 */
 async function loadUsers() {
-  const box = $("usersList");
-  box.innerHTML = `<p class="muted">載入中...</p>`;
+    const box = $("usersList");
+    box.innerHTML = `<p class="muted">載入中...</p>`;
 
-  try {
-    const snapshot = await getDocs(collection(db, "users"));
+    try {
+        const snapshot = await getDocs(collection(db, "users"));
 
-    if (snapshot.empty) {
-      box.innerHTML = `<p class="muted">目前沒有會員資料。</p>`;
-      return;
+        if (snapshot.empty) {
+            box.innerHTML = `<p class="muted">目前沒有會員資料。</p>`;
+            return;
+        }
+
+        box.innerHTML = snapshot.docs.map((docSnap) => {
+            const u = docSnap.data();
+
+            return `
+            <div class="admin-data-card">
+            <h3>${u.name || "未填姓名"}</h3>
+            <p>Email：${u.email || ""}</p>
+            <p>電話：${u.phone || ""}</p>
+            <p>電子報：${u.newsletterSubscribed ? "已訂閱": "未訂閱"}</p>
+            <p>角色：${u.role || "customer"}</p>
+            </div>
+            `;
+        }).join("");
+    } catch (err) {
+        console.error(err);
+        box.innerHTML = `<p class="muted">會員資料載入失敗：${err.message}</p>`;
     }
-
-    box.innerHTML = snapshot.docs.map((docSnap) => {
-      const u = docSnap.data();
-
-      return `
-        <div class="admin-data-card">
-          <h3>${u.name || "未填姓名"}</h3>
-          <p>Email：${u.email || ""}</p>
-          <p>電話：${u.phone || ""}</p>
-          <p>電子報：${u.newsletterSubscribed ? "已訂閱" : "未訂閱"}</p>
-          <p>角色：${u.role || "customer"}</p>
-        </div>
-      `;
-    }).join("");
-  } catch (err) {
-    console.error(err);
-    box.innerHTML = `<p class="muted">會員資料載入失敗：${err.message}</p>`;
-  }
 }
 
 $("loadUsersBtn")?.addEventListener("click", async () => {
-  await loadUsers();
-  usersLoaded = true;
+    await loadUsers();
+    usersLoaded = true;
 });
 
 /* 訂單資料 */
 function matchOrderFilter(order, filter) {
-  const paymentStatus = order.payment?.status || "pending";
-  const orderStatus = order.status || "pending";
+    const paymentStatus = order.payment?.status || "pending";
+    const orderStatus = order.status || "pending";
 
-  if (filter === "all") return true;
-  if (filter === "pending") return orderStatus === "pending";
-  if (filter === "paid_not_shipped") {
-    return paymentStatus === "paid" && orderStatus === "pending";
-  }
-  if (filter === "shipped") return orderStatus === "shipped";
-  if (filter === "completed") return orderStatus === "completed";
-  if (filter === "cancelled") return orderStatus === "cancelled";
+    if (filter === "all") return true;
+    if (filter === "pending") return orderStatus === "pending";
+    if (filter === "paid_not_shipped") {
+        return paymentStatus === "paid" && orderStatus === "pending";
+    }
+    if (filter === "shipped") return orderStatus === "shipped";
+    if (filter === "completed") return orderStatus === "completed";
+    if (filter === "cancelled") return orderStatus === "cancelled";
 
-  return true;
+    return true;
 }
 
 function matchOrderSearch(orderItem, keyword) {
-  if (!keyword) return true;
+    if (!keyword) return true;
 
-  const order = orderItem.data;
+    const order = orderItem.data;
 
-  const text = [
-    orderItem.id,
-    order.customer?.name,
-    order.customer?.phone,
-    order.customer?.email,
-    order.shipping?.methodLabel,
-    order.shipping?.address
-  ].join(" ").toLowerCase();
+    const text = [
+        orderItem.id,
+        order.customer?.name,
+        order.customer?.phone,
+        order.customer?.email,
+        order.shipping?.methodLabel,
+        order.shipping?.address
+    ].join(" ").toLowerCase();
 
-  return text.includes(keyword.toLowerCase());
+    return text.includes(keyword.toLowerCase());
 }
 
 function renderOrders() {
-  const box = $("ordersList");
+    const box = $("ordersList");
 
-  const filtered = allOrders.filter((orderItem) => {
-    return (
-      matchOrderFilter(orderItem.data, currentOrderFilter) &&
-      matchOrderSearch(orderItem, currentOrderSearch)
-    );
-  });
+    const filtered = allOrders.filter((orderItem) => {
+        return (
+            matchOrderFilter(orderItem.data, currentOrderFilter) &&
+            matchOrderSearch(orderItem, currentOrderSearch)
+        );
+    });
 
-  if (!filtered.length) {
-    box.innerHTML = `<p class="muted">目前沒有符合條件的訂單。</p>`;
-    return;
-  }
+    if (!filtered.length) {
+        box.innerHTML = `<p class="muted">目前沒有符合條件的訂單。</p>`;
+        return;
+    }
 
-  box.innerHTML = filtered.map((orderItem) => {
-    const docId = orderItem.id;
-    const o = orderItem.data;
-    const items = o.items || [];
+    box.innerHTML = filtered.map((orderItem) => {
+        const docId = orderItem.id;
+        const o = orderItem.data;
+        const items = o.items || [];
 
-    return `
-      <div class="admin-data-card">
+        return `
+        <div class="admin-data-card">
         <h3>訂單：${docId}</h3>
 
         <p>姓名：${o.customer?.name || ""}</p>
         <p>總金額：NT$ ${Number(o.total || 0).toLocaleString("zh-Hant-TW")}</p>
 
         <div class="admin-status-row">
-          <label>
-            付款狀態
-            <select class="payment-status-select" data-order-id="${docId}">
-              ${Object.entries(PAYMENT_STATUS_LABELS).map(([value, label]) => `
-                <option value="${value}" ${o.payment?.status === value ? "selected" : ""}>
-                  ${label}
-                </option>
-              `).join("")}
-            </select>
-          </label>
+        <label>
+        付款狀態
+        <select class="payment-status-select" data-order-id="${docId}">
+        ${Object.entries(PAYMENT_STATUS_LABELS).map(([value, label]) => `
+            <option value="${value}" ${o.payment?.status === value ? "selected": ""}>
+            ${label}
+            </option>
+            `).join("")}
+        </select>
+        </label>
 
-          <label>
-            訂單狀態
-            <select class="order-status-select" data-order-id="${docId}">
-              ${Object.entries(ORDER_STATUS_LABELS).map(([value, label]) => `
-                <option value="${value}" ${o.status === value ? "selected" : ""}>
-                  ${label}
-                </option>
-              `).join("")}
-            </select>
-          </label>
+        <label>
+        訂單狀態
+        <select class="order-status-select" data-order-id="${docId}">
+        ${Object.entries(ORDER_STATUS_LABELS).map(([value, label]) => `
+            <option value="${value}" ${o.status === value ? "selected": ""}>
+            ${label}
+            </option>
+            `).join("")}
+        </select>
+        </label>
 
-          <button class="admin-btn save-order-status-btn" type="button" data-order-id="${docId}">
-            儲存狀態
-          </button>
+        <button class="admin-btn save-order-status-btn" type="button" data-order-id="${docId}">
+        儲存狀態
+        </button>
         </div>
 
         <button class="admin-btn secondary order-detail-toggle" type="button">
-          查看詳情
+        查看詳情
         </button>
 
         <div class="order-detail-panel" style="display:none;">
-          <hr>
+        <hr>
 
-          <p>電話：${o.customer?.phone || ""}</p>
-          <p>Email：${o.customer?.email || ""}</p>
-          <p>配送方式：${o.shipping?.methodLabel || ""}</p>
-          <p>收件資訊：${o.shipping?.address || ""}</p>
-
-          <p>商品明細：</p>
-          <ul>
-            ${items.map((item) => `
-              <li>${item.name}｜${item.variantLabel} × ${item.qty}</li>
-            `).join("")}
-          </ul>
-        </div>
-
-        <p class="admin-msg" id="orderMsg-${docId}"></p>
-      </div>
-    `;
-  }).join("");
-}
-
-  if (!filtered.length) {
-    box.innerHTML = `<p class="muted">目前沒有符合條件的訂單。</p>`;
-    return;
-  }
-
-  box.innerHTML = filtered.map((orderItem) => {
-    const docId = orderItem.id;
-    const o = orderItem.data;
-    const items = o.items || [];
-
-    return `
-      <div class="admin-data-card">
-        <h3>訂單：${docId}</h3>
-
-        <p>姓名：${o.customer?.name || ""}</p>
         <p>電話：${o.customer?.phone || ""}</p>
         <p>Email：${o.customer?.email || ""}</p>
         <p>配送方式：${o.shipping?.methodLabel || ""}</p>
         <p>收件資訊：${o.shipping?.address || ""}</p>
-        <p>總金額：NT$ ${Number(o.total || 0).toLocaleString("zh-Hant-TW")}</p>
 
-        <div class="admin-status-row">
-          <label>
-            付款狀態
-            <select class="payment-status-select" data-order-id="${docId}">
-              ${Object.entries(PAYMENT_STATUS_LABELS).map(([value, label]) => `
-                <option value="${value}" ${o.payment?.status === value ? "selected" : ""}>
-                  ${label}
-                </option>
-              `).join("")}
-            </select>
-          </label>
-
-          <label>
-            訂單狀態
-            <select class="order-status-select" data-order-id="${docId}">
-              ${Object.entries(ORDER_STATUS_LABELS).map(([value, label]) => `
-                <option value="${value}" ${o.status === value ? "selected" : ""}>
-                  ${label}
-                </option>
-              `).join("")}
-            </select>
-          </label>
-
-          <button class="admin-btn save-order-status-btn" type="button" data-order-id="${docId}">
-            儲存狀態
-          </button>
+        <p>商品明細：</p>
+        <ul>
+        ${items.map((item) => `
+            <li>${item.name}｜${item.variantLabel} × ${item.qty}</li>
+            `).join("")}
+        </ul>
         </div>
 
-        <p>商品：</p>
-        <ul>
-          ${items.map((item) => `
-            <li>${item.name}｜${item.variantLabel} × ${item.qty}</li>
-          `).join("")}
-        </ul>
-
         <p class="admin-msg" id="orderMsg-${docId}"></p>
-      </div>
-    `;
-  }).join("");
+        </div>
+        `;
+    }).join("");
 }
 
+
+
 async function loadOrders() {
-  const box = $("ordersList");
-  box.innerHTML = `<p class="muted">載入中...</p>`;
+    const box = $("ordersList");
+    box.innerHTML = `<p class="muted">載入中...</p>`;
 
-  try {
-    const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
-    const snapshot = await getDocs(q);
+    try {
+        const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+        const snapshot = await getDocs(q);
 
-    allOrders = snapshot.docs.map((docSnap) => ({
-      id: docSnap.id,
-      data: docSnap.data()
-    }));
+        allOrders = snapshot.docs.map((docSnap) => ({
+            id: docSnap.id,
+            data: docSnap.data()
+        }));
 
-    renderOrders();
-  } catch (err) {
-    console.error(err);
-    box.innerHTML = `<p class="muted">訂單資料載入失敗：${err.message}</p>`;
-  }
+        renderOrders();
+    } catch (err) {
+        console.error(err);
+        box.innerHTML = `<p class="muted">訂單資料載入失敗：${err.message}</p>`;
+    }
 }
 
 $("loadOrdersBtn")?.addEventListener("click", async () => {
-  await loadOrders();
-  ordersLoaded = true;
+    await loadOrders();
+    ordersLoaded = true;
 });
 
 document.querySelectorAll(".order-filter").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".order-filter").forEach((item) => {
-      item.classList.remove("active");
+    btn.addEventListener("click", () => {
+        document.querySelectorAll(".order-filter").forEach((item) => {
+            item.classList.remove("active");
+        });
+
+        btn.classList.add("active");
+        currentOrderFilter = btn.dataset.filter || "all";
+
+        renderOrders();
     });
-
-    btn.classList.add("active");
-    currentOrderFilter = btn.dataset.filter || "all";
-
-    renderOrders();
-  });
 });
 
 $("orderSearch")?.addEventListener("input", (e) => {
-  currentOrderSearch = e.target.value.trim();
-  renderOrders();
+    currentOrderSearch = e.target.value.trim();
+    renderOrders();
 });
 
 /* 儲存訂單狀態 */
 document.addEventListener("click", async (e) => {
-  const btn = e.target.closest(".save-order-status-btn");
-  if (!btn) return;
+    const btn = e.target.closest(".save-order-status-btn");
+    if (!btn) return;
 
-  const orderId = btn.dataset.orderId;
-  const msg = document.getElementById(`orderMsg-${orderId}`);
+    const orderId = btn.dataset.orderId;
+    const msg = document.getElementById(`orderMsg-${orderId}`);
 
-  const paymentSelect = document.querySelector(
-    `.payment-status-select[data-order-id="${orderId}"]`
-  );
+    const paymentSelect = document.querySelector(
+        `.payment-status-select[data-order-id="${orderId}"]`
+    );
 
-  const orderSelect = document.querySelector(
-    `.order-status-select[data-order-id="${orderId}"]`
-  );
+    const orderSelect = document.querySelector(
+        `.order-status-select[data-order-id="${orderId}"]`
+    );
 
-  if (!paymentSelect || !orderSelect) return;
+    if (!paymentSelect || !orderSelect) return;
 
-  msg.textContent = "儲存中...";
+    msg.textContent = "儲存中...";
 
-  try {
-    await updateDoc(doc(db, "orders", orderId), {
-      "payment.status": paymentSelect.value,
-      status: orderSelect.value
-    });
+    try {
+        await updateDoc(doc(db, "orders", orderId), {
+            "payment.status": paymentSelect.value,
+            status: orderSelect.value
+        });
 
-    const targetOrder = allOrders.find((item) => item.id === orderId);
+        const targetOrder = allOrders.find((item) => item.id === orderId);
 
-    if (targetOrder) {
-      targetOrder.data.payment = {
-        ...(targetOrder.data.payment || {}),
-        status: paymentSelect.value
-      };
+        if (targetOrder) {
+            targetOrder.data.payment = {
+                ...(targetOrder.data.payment || {}),
+                status: paymentSelect.value
+            };
 
-      targetOrder.data.status = orderSelect.value;
+            targetOrder.data.status = orderSelect.value;
+        }
+
+        msg.textContent = "狀態已更新";
+        await loadDashboardStats();
+    } catch (err) {
+        console.error(err);
+        msg.textContent = `更新失敗：${err.message}`;
     }
-
-    msg.textContent = "狀態已更新";
-    await loadDashboardStats();
-  } catch (err) {
-    console.error(err);
-    msg.textContent = `更新失敗：${err.message}`;
-  }
 });
 
 // 新增展開/收合事件
 document.addEventListener("click", (e) => {
-  const btn = e.target.closest(".order-detail-toggle");
-  if (!btn) return;
+    const btn = e.target.closest(".order-detail-toggle");
+    if (!btn) return;
 
-  const card = btn.closest(".admin-data-card");
-  const panel = card?.querySelector(".order-detail-panel");
+    const card = btn.closest(".admin-data-card");
+    const panel = card?.querySelector(".order-detail-panel");
 
-  if (!panel) return;
+    if (!panel) return;
 
-  const isOpen = panel.style.display === "block";
+    const isOpen = panel.style.display === "block";
 
-  panel.style.display = isOpen ? "none" : "block";
-  btn.textContent = isOpen ? "查看詳情" : "收起詳情";
+    panel.style.display = isOpen ? "none": "block";
+    btn.textContent = isOpen ? "查看詳情": "收起詳情";
 });
 /* 商品資料 */
 async function loadProductBySlug(slug) {
-  const editMsg = $("editMsg");
+    const editMsg = $("editMsg");
 
-  if (!slug) {
-    editMsg.textContent = "請輸入商品 slug";
-    return;
-  }
-
-  editMsg.textContent = "載入中...";
-
-  try {
-    const productRef = doc(db, "products", slug);
-    const snap = await getDoc(productRef);
-
-    if (!snap.exists()) {
-      editMsg.textContent = "找不到這個商品";
-      return;
+    if (!slug) {
+        editMsg.textContent = "請輸入商品 slug";
+        return;
     }
 
-    const p = snap.data();
+    editMsg.textContent = "載入中...";
 
-    currentImages = p.images || [];
-    updatePreviewImage(currentImages[0] || "");
+    try {
+        const productRef = doc(db, "products", slug);
+        const snap = await getDoc(productRef);
 
-    $("name").value = p.name || "";
-    $("en").value = p.en || "";
-    $("slug").value = p.slug || slug;
-    $("category").value = p.category || "single-oil";
-    $("productStatus").value = p.status || "active";
-    $("latin").value = p.latin || "";
+        if (!snap.exists()) {
+            editMsg.textContent = "找不到這個商品";
+            return;
+        }
 
-    $("price5").value =
-      p.variants?.find((v) => v.label === "5 ml")?.price ?? "";
+        const p = snap.data();
 
-    $("price10").value =
-      p.variants?.find((v) => v.label === "10 ml")?.price ?? "";
+        currentImages = p.images || [];
+        updatePreviewImage(currentImages[0] || "");
 
-    $("price30").value =
-      p.variants?.find((v) => v.label === "30 ml")?.price ?? "";
+        $("name").value = p.name || "";
+        $("en").value = p.en || "";
+        $("slug").value = p.slug || slug;
+        $("category").value = p.category || "single-oil";
+        $("productStatus").value = p.status || "active";
+        $("latin").value = p.latin || "";
 
-    $("family").value = p.overview?.["科屬"] || "";
-    $("extractPart").value = p.overview?.["萃取部位"] || "";
-    $("extractMethod").value = p.overview?.["萃取方法"] || "";
-    $("plantOrigin").value = p.overview?.["植物產地"] || "";
-    $("aroma").value = p.overview?.["香氣概述"] || "";
-    $("usageOverview").value = p.overview?.["建議用途"] || "";
+        $("price5").value =
+        p.variants?.find((v) => v.label === "5 ml")?.price ?? "";
 
-    $("compositionText").value = (p.composition || [])
-      .map((c) => `${c.name},${c.value}`)
-      .join("\n");
+        $("price10").value =
+        p.variants?.find((v) => v.label === "10 ml")?.price ?? "";
 
-    $("description").value = (p.description || []).join("\n");
+        $("price30").value =
+        p.variants?.find((v) => v.label === "30 ml")?.price ?? "";
 
-    $("featured").checked = p.featured === true;
+        $("family").value = p.overview?.["科屬"] || "";
+        $("extractPart").value = p.overview?.["萃取部位"] || "";
+        $("extractMethod").value = p.overview?.["萃取方法"] || "";
+        $("plantOrigin").value = p.overview?.["植物產地"] || "";
+        $("aroma").value = p.overview?.["香氣概述"] || "";
+        $("usageOverview").value = p.overview?.["建議用途"] || "";
 
-    editMsg.textContent = "商品資料已載入，可以修改後儲存";
-  } catch (err) {
-    console.error(err);
-    editMsg.textContent = `載入失敗：${err.message}`;
-  }
+        $("compositionText").value = (p.composition || [])
+        .map((c) => `${c.name},${c.value}`)
+        .join("\n");
+
+        $("description").value = (p.description || []).join("\n");
+
+        $("featured").checked = p.featured === true;
+
+        editMsg.textContent = "商品資料已載入，可以修改後儲存";
+    } catch (err) {
+        console.error(err);
+        editMsg.textContent = `載入失敗：${err.message}`;
+    }
 }
 
 $("loadProductBtn")?.addEventListener("click", async () => {
-  const slug = $("slug").value.trim();
-  await loadProductBySlug(slug);
+    const slug = $("slug").value.trim();
+    await loadProductBySlug(slug);
 });
 
 // 統計
 async function loadDashboardStats() {
-  try {
-    const [productsSnap, usersSnap, ordersSnap] = await Promise.all([
-      getDocs(collection(db, "products")),
-      getDocs(collection(db, "users")),
-      getDocs(collection(db, "orders"))
-    ]);
+    try {
+        const [productsSnap, usersSnap, ordersSnap] = await Promise.all([
+            getDocs(collection(db, "products")),
+            getDocs(collection(db, "users")),
+            getDocs(collection(db, "orders"))
+        ]);
 
-    const orders = ordersSnap.docs.map((docSnap) => docSnap.data());
+        const orders = ordersSnap.docs.map((docSnap) => docSnap.data());
 
-    const pendingOrders = orders.filter((order) => {
-      return (order.status || "pending") === "pending";
-    }).length;
+        const pendingOrders = orders.filter((order) => {
+            return (order.status || "pending") === "pending";
+        }).length;
 
-    const paidNotShipped = orders.filter((order) => {
-      return (
-        order.payment?.status === "paid" &&
-        (order.status || "pending") === "pending"
-      );
-    }).length;
+        const paidNotShipped = orders.filter((order) => {
+            return (
+                order.payment?.status === "paid" &&
+                (order.status || "pending") === "pending"
+            );
+        }).length;
 
-    $("statProducts").textContent = String(productsSnap.size);
-    $("statUsers").textContent = String(usersSnap.size);
-    $("statPendingOrders").textContent = String(pendingOrders);
-    $("statPaidNotShipped").textContent = String(paidNotShipped);
-  } catch (err) {
-    console.error("Dashboard 統計載入失敗", err);
-  }
+        $("statProducts").textContent = String(productsSnap.size);
+        $("statUsers").textContent = String(usersSnap.size);
+        $("statPendingOrders").textContent = String(pendingOrders);
+        $("statPaidNotShipped").textContent = String(paidNotShipped);
+    } catch (err) {
+        console.error("Dashboard 統計載入失敗", err);
+    }
 }
 /* 商品列表 */
 async function loadProductsList() {
-  const box = $("productsList");
-  box.innerHTML = `<p class="muted">載入中...</p>`;
+    const box = $("productsList");
+    box.innerHTML = `<p class="muted">載入中...</p>`;
 
-  try {
-    const snapshot = await getDocs(collection(db, "products"));
+    try {
+        const snapshot = await getDocs(collection(db, "products"));
 
-    allProducts = snapshot.docs.map((docSnap) => ({
-      id: docSnap.id,
-      data: docSnap.data()
-    }));
+        allProducts = snapshot.docs.map((docSnap) => ({
+            id: docSnap.id,
+            data: docSnap.data()
+        }));
 
-    renderProductsList();
-  } catch (err) {
-    console.error(err);
-    box.innerHTML = `商品列表載入失敗：${err.message}`;
-  }
+        renderProductsList();
+    } catch (err) {
+        console.error(err);
+        box.innerHTML = `商品列表載入失敗：${err.message}`;
+    }
 }
 
 function matchProductSearch(productItem, keyword) {
-  if (!keyword) return true;
+    if (!keyword) return true;
 
-  const p = productItem.data;
+    const p = productItem.data;
 
-  const text = [
-    p.name,
-    p.en,
-    p.slug
-  ].join(" ").toLowerCase();
+    const text = [
+        p.name,
+        p.en,
+        p.slug
+    ].join(" ").toLowerCase();
 
-  return text.includes(keyword.toLowerCase());
+    return text.includes(keyword.toLowerCase());
 }
 
 function renderProductsList() {
-  const box = $("productsList");
+    const box = $("productsList");
 
-  const filtered = allProducts.filter((item) =>
-    matchProductSearch(item, currentProductSearch)
-  );
+    const filtered = allProducts.filter((item) =>
+        matchProductSearch(item, currentProductSearch)
+    );
 
-  if (!filtered.length) {
-    box.innerHTML = `<p class="muted">找不到商品</p>`;
-    return;
-  }
+    if (!filtered.length) {
+        box.innerHTML = `<p class="muted">找不到商品</p>`;
+        return;
+    }
 
-  box.innerHTML = filtered.map((item) => {
-    const p = item.data;
-    const slug = p.slug || item.id;
+    box.innerHTML = filtered.map((item) => {
+        const p = item.data;
+        const slug = p.slug || item.id;
 
-    return `
-      <div class="admin-data-card">
+        return `
+        <div class="admin-data-card">
         <h3>${p.name || "未命名商品"}</h3>
         <p>${p.en || ""}</p>
 
         <div class="product-card-actions">
-          <label>
-            商品狀態
-            <select class="product-status-select" data-slug="${slug}">
-              <option value="active" ${p.status === "active" ? "selected" : ""}>上架</option>
-              <option value="inactive" ${p.status === "inactive" ? "selected" : ""}>下架</option>
-            </select>
-          </label>
+        <label>
+        商品狀態
+        <select class="product-status-select" data-slug="${slug}">
+        <option value="active" ${p.status === "active" ? "selected": ""}>上架</option>
+        <option value="inactive" ${p.status === "inactive" ? "selected": ""}>下架</option>
+        </select>
+        </label>
 
-          <label class="product-featured-toggle">
-            <input
-              type="checkbox"
-              class="product-featured-check"
-              data-slug="${slug}"
-              ${p.featured ? "checked" : ""}
-            >
-            精選商品
-          </label>
+        <label class="product-featured-toggle">
+        <input
+        type="checkbox"
+        class="product-featured-check"
+        data-slug="${slug}"
+        ${p.featured ? "checked": ""}
+        >
+        精選商品
+        </label>
         </div>
 
         <button class="admin-btn edit-product-btn" type="button" data-slug="${slug}">
-          編輯商品
+        編輯商品
         </button>
 
         <p class="admin-msg" id="productMsg-${slug}"></p>
-      </div>
-    `;
-  }).join("");
+        </div>
+        `;
+    }).join("");
 }
 
 $("loadProductsListBtn")?.addEventListener("click", loadProductsList);
 
 $("productSearch")?.addEventListener("input", (e) => {
-  currentProductSearch = e.target.value.trim();
-  renderProductsList();
+    currentProductSearch = e.target.value.trim();
+    renderProductsList();
 });
 
 /* 新增商品 */
 $("newProductBtn")?.addEventListener("click", () => {
-  $("productForm")?.reset();
+    $("productForm")?.reset();
 
-  currentImages = [];
-  updatePreviewImage("");
+    currentImages = [];
+    updatePreviewImage("");
 
-  $("featured").checked = true;
-  $("productStatus").value = "active";
-  $("msg").textContent = "";
-  $("editMsg").textContent = "正在新增商品";
+    $("featured").checked = true;
+    $("productStatus").value = "active";
+    $("msg").textContent = "";
+    $("editMsg").textContent = "正在新增商品";
 
-  $("productForm")?.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
+    $("productForm")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
 });
 
 /* 一鍵編輯商品 */
 document.addEventListener("click", async (e) => {
-  const btn = e.target.closest(".edit-product-btn");
-  if (!btn) return;
+    const btn = e.target.closest(".edit-product-btn");
+    if (!btn) return;
 
-  const slug = btn.dataset.slug;
+    const slug = btn.dataset.slug;
 
-  await loadProductBySlug(slug);
+    await loadProductBySlug(slug);
 
-  $("productForm")?.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
+    $("productForm")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
 });
 
 /* 商品卡直接更新狀態 */
 document.addEventListener("change", async (e) => {
-  const statusSelect = e.target.closest(".product-status-select");
-  if (!statusSelect) return;
+    const statusSelect = e.target.closest(".product-status-select");
+    if (!statusSelect) return;
 
-  const slug = statusSelect.dataset.slug;
-  const newStatus = statusSelect.value;
-  const msg = document.getElementById(`productMsg-${slug}`);
+    const slug = statusSelect.dataset.slug;
+    const newStatus = statusSelect.value;
+    const msg = document.getElementById(`productMsg-${slug}`);
 
-  if (msg) msg.textContent = "更新中...";
+    if (msg) msg.textContent = "更新中...";
 
-  try {
-    await updateDoc(doc(db, "products", slug), {
-      status: newStatus
-    });
+    try {
+        await updateDoc(doc(db, "products", slug), {
+            status: newStatus
+        });
 
-    const target = allProducts.find((item) => {
-      const p = item.data;
-      return (p.slug || item.id) === slug;
-    });
+        const target = allProducts.find((item) => {
+            const p = item.data;
+            return (p.slug || item.id) === slug;
+        });
 
-    if (target) {
-      target.data.status = newStatus;
+        if (target) {
+            target.data.status = newStatus;
+        }
+
+        if (msg) msg.textContent = "商品狀態已更新";
+    } catch (err) {
+        console.error(err);
+        if (msg) msg.textContent = `更新失敗：${err.message}`;
     }
-
-    if (msg) msg.textContent = "商品狀態已更新";
-  } catch (err) {
-    console.error(err);
-    if (msg) msg.textContent = `更新失敗：${err.message}`;
-  }
 });
 
 /* 商品卡直接更新精選 */
 document.addEventListener("change", async (e) => {
-  const featuredCheck = e.target.closest(".product-featured-check");
-  if (!featuredCheck) return;
+    const featuredCheck = e.target.closest(".product-featured-check");
+    if (!featuredCheck) return;
 
-  const slug = featuredCheck.dataset.slug;
-  const isFeatured = featuredCheck.checked;
-  const msg = document.getElementById(`productMsg-${slug}`);
+    const slug = featuredCheck.dataset.slug;
+    const isFeatured = featuredCheck.checked;
+    const msg = document.getElementById(`productMsg-${slug}`);
 
-  if (msg) msg.textContent = "更新中...";
+    if (msg) msg.textContent = "更新中...";
 
-  try {
-    await updateDoc(doc(db, "products", slug), {
-      featured: isFeatured
-    });
+    try {
+        await updateDoc(doc(db, "products", slug), {
+            featured: isFeatured
+        });
 
-    const target = allProducts.find((item) => {
-      const p = item.data;
-      return (p.slug || item.id) === slug;
-    });
+        const target = allProducts.find((item) => {
+            const p = item.data;
+            return (p.slug || item.id) === slug;
+        });
 
-    if (target) {
-      target.data.featured = isFeatured;
+        if (target) {
+            target.data.featured = isFeatured;
+        }
+
+        if (msg) msg.textContent = "精選狀態已更新";
+    } catch (err) {
+        console.error(err);
+        if (msg) msg.textContent = `更新失敗：${err.message}`;
     }
-
-    if (msg) msg.textContent = "精選狀態已更新";
-  } catch (err) {
-    console.error(err);
-    if (msg) msg.textContent = `更新失敗：${err.message}`;
-  }
 });
 
 /* 新增或更新商品 */
 $("productForm")?.addEventListener("submit", async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const msg = $("msg");
-  msg.textContent = "儲存中...";
+    const msg = $("msg");
+    msg.textContent = "儲存中...";
 
-  const slug = $("slug").value.trim();
+    const slug = $("slug").value.trim();
 
-  if (!slug) {
-    msg.textContent = "請填寫 slug";
-    return;
-  }
+    if (!slug) {
+        msg.textContent = "請填寫 slug";
+        return;
+    }
 
-  try {
-    const uploadedImageUrl = await uploadProductImage(slug);
-    const images = uploadedImageUrl ? [uploadedImageUrl] : currentImages;
+    try {
+        const uploadedImageUrl = await uploadProductImage(slug);
+        const images = uploadedImageUrl ? [uploadedImageUrl]: currentImages;
 
-    const product = {
-      slug,
-      name: $("name").value.trim(),
-      en: $("en").value.trim(),
-      latin: $("latin").value.trim(),
-      category: $("category").value,
-      status: $("productStatus").value,
-      featured: $("featured").checked,
-      salesCount: 0,
-      images,
-      variants: makeVariants(),
-      overview: {
-        "科屬": $("family").value.trim(),
-        "萃取部位": $("extractPart").value.trim(),
-        "萃取方法": $("extractMethod").value.trim(),
-        "植物產地": $("plantOrigin").value.trim(),
-        "香氣概述": $("aroma").value.trim(),
-        "建議用途": $("usageOverview").value.trim()
-      },
-      composition: parseComposition($("compositionText").value),
-      docs: {
-        coa: "",
-        sds: "",
-        eu: ""
-      },
-      description: splitLines($("description").value)
-    };
+        const product = {
+            slug,
+            name: $("name").value.trim(),
+            en: $("en").value.trim(),
+            latin: $("latin").value.trim(),
+            category: $("category").value,
+            status: $("productStatus").value,
+            featured: $("featured").checked,
+            salesCount: 0,
+            images,
+            variants: makeVariants(),
+            overview: {
+                "科屬": $("family").value.trim(),
+                "萃取部位": $("extractPart").value.trim(),
+                "萃取方法": $("extractMethod").value.trim(),
+                "植物產地": $("plantOrigin").value.trim(),
+                "香氣概述": $("aroma").value.trim(),
+                "建議用途": $("usageOverview").value.trim()
+            },
+            composition: parseComposition($("compositionText").value),
+            docs: {
+                coa: "",
+                sds: "",
+                eu: ""
+            },
+            description: splitLines($("description").value)
+        };
 
-    await setDoc(doc(db, "products", slug), product);
+        await setDoc(doc(db, "products", slug), product);
 
-    currentImages = images;
+        currentImages = images;
 
-    msg.textContent = `儲存成功：${product.name}`;
+        msg.textContent = `儲存成功：${product.name}`;
 
-    e.target.reset();
-    $("featured").checked = true;
-    currentImages = [];
-    updatePreviewImage("");
+        e.target.reset();
+        $("featured").checked = true;
+        currentImages = [];
+        updatePreviewImage("");
 
-    await loadProductsList();
-    await loadDashboardStats();
-  } catch (err) {
-    console.error(err);
-    msg.textContent = `儲存失敗：${err.message}`;
-  }
+        await loadProductsList();
+        await loadDashboardStats();
+    } catch (err) {
+        console.error(err);
+        msg.textContent = `儲存失敗：${err.message}`;
+    }
 });

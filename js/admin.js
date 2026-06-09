@@ -161,6 +161,10 @@ document.querySelectorAll(".admin-tab").forEach((tab) => {
 });
 
 /* 工具函式 */
+function fmtCurrency(value) {
+  return `NT$ ${Number(value || 0).toLocaleString("zh-Hant-TW")}`;
+}
+
 function toNumber(value) {
     const n = Number(value);
     return Number.isFinite(n) ? n: 0;
@@ -588,34 +592,71 @@ $("loadProductBtn")?.addEventListener("click", async () => {
 
 // 統計
 async function loadDashboardStats() {
-    try {
-        const [productsSnap, usersSnap, ordersSnap] = await Promise.all([
-            getDocs(collection(db, "products")),
-            getDocs(collection(db, "users")),
-            getDocs(collection(db, "orders"))
-        ]);
+  try {
+    const [productsSnap, usersSnap, ordersSnap] = await Promise.all([
+      getDocs(collection(db, "products")),
+      getDocs(collection(db, "users")),
+      getDocs(collection(db, "orders"))
+    ]);
 
-        const orders = ordersSnap.docs.map((docSnap) => docSnap.data());
+    const orders = ordersSnap.docs.map((docSnap) => docSnap.data());
 
-        const pendingOrders = orders.filter((order) => {
-            return (order.status || "pending") === "pending";
-        }).length;
+    const pendingOrders = orders.filter((order) => {
+      return (order.status || "pending") === "pending";
+    }).length;
 
-        const paidNotShipped = orders.filter((order) => {
-            return (
-                order.payment?.status === "paid" &&
-                (order.status || "pending") === "pending"
-            );
-        }).length;
+    const paidNotShipped = orders.filter((order) => {
+      return (
+        order.payment?.status === "paid" &&
+        (order.status || "pending") === "pending"
+      );
+    }).length;
 
-        $("statProducts").textContent = String(productsSnap.size);
-        $("statUsers").textContent = String(usersSnap.size);
-        $("statPendingOrders").textContent = String(pendingOrders);
-        $("statPaidNotShipped").textContent = String(paidNotShipped);
-    } catch (err) {
-        console.error("Dashboard 統計載入失敗", err);
-    }
+    const completedOrders = orders.filter((order) => {
+      return (order.status || "") === "completed";
+    });
+
+    const totalRevenue = completedOrders.reduce((sum, order) => {
+      return sum + Number(order.total || 0);
+    }, 0);
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    const monthlyRevenue = completedOrders
+      .filter((order) => {
+        const createdAt = order.createdAt?.toDate
+          ? order.createdAt.toDate()
+          : new Date(order.createdAt);
+
+        return (
+          createdAt.getFullYear() === currentYear &&
+          createdAt.getMonth() === currentMonth
+        );
+      })
+      .reduce((sum, order) => {
+        return sum + Number(order.total || 0);
+      }, 0);
+
+    const averageOrderValue = completedOrders.length
+      ? Math.round(totalRevenue / completedOrders.length)
+      : 0;
+
+    $("statProducts").textContent = String(productsSnap.size);
+    $("statUsers").textContent = String(usersSnap.size);
+    $("statPendingOrders").textContent = String(pendingOrders);
+    $("statPaidNotShipped").textContent = String(paidNotShipped);
+
+    $("statTotalRevenue").textContent = fmtCurrency(totalRevenue);
+    $("statMonthlyRevenue").textContent = fmtCurrency(monthlyRevenue);
+    $("statCompletedOrders").textContent = String(completedOrders.length);
+    $("statAverageOrderValue").textContent = fmtCurrency(averageOrderValue);
+  } catch (err) {
+    console.error("Dashboard 統計載入失敗", err);
+  }
 }
+
 /* 商品列表 */
 async function loadProductsList() {
     const box = $("productsList");

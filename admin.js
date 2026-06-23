@@ -544,7 +544,7 @@ async function openProductModal(id = null) {
         const row = $(`.spec-row[data-size="${size}"]`);
         if (!row) return;
         const sp = specs[size] || {};
-        row.querySelector('.spec-enabled').checked = sp.enabled !== false && !!sp.price;
+        row.querySelector('.spec-enabled').checked = sp.enabled === true || (sp.enabled !== false && (!!sp.price || sp.stock > 0));
         row.querySelector('.spec-price').value     = sp.price || '';
         row.querySelector('.spec-stock').value     = sp.stock !== undefined ? sp.stock : '';
       });
@@ -605,11 +605,18 @@ async function saveProduct() {
       };
     });
 
-    const totalStock = SPEC_SIZES.reduce((s, sz) => s + (specs[sz]?.enabled ? (specs[sz]?.stock || 0) : 0), 0);
+    // 計算「所有啟用規格」的總庫存
+    const totalStock = SPEC_SIZES.reduce((s, sz) => {
+      const sp = specs[sz];
+      if (!sp || !sp.enabled) return s;
+      return s + (Number(sp.stock) || 0);
+    }, 0);
+    // 計算「所有規格（不論啟用）」的總庫存，判斷是否需要自動下架
+    const allStock = SPEC_SIZES.reduce((s, sz) => s + (Number(specs[sz]?.stock) || 0), 0);
     let status = getValue('#product-status');
-    if (totalStock === 0 && status === 'active') {
+    if (allStock === 0 && status === 'active') {
       status = 'hidden';
-      toast('啟用規格庫存為 0，已自動下架', 'info');
+      toast('所有規格庫存為 0，已自動下架', 'info');
     }
 
     // 解析成分（每行 "名稱,百分比"）

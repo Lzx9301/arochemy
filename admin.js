@@ -14,10 +14,12 @@ const firebaseConfig = {
   measurementId: "G-KHR4PVKJCK"
 };
 
-firebase.initializeApp(firebaseConfig);
-const auth    = firebase.auth();
-const db      = firebase.firestore();
-const storage = firebase.storage();
+// ── 後台使用獨立的 Firebase app 實例（名稱 "admin-app"）────────
+// 這樣後台和前台的登入 session 完全分開，互不干擾
+const adminApp = firebase.initializeApp(firebaseConfig, 'admin-app');
+const auth     = adminApp.auth();
+const db       = adminApp.firestore();
+const storage  = adminApp.storage();
 
 // ── EmailJS 設定 ─────────────────────────────────────────────
 const EMAILJS_CONFIG = {

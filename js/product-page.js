@@ -347,20 +347,31 @@ function renderComposition(comp) {
   const el = $('compBars');
   if (!el) return;
 
-  if (!comp.length) {
+  if (!comp || !comp.length) {
     el.innerHTML = '<div class="muted" style="padding:16px">暫無成分資料</div>';
     return;
   }
 
-  const max = Math.max(...comp.map(c => c.pct || 0), 1);
+  // 相容多種格式：pct / percent / percentage
+  const normalized = comp.map(c => ({
+    name: c.name || c.ingredient || '—',
+    pct:  Number(c.pct ?? c.percent ?? c.percentage ?? 0),
+  })).filter(c => c.name && c.name !== '—');
 
-  el.innerHTML = comp.map(c => `
+  if (!normalized.length) {
+    el.innerHTML = '<div class="muted" style="padding:16px">暫無成分資料</div>';
+    return;
+  }
+
+  const max = Math.max(...normalized.map(c => c.pct), 1);
+
+  el.innerHTML = normalized.map(c => `
     <div class="comp-row">
       <div class="comp-name">${esc(c.name)}</div>
       <div class="comp-bar-wrap">
-        <div class="comp-bar" style="width:${Math.round((c.pct/max)*100)}%"></div>
+        <div class="comp-bar" style="width:${Math.round((c.pct / max) * 100)}%"></div>
       </div>
-      <div class="comp-pct">${c.pct}%</div>
+      <div class="comp-pct">${c.pct > 0 ? c.pct + '%' : '—'}</div>
     </div>
   `).join('');
 }

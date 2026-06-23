@@ -36,25 +36,37 @@ const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replac
    初始化
 ══════════════════════════════════════════════════════════════ */
 async function init() {
-  // 支援多種 URL 格式：?id=xxx 或 #id=xxx 或 ?productId=xxx
-  const params  = new URLSearchParams(location.search);
-  const hashParams = new URLSearchParams(location.hash.replace('#',''));
-  const id = params.get('id') || params.get('productId') || hashParams.get('id') || null;
+  const params = new URLSearchParams(location.search);
+  // 優先用 ?id=（Firestore document ID），其次支援舊版 ?slug=
+  const id   = params.get('id')   || null;
+  const slug = params.get('slug') || null;
 
-  console.log('[product-page] URL:', location.href);
-  console.log('[product-page] product id:', id);
-
-  if (!id) {
-    showError('找不到商品 ID。<br><small style="color:#bbb">目前網址：' + location.href + '</small>');
+  if (!id && !slug) {
+    showError('找不到商品資訊，請回到產品列表重新選擇。');
     return;
   }
 
   try {
-    const snap = await getDoc(doc(db, 'products', id));
-    console.log('[product-page] Firestore snap exists:', snap.exists());
+    let snap = null;
 
-    if (!snap.exists()) {
-      showError('此商品不存在或已下架。<br><small style="color:#bbb">ID：' + id + '</small>');
+    if (id) {
+      // 直接用 document ID 查詢（最快）
+      snap = await getDoc(doc(db, 'products', id));
+      if (!snap.exists()) snap = null;
+    }
+
+    if (!snap && slug) {
+      // 用 slug 欄位查詢（舊連結相容）
+      const { getDocs, collection, query, where } = await import(
+        'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js'
+      );
+      const q = query(collection(db, 'products'), where('slug', '==', slug));
+      const result = await getDocs(q);
+      if (!result.empty) snap = result.docs[0];
+    }
+
+    if (!snap || !snap.exists()) {
+      showError('此商品不存在或已下架。');
       return;
     }
 

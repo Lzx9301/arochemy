@@ -73,30 +73,13 @@ async function safeGetDoc(ref) {
 // 1. 先確認 admins collection 是否有任何文件
 // 2. 若 admins collection 是空的（尚未設定），放行所有登入者進後台
 // 3. 若 admins collection 已有資料，則嚴格驗證 uid
-// 管理員 Email 白名單（與 Firestore 規則的 isAdmin() 保持一致）
-const ADMIN_EMAILS = [
-  'nicoliu930226@gmail.com',
-  // 如需新增其他管理員，在這裡加 email
-];
+// 管理員 Email 白名單
+const ADMIN_EMAILS = ['nicoliu930226@gmail.com'];
 
-async function checkIsAdmin(uid) {
-  // 直接比對登入者的 email，不需要讀 Firestore
-  // 與你的 Firestore 規則 isAdmin() 邏輯完全一致
-  try {
-    const user = adminApp.auth().currentUser;
-    if (!user) return false;
-
-    const email = user.email || '';
-    if (ADMIN_EMAILS.includes(email)) {
-      return true;
-    }
-
-    // Email 不在白名單
-    return false;
-  } catch (e) {
-    console.warn('[Admin] checkIsAdmin error:', e.message);
-    return false;
-  }
+function checkIsAdmin(user) {
+  // 直接傳入 user 物件比對 email，最簡單最可靠
+  if (!user || !user.email) return false;
+  return ADMIN_EMAILS.includes(user.email.toLowerCase().trim());
 }
 
 function initAuth() {
@@ -107,19 +90,17 @@ function initAuth() {
   const emailInput  = $('#login-email');
   const passInput   = $('#login-password');
 
-  auth.onAuthStateChanged(async user => {
+  auth.onAuthStateChanged(user => {
     if (user) {
-      // ── 管理員驗證 ──────────────────────────────────────
-      const isAdmin = await checkIsAdmin(user.uid);
-      if (!isAdmin) {
-        // 前台會員或非管理員 → 立即登出並顯示提示
-        await auth.signOut();
+      // 同步比對 email，不需要 await
+      if (!checkIsAdmin(user)) {
+        auth.signOut();
         loginErr.textContent = '此帳號沒有後台管理權限。';
         loginScreen.style.display = 'flex';
         appLayout.style.display   = 'none';
         return;
       }
-      // ── 通過驗證 → 進入後台 ────────────────────────────
+      // 通過驗證 → 進入後台
       currentUser = user;
       loginScreen.style.display = 'none';
       appLayout.style.display   = 'flex';

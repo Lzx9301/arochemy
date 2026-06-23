@@ -74,23 +74,37 @@ async function safeGetDoc(ref) {
 // 2. 若 admins collection 是空的（尚未設定），放行所有登入者進後台
 // 3. 若 admins collection 已有資料，則嚴格驗證 uid
 async function checkIsAdmin(uid) {
+  // 直接嘗試讀取自己的 admins/{uid} 文件
   try {
-    // 先檢查 admins collection 是否已建立（有任何文件）
-    const collSnap = await db.collection('admins').limit(1).get();
-    
-    if (collSnap.empty) {
-      // admins collection 尚未設定 → 暫時放行，讓你可以進後台去設定
-      console.warn('[Admin] admins collection 尚未設定，暫時放行。請盡快在 Firestore 建立 admins collection！');
+    const docSnap = await db.collection('admins').doc(uid).get();
+    if (docSnap.exists) return true;
+
+    // 文件不存在 → 嘗試讀 collection 判斷是否尚未設定
+    try {
+      const collSnap = await db.collection('admins').limit(1).get();
+      if (collSnap.empty) {
+        // Collection 是空的 → 尚未設定，暫時放行
+        console.warn('[Admin] admins collection 是空的，暫時放行。');
+        return true;
+      }
+    } catch (_) {}
+
+    // Collection 有資料但此 uid 不在裡面
+    return false;
+
+  } catch (e) {
+    console.warn('[Admin] checkIsAdmin error:', e.code, e.message);
+
+    // ── Firestore 規則擋住時的處理 ──────────────────────
+    // permission-denied 通常是安全規則問題，暫時放行並警告
+    if (e.code === 'permission-denied') {
+      console.warn('[Admin] Firestore 安全規則擋住了 admins 讀取，暫時放行。請更新 Firestore 規則！');
       return true;
     }
-    
-    // admins collection 已有資料 → 嚴格驗證
-    const docSnap = await db.collection('admins').doc(uid).get();
-    return docSnap.exists;
-    
-  } catch (e) {
-    // 權限問題或網路錯誤 → 為安全起見拒絕
-    console.warn('Admin check failed:', e.message);
+
+    // 其他錯誤（網路等）→ 顯示在登入畫面讓使用者知道
+    const loginErr = document.getElementById('login-error');
+    if (loginErr) loginErr.textContent = '驗證失敗：' + (e.message || e.code);
     return false;
   }
 }

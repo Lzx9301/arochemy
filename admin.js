@@ -532,16 +532,12 @@ async function openProductModal(id = null) {
       setValue('#product-doc-eu',      data.docEU       || '');
       // 成分：陣列轉成每行一條 "名稱,百分比" 格式
       setValue('#product-composition',
-        (data.composition || []).map(c => `${c.name},${c.pct}`).join('
-')
+        (data.composition || []).map(c => c.name + ',' + c.pct).join('\n')
       );
       // 清單欄位：陣列轉換行文字
-      setValue('#product-storage', (data.storage || []).join('
-'));
-      setValue('#product-usage',   (data.usage   || []).join('
-'));
-      setValue('#product-caution', (data.caution || []).join('
-'));
+      setValue('#product-storage', (data.storage || []).join('\n'));
+      setValue('#product-usage',   (data.usage   || []).join('\n'));
+      setValue('#product-caution', (data.caution || []).join('\n'));
 
       const specs = data.specs || {};
       SPEC_SIZES.forEach(size => {
@@ -619,8 +615,7 @@ async function saveProduct() {
     // 解析成分（每行 "名稱,百分比"）
     const compositionRaw = getValue('#product-composition');
     const composition = compositionRaw
-      .split('
-')
+      .split('\n')
       .map(line => line.trim())
       .filter(line => line.includes(','))
       .map(line => {
@@ -630,8 +625,7 @@ async function saveProduct() {
       .filter(c => c.name);
 
     // 解析清單欄位（每行一條）
-    const parseList = sel => getValue(sel).split('
-').map(l => l.trim()).filter(Boolean);
+    const parseList = sel => getValue(sel).split('\n').map(l => l.trim()).filter(Boolean);
 
     const data = {
       name:        getValue('#product-name'),

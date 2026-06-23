@@ -1,929 +1,1366 @@
-import {
-    initializeApp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+/* ===================================
+   Arochemy Admin Panel — admin.js v3
+   修正：Firestore 索引問題、collection 不存在時的 graceful handling
+   =================================== */
 
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  getDoc,
-  collection,
-  getDocs,
-  query,
-  orderBy,
-  updateDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-import {
-    getAuth,
-    signInWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-import {
-    getStorage,
-    ref,
-    uploadBytes,
-    getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-
-/* Firebase 設定：主專案負責 Firestore / Auth */
+// ── Firebase 初始化 ──────────────────────────────────────────
 const firebaseConfig = {
-    apiKey: "AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",
-    authDomain: "trying-89dc6.firebaseapp.com",
-    projectId: "trying-89dc6",
-    storageBucket: "trying-89dc6.firebasestorage.app",
-    messagingSenderId: "115559148124",
-    appId: "1:115559148124:web:ac37b9c249183a919b5499",
-    measurementId: "G-KHR4PVKJCK"
+  apiKey: "AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",
+  authDomain: "trying-89dc6.firebaseapp.com",
+  projectId: "trying-89dc6",
+  storageBucket: "trying-89dc6.firebasestorage.app",
+  messagingSenderId: "115559148124",
+  appId: "1:115559148124:web:ac37b9c249183a919b5499",
+  measurementId: "G-KHR4PVKJCK"
 };
 
-/* 舊專案暫時負責商品圖片 Storage */
-const storageConfig = {
-    apiKey: "AIzaSyAdS--elaCvzQOAPhMDPByLoTRXGibC9Rc",
-    authDomain: "octo-7c190.firebaseapp.com",
-    projectId: "octo-7c190",
-    storageBucket: "octo-7c190.firebasestorage.app",
-    messagingSenderId: "351002657731",
-    appId: "1:351002657731:web:9db320ed4723e74a2a7376"
+// ── 後台使用獨立的 Firebase app 實例（名稱 "admin-app"）────────
+// 這樣後台和前台的登入 session 完全分開，互不干擾
+const adminApp = firebase.initializeApp(firebaseConfig, 'admin-app');
+const auth     = adminApp.auth();
+const db       = adminApp.firestore();
+const storage  = adminApp.storage();
+
+// ── EmailJS 設定 ─────────────────────────────────────────────
+const EMAILJS_CONFIG = {
+  publicKey:  '6ErXVriFfrV0WgH1C',
+  serviceId:  'service_cq6g91d',
+  templateId: 'template_p34lyxz',
 };
 
-const app = initializeApp(firebaseConfig);
-const storageApp = initializeApp(storageConfig, "storageApp");
+// ── 全域狀態 ──────────────────────────────────────────────────
+let currentUser        = null;
+let editingProductId   = null;
+let editingArticleId   = null;
+let productImages      = [];
+let coverImageFile     = null;
+let allOrders          = [];
+let currentOrderFilter = 'all';
 
-const db = getFirestore(app);
-const auth = getAuth(app);
-const storage = getStorage(storageApp);
+// ── DOM 工具 ──────────────────────────────────────────────────
+const $  = (sel, ctx = document) => ctx.querySelector(sel);
+const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
-const ADMIN_EMAIL = "nicoliu930226@gmail.com";
-const $ = (id) => document.getElementById(id);
-
-let currentImages = [];
-
-let usersLoaded = false;
-let ordersLoaded = false;
-
-let allOrders = [];
-let currentOrderFilter = "all";
-let currentOrderSearch = "";
-
-let allProducts = [];
-let currentProductSearch = "";
-
-const PAYMENT_STATUS_LABELS = {
-    pending: "未付款",
-    paid: "已付款",
-    refunding: "退款中",
-    refunded: "已退款"
-};
-
-const ORDER_STATUS_LABELS = {
-    pending: "處理中",
-    shipped: "已出貨",
-    completed: "已完成",
-    cancelled: "已取消"
-};
-
-/* 管理員登入 */
-const loginBox = $("loginBox");
-const adminBox = $("adminBox");
-const loginBtn = $("loginBtn");
-const logoutBtn = $("logoutBtn");
-const loginMsg = $("loginMsg");
-
-loginBtn?.addEventListener("click", async () => {
-    loginMsg.textContent = "登入中...";
-
-    try {
-        await signInWithEmailAndPassword(
-            auth,
-            $("adminEmail").value.trim(),
-            $("adminPassword").value
-        );
-    } catch (err) {
-        console.error(err);
-        loginMsg.textContent = "登入失敗，請確認 Email 或密碼";
-    }
-});
-
-logoutBtn?.addEventListener("click", async () => {
-    await signOut(auth);
-});
-
-onAuthStateChanged(auth, async (user) => {
-    if (user && user.email === ADMIN_EMAIL) {
-        loginBox.style.display = "none";
-        adminBox.style.display = "block";
-        loginMsg.textContent = "";
-
-        await loadProductsList();
-        await loadDashboardStats();
-    } else {
-        loginBox.style.display = "block";
-        adminBox.style.display = "none";
-
-        if (user && user.email !== ADMIN_EMAIL) {
-            loginMsg.textContent = "此帳號沒有管理員權限";
-            await signOut(auth);
-        }
-    }
-});
-
-/* 後台切換：商品 / 會員 / 訂單 */
-document.querySelectorAll(".admin-tab").forEach((tab) => {
-    tab.addEventListener("click", async (e) => {
-        e.preventDefault();
-
-        const target = tab.dataset.panel;
-
-        document.querySelectorAll(".admin-tab").forEach((btn) => {
-            btn.classList.remove("active");
-        });
-
-        document.querySelectorAll(".admin-panel").forEach((panel) => {
-            panel.classList.remove("active");
-        });
-
-        tab.classList.add("active");
-        document.getElementById(target)?.classList.add("active");
-
-        if (target === "usersPanel" && !usersLoaded) {
-            await loadUsers();
-            usersLoaded = true;
-        }
-
-        if (target === "ordersPanel" && !ordersLoaded) {
-            await loadOrders();
-            ordersLoaded = true;
-        }
-    });
-});
-
-/* 工具函式 */
-function fmtCurrency(value) {
-  return `NT$ ${Number(value || 0).toLocaleString("zh-Hant-TW")}`;
+// ── 安全取得 collection（不存在時回傳空陣列，不報錯）───────────
+async function safeGet(ref) {
+  try {
+    const snap = await ref.get();
+    const items = [];
+    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+    return items;
+  } catch (e) {
+    // Firestore collection 不存在或權限問題，回傳空陣列
+    console.warn('safeGet warning:', e.message);
+    return [];
+  }
 }
 
-function toNumber(value) {
-    const n = Number(value);
-    return Number.isFinite(n) ? n: 0;
+async function safeGetDoc(ref) {
+  try {
+    const doc = await ref.get();
+    return doc.exists ? doc.data() : {};
+  } catch (e) {
+    console.warn('safeGetDoc warning:', e.message);
+    return {};
+  }
 }
 
-function splitLines(text) {
-    return text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-}
+/* ═══════════════════════════════════════════════════════════════
+   認證（含管理員角色驗證）
+════════════════════════════════════════════════════════════ */
 
-function parseComposition(text) {
-    return text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-        const [name, value] = line.split(",").map((x) => x.trim());
+// 管理員驗證：
+// 1. 先確認 admins collection 是否有任何文件
+// 2. 若 admins collection 是空的（尚未設定），放行所有登入者進後台
+// 3. 若 admins collection 已有資料，則嚴格驗證 uid
+// 管理員 Email 白名單（與 Firestore 規則的 isAdmin() 保持一致）
+const ADMIN_EMAILS = [
+  'nicoliu930226@gmail.com',
+  // 如需新增其他管理員，在這裡加 email
+];
 
-        return {
-            name: name || "",
-            value: Number(value) || 0
-        };
-    })
-    .filter((item) => item.name);
-}
+async function checkIsAdmin(uid) {
+  // 直接比對登入者的 email，不需要讀 Firestore
+  // 與你的 Firestore 規則 isAdmin() 邏輯完全一致
+  try {
+    const user = adminApp.auth().currentUser;
+    if (!user) return false;
 
-function makeVariants() {
-    const variants = [];
-
-    const price5 = $("price5").value;
-    const price10 = $("price10").value;
-    const price30 = $("price30").value;
-
-    if (price5 !== "") {
-        variants.push({
-            label: "5 ml", price: toNumber(price5)
-        });
+    const email = user.email || '';
+    if (ADMIN_EMAILS.includes(email)) {
+      return true;
     }
 
-    if (price10 !== "") {
-        variants.push({
-            label: "10 ml", price: toNumber(price10)
-        });
-    }
-
-    if (price30 !== "") {
-        variants.push({
-            label: "30 ml", price: toNumber(price30)
-        });
-    }
-
-    return variants;
+    // Email 不在白名單
+    return false;
+  } catch (e) {
+    console.warn('[Admin] checkIsAdmin error:', e.message);
+    return false;
+  }
 }
 
-function updatePreviewImage(url) {
-    const preview = $("previewImage");
-    if (!preview) return;
+function initAuth() {
+  const loginScreen = $('#login-screen');
+  const appLayout   = $('#app-layout');
+  const loginBtn    = $('#login-btn');
+  const loginErr    = $('#login-error');
+  const emailInput  = $('#login-email');
+  const passInput   = $('#login-password');
 
-    if (url) {
-        preview.src = url;
-        preview.style.display = "block";
-    } else {
-        preview.removeAttribute("src");
-        preview.style.display = "none";
-    }
-}
-
-/* 選擇圖片後，立即顯示本機預覽 */
-$("productImage")?.addEventListener("change", (e) => {
-    const file = e.target.files?.[0];
-
-    if (!file) {
-        updatePreviewImage("");
+  auth.onAuthStateChanged(async user => {
+    if (user) {
+      // ── 管理員驗證 ──────────────────────────────────────
+      const isAdmin = await checkIsAdmin(user.uid);
+      if (!isAdmin) {
+        // 前台會員或非管理員 → 立即登出並顯示提示
+        await auth.signOut();
+        loginErr.textContent = '此帳號沒有後台管理權限。';
+        loginScreen.style.display = 'flex';
+        appLayout.style.display   = 'none';
         return;
+      }
+      // ── 通過驗證 → 進入後台 ────────────────────────────
+      currentUser = user;
+      loginScreen.style.display = 'none';
+      appLayout.style.display   = 'flex';
+      $('#user-email-display').textContent   = user.email;
+      $('#user-avatar-initials').textContent = user.email[0].toUpperCase();
+      initDashboard();
+    } else {
+      loginScreen.style.display = 'flex';
+      appLayout.style.display   = 'none';
     }
+  });
 
-    const previewUrl = URL.createObjectURL(file);
-    updatePreviewImage(previewUrl);
-});
+  loginBtn.addEventListener('click', doLogin);
+  [emailInput, passInput].forEach(el =>
+    el.addEventListener('keydown', e => e.key === 'Enter' && doLogin())
+  );
 
-/* 上傳商品圖片 */
-async function uploadProductImage(slug) {
-    const fileInput = $("productImage");
-    const file = fileInput?.files?.[0];
-
-    if (!file) return "";
-
-    const ext = file.name.split(".").pop();
-    const safeSlug = slug.replace(/[^\w-]/g, "-");
-    const filePath = `products/${safeSlug}-${Date.now()}.${ext}`;
-
-    const storageRef = ref(storage, filePath);
-
-    await uploadBytes(storageRef, file);
-
-    return await getDownloadURL(storageRef);
-}
-
-/* 會員資料 */
-async function loadUsers() {
-    const box = $("usersList");
-    box.innerHTML = `<p class="muted">載入中...</p>`;
-
+  async function doLogin() {
+    const email = emailInput.value.trim();
+    const pass  = passInput.value;
+    loginErr.textContent = '';
+    loginBtn.disabled    = true;
+    loginBtn.textContent = '驗證中…';
     try {
-        const snapshot = await getDocs(collection(db, "users"));
-
-        if (snapshot.empty) {
-            box.innerHTML = `<p class="muted">目前沒有會員資料。</p>`;
-            return;
-        }
-
-        box.innerHTML = snapshot.docs.map((docSnap) => {
-            const u = docSnap.data();
-
-            return `
-            <div class="admin-data-card">
-            <h3>${u.name || "未填姓名"}</h3>
-            <p>Email：${u.email || ""}</p>
-            <p>電話：${u.phone || ""}</p>
-            <p>電子報：${u.newsletterSubscribed ? "已訂閱": "未訂閱"}</p>
-            <p>角色：${u.role || "customer"}</p>
-            </div>
-            `;
-        }).join("");
+      await auth.signInWithEmailAndPassword(email, pass);
+      // onAuthStateChanged 接手後續管理員驗證
     } catch (err) {
-        console.error(err);
-        box.innerHTML = `<p class="muted">會員資料載入失敗：${err.message}</p>`;
+      const msgs = {
+        'auth/user-not-found':    '找不到此帳號',
+        'auth/wrong-password':    '密碼錯誤',
+        'auth/invalid-email':     'Email 格式不正確',
+        'auth/invalid-credential':'帳號或密碼錯誤',
+        'auth/too-many-requests': '嘗試次數過多，請稍後再試',
+      };
+      loginErr.textContent = msgs[err.code] || err.message;
+    } finally {
+      loginBtn.disabled    = false;
+      loginBtn.textContent = '登入';
     }
+  }
+
+  $('#logout-btn').addEventListener('click', () => {
+    auth.signOut();
+    toast('已登出', 'info');
+  });
 }
 
-$("loadUsersBtn")?.addEventListener("click", async () => {
-    await loadUsers();
-    usersLoaded = true;
-});
+/* ═══════════════════════════════════════════════════════════════
+   導航
+════════════════════════════════════════════════════════════ */
+function initNav() {
+  const navItems    = $$('.nav-item');
+  const pages       = $$('.page');
+  const topbarTitle = $('#topbar-title');
+  const sidebar     = $('.sidebar');
+  const overlay     = $('#sidebar-overlay');
+  const hamburger   = $('#hamburger-btn');
 
-/* 訂單資料 */
-function matchOrderFilter(order, filter) {
-    const paymentStatus = order.payment?.status || "pending";
-    const orderStatus = order.status || "pending";
+  const titles = {
+    'page-dashboard': '儀表板',
+    'page-hero':      '首頁設定',
+    'page-products':  '產品管理',
+    'page-articles':  '文章管理',
+    'page-orders':    '訂單管理',
+    'page-members':   '會員管理',
+    'page-settings':  '網站設定',
+  };
 
-    if (filter === "all") return true;
-    if (filter === "pending") return orderStatus === "pending";
-    if (filter === "paid_not_shipped") {
-        return paymentStatus === "paid" && orderStatus === "pending";
-    }
-    if (filter === "shipped") return orderStatus === "shipped";
-    if (filter === "completed") return orderStatus === "completed";
-    if (filter === "cancelled") return orderStatus === "cancelled";
+  const loaders = {
+    'page-products': () => loadProducts(),
+    'page-articles': () => loadArticles(),
+    'page-hero':     loadHomepageSettings,
+    'page-settings': loadSiteSettings,
+    'page-orders':   () => loadOrders(),
+    'page-members':  () => loadMembers(),
+  };
 
-    return true;
-}
-
-function matchOrderSearch(orderItem, keyword) {
-    if (!keyword) return true;
-
-    const order = orderItem.data;
-
-    const text = [
-        orderItem.id,
-        order.customer?.name,
-        order.customer?.phone,
-        order.customer?.email,
-        order.shipping?.methodLabel,
-        order.shipping?.address
-    ].join(" ").toLowerCase();
-
-    return text.includes(keyword.toLowerCase());
-}
-
-function renderOrders() {
-    const box = $("ordersList");
-
-    const filtered = allOrders.filter((orderItem) => {
-        return (
-            matchOrderFilter(orderItem.data, currentOrderFilter) &&
-            matchOrderSearch(orderItem, currentOrderSearch)
-        );
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const target = item.dataset.page;
+      navItems.forEach(n => n.classList.remove('active'));
+      pages.forEach(p => p.classList.remove('active'));
+      item.classList.add('active');
+      document.getElementById(target)?.classList.add('active');
+      topbarTitle.textContent = titles[target] || '';
+      loaders[target]?.();
+      closeSidebar();
     });
+  });
 
-    if (!filtered.length) {
-        box.innerHTML = `<p class="muted">目前沒有符合條件的訂單。</p>`;
-        return;
-    }
+  hamburger?.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('show');
+  });
+  overlay?.addEventListener('click', closeSidebar);
 
-    box.innerHTML = filtered.map((orderItem) => {
-        const docId = orderItem.id;
-        const o = orderItem.data;
-        const items = o.items || [];
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay?.classList.remove('show');
+  }
+}
 
-        return `
-        <div class="admin-data-card">
-        <h3>訂單：${docId}</h3>
+/* ═══════════════════════════════════════════════════════════════
+   儀表板
+════════════════════════════════════════════════════════════ */
+async function initDashboard() {
+  // 各 collection 可能尚未建立，用 safeGet 避免報錯
+  const [products, articles, orders, members] = await Promise.all([
+    safeGet(db.collection('products')),
+    safeGet(db.collection('articles')),
+    safeGet(db.collection('orders')),
+    safeGet(db.collection('members')),
+  ]);
 
-        <p>姓名：${o.customer?.name || ""}</p>
-        <p>總金額：NT$ ${Number(o.total || 0).toLocaleString("zh-Hant-TW")}</p>
+  const now   = new Date();
+  const month = now.getMonth();
+  const year  = now.getFullYear();
 
-        <div class="admin-status-row">
-        <label>
-        付款狀態
-        <select class="payment-status-select" data-order-id="${docId}">
-        ${Object.entries(PAYMENT_STATUS_LABELS).map(([value, label]) => `
-            <option value="${value}" ${o.payment?.status === value ? "selected": ""}>
-            ${label}
-            </option>
-            `).join("")}
-        </select>
-        </label>
+  let monthlyRevenue = 0, completedCount = 0, pendingCount = 0;
 
-        <label>
-        訂單狀態
-        <select class="order-status-select" data-order-id="${docId}">
-        ${Object.entries(ORDER_STATUS_LABELS).map(([value, label]) => `
-            <option value="${value}" ${o.status === value ? "selected": ""}>
-            ${label}
-            </option>
-            `).join("")}
-        </select>
-        </label>
+  orders.forEach(o => {
+    const ts = toDate(o.createdAt);
+    if (ts.getMonth() === month && ts.getFullYear() === year && o.status !== 'cancel')
+      monthlyRevenue += Number(o.total || 0);
+    if (o.status === 'done') completedCount++;
+    else if (o.status !== 'cancel') pendingCount++;
+  });
 
-        <button class="admin-btn save-order-status-btn" type="button" data-order-id="${docId}">
-        儲存狀態
-        </button>
-        </div>
+  setText('#stat-products', products.length);
+  setText('#stat-articles', articles.length);
+  setText('#stat-orders',   orders.length);
+  setText('#stat-members',  members.length);
+  setText('#stat-revenue',  monthlyRevenue.toLocaleString());
+  setText('#stat-pending',  pendingCount);
+  setText('#stat-done',     completedCount);
 
-        <button class="admin-btn secondary order-detail-toggle" type="button">
-        查看詳情
-        </button>
-
-        <div class="order-detail-panel" style="display:none;">
-        <hr>
-
-        <p>電話：${o.customer?.phone || ""}</p>
-        <p>Email：${o.customer?.email || ""}</p>
-        <p>配送方式：${o.shipping?.methodLabel || ""}</p>
-        <p>收件資訊：${o.shipping?.address || ""}</p>
-
-        <p>商品明細：</p>
-        <ul>
-        ${items.map((item) => `
-            <li>${item.name}｜${item.variantLabel} × ${item.qty}</li>
-            `).join("")}
-        </ul>
-        </div>
-
-        <p class="admin-msg" id="orderMsg-${docId}"></p>
-        </div>
+  // 最新訂單（最近 5 筆，不用 orderBy 避免索引問題）
+  const sorted = [...orders].sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
+  const tbody  = $('#recent-orders-list');
+  if (tbody) {
+    tbody.innerHTML = '';
+    if (!sorted.length) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">尚無訂單資料</td></tr>`;
+    } else {
+      sorted.slice(0, 5).forEach(o => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="td-name">${escHtml(o.customerName || '—')}</td>
+          <td>NT$ ${Number(o.total || 0).toLocaleString()}</td>
+          <td><span class="badge badge-${o.status || 'pending'}">${statusLabel(o.status)}</span></td>
+          <td>${formatDate(o.createdAt)}</td>
         `;
-    }).join("");
-}
-
-
-
-async function loadOrders() {
-    const box = $("ordersList");
-    box.innerHTML = `<p class="muted">載入中...</p>`;
-
-    try {
-        const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
-        const snapshot = await getDocs(q);
-
-        allOrders = snapshot.docs.map((docSnap) => ({
-            id: docSnap.id,
-            data: docSnap.data()
-        }));
-
-        renderOrders();
-    } catch (err) {
-        console.error(err);
-        box.innerHTML = `<p class="muted">訂單資料載入失敗：${err.message}</p>`;
+        tbody.appendChild(tr);
+      });
     }
+  }
+
+  await renderSalesRank('#dashboard-sales-rank', 5, orders);
 }
 
-$("loadOrdersBtn")?.addEventListener("click", async () => {
-    await loadOrders();
-    ordersLoaded = true;
-});
+/* ═══════════════════════════════════════════════════════════════
+   首頁設定
+════════════════════════════════════════════════════════════ */
+async function loadHomepageSettings() {
+  // 用 safeGetDoc，settings doc 不存在時回傳 {}
+  const data = await safeGetDoc(db.collection('settings').doc('homepage'));
 
-document.querySelectorAll(".order-filter").forEach((btn) => {
-    btn.addEventListener("click", () => {
-        document.querySelectorAll(".order-filter").forEach((item) => {
-            item.classList.remove("active");
-        });
+  setValue('#hero-title',    data.heroTitle    || '');
+  setValue('#hero-subtitle', data.heroSubtitle || '');
+  setValue('#hero-btn-text', data.heroBtnText  || '');
+  setValue('#hero-btn-link', data.heroBtnLink  || '');
+  setValue('#brand-title',   data.brandTitle   || '');
+  setValue('#brand-body',    data.brandBody    || '');
+  renderFaqEditor(data.faqs || []);
+}
 
-        btn.classList.add("active");
-        currentOrderFilter = btn.dataset.filter || "all";
-
-        renderOrders();
+function initHomepageSettings() {
+  $$('.section-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      $$('.section-tab').forEach(t => t.classList.remove('active'));
+      $$('.section-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.panel)?.classList.add('active');
     });
-});
+  });
 
-$("orderSearch")?.addEventListener("input", (e) => {
-    currentOrderSearch = e.target.value.trim();
-    renderOrders();
-});
+  $('#save-hero-btn')?.addEventListener('click', () => saveHomepageSection({
+    heroTitle:    getValue('#hero-title'),
+    heroSubtitle: getValue('#hero-subtitle'),
+    heroBtnText:  getValue('#hero-btn-text'),
+    heroBtnLink:  getValue('#hero-btn-link'),
+  }));
 
-/* 儲存訂單狀態 */
-document.addEventListener("click", async (e) => {
-  const btn = e.target.closest(".save-order-status-btn");
-  if (!btn) return;
+  $('#save-brand-btn')?.addEventListener('click', () => saveHomepageSection({
+    brandTitle: getValue('#brand-title'),
+    brandBody:  getValue('#brand-body'),
+  }));
 
-  const orderId = btn.dataset.orderId;
-  const msg = document.getElementById(`orderMsg-${orderId}`);
+  $('#add-faq-btn')?.addEventListener('click', () => addFaqItem('', ''));
 
-  const paymentSelect = document.querySelector(
-    `.payment-status-select[data-order-id="${orderId}"]`
-  );
+  $('#save-faq-btn')?.addEventListener('click', () => {
+    saveHomepageSection({ faqs: collectFaqs() });
+  });
 
-  const orderSelect = document.querySelector(
-    `.order-status-select[data-order-id="${orderId}"]`
-  );
+  $('#update-featured-btn')?.addEventListener('click', updateFeaturedProducts);
+}
 
-  if (!paymentSelect || !orderSelect) return;
+async function saveHomepageSection(data) {
+  try {
+    await db.collection('settings').doc('homepage').set(data, { merge: true });
+    toast('已儲存', 'success');
+  } catch (e) {
+    toast('儲存失敗：' + e.message, 'error');
+  }
+}
 
-  const paymentStatus = paymentSelect.value;
-  const orderStatus = orderSelect.value;
+function renderFaqEditor(faqs) {
+  const container = $('#faq-editor-list');
+  if (!container) return;
+  container.innerHTML = '';
+  faqs.forEach(f => addFaqItem(f.q, f.a));
+}
 
-  msg.textContent = "儲存中...";
+function addFaqItem(q = '', a = '') {
+  const container = $('#faq-editor-list');
+  if (!container) return;
+  const div = document.createElement('div');
+  div.className = 'faq-item';
+  div.innerHTML = `
+    <div class="faq-drag-handle">
+      <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+        <circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/>
+        <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+        <circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/>
+      </svg>
+    </div>
+    <div class="faq-fields">
+      <input type="text" placeholder="問題" value="${escHtml(q)}" class="faq-q">
+      <textarea placeholder="回答" rows="2" class="faq-a">${escHtml(a)}</textarea>
+    </div>
+    <button class="faq-remove" title="刪除">×</button>
+  `;
+  div.querySelector('.faq-remove').addEventListener('click', () => div.remove());
+  container.appendChild(div);
+}
+
+function collectFaqs() {
+  return $$('.faq-item').map(item => ({
+    q: item.querySelector('.faq-q').value.trim(),
+    a: item.querySelector('.faq-a').value.trim(),
+  })).filter(f => f.q);
+}
+
+/* ── 更新精選產品 ── */
+async function updateFeaturedProducts() {
+  const btn       = $('#update-featured-btn');
+  const strongEl  = btn?.querySelector('.text strong');
+  if (strongEl) strongEl.textContent = '計算中…';
+  if (btn) btn.disabled = true;
 
   try {
-    const updateData = {
-      "payment.status": paymentStatus,
-      status: orderStatus
-    };
+    const orders   = await safeGet(db.collection('orders'));
+    const salesMap = {};
 
-    if (orderStatus === "completed") {
-      updateData.completedAt = serverTimestamp();
+    orders.forEach(o => {
+      if (o.status === 'cancel') return;
+      (o.items || []).forEach(item => {
+        const key = item.productId || item.name;
+        if (!key) return;
+        if (!salesMap[key]) salesMap[key] = { name: item.name || key, qty: 0, productId: item.productId };
+        salesMap[key].qty += Number(item.qty || item.quantity || 1);
+      });
+    });
+
+    const top3 = Object.values(salesMap)
+      .sort((a, b) => b.qty - a.qty)
+      .slice(0, 3)
+      .map(p => p.productId)
+      .filter(Boolean);
+
+    if (!top3.length) {
+      toast('目前沒有訂單銷售紀錄，無法計算熱銷', 'info');
+      return;
     }
 
-    await updateDoc(doc(db, "orders", orderId), updateData);
+    const allProducts = await safeGet(db.collection('products'));
+    const batch = db.batch();
+    allProducts.forEach(p => {
+      batch.update(db.collection('products').doc(p.id), { featured: top3.includes(p.id) });
+    });
+    await batch.commit();
+    await saveHomepageSection({ featuredProductIds: top3, featuredUpdatedAt: new Date().toISOString() });
+    toast(`精選產品已更新（熱銷前 ${top3.length} 名）`, 'success');
+  } catch (e) {
+    toast('更新失敗：' + e.message, 'error');
+  } finally {
+    if (strongEl) strongEl.textContent = '一鍵更新本月熱銷精選';
+    if (btn) btn.disabled = false;
+  }
+}
 
-    const targetOrder = allOrders.find((item) => item.id === orderId);
+/* ═══════════════════════════════════════════════════════════════
+   產品管理
+════════════════════════════════════════════════════════════ */
+const SPEC_SIZES = ['5ml', '10ml', '30ml'];
 
-    if (targetOrder) {
-      targetOrder.data.payment = {
-        ...(targetOrder.data.payment || {}),
-        status: paymentStatus
-      };
+async function loadProducts(filter = '', catFilter = '') {
+  const tbody = $('#products-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = skeletonRow(7);
 
-      targetOrder.data.status = orderStatus;
+  // 不用 orderBy，抓回來後在前端排序，避免索引建立需求
+  const products = await safeGet(db.collection('products'));
+  products.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
 
-      if (orderStatus === "completed") {
-        targetOrder.data.completedAt = new Date();
+  let filtered = products;
+  if (filter) filtered = filtered.filter(p => p.name?.toLowerCase().includes(filter.toLowerCase()));
+  if (catFilter && catFilter !== 'all') filtered = filtered.filter(p => p.category === catFilter);
+
+  setText('#stat-products', products.length);
+  tbody.innerHTML = '';
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">目前沒有符合的產品</td></tr>`;
+    return;
+  }
+
+  filtered.forEach(p => {
+    const imgHtml = p.images?.[0]
+      ? `<div class="thumb"><img src="${escHtml(p.images[0])}" alt=""></div>`
+      : `<div class="thumb">🌿</div>`;
+
+    const specs      = p.specs || {};
+    const totalStock = SPEC_SIZES.reduce((s, sz) => s + Number(specs[sz]?.stock || 0), 0);
+    const maxStock   = Math.max(...SPEC_SIZES.map(sz => Number(specs[sz]?.stock || 0)), 1);
+    const stockClass = totalStock === 0 ? 'stock-out' : totalStock < 10 ? 'stock-low' : 'stock-ok';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${imgHtml}</td>
+      <td class="td-name">
+        ${escHtml(p.name || '—')}
+        ${p.featured ? '<span class="badge badge-success" style="margin-left:6px">⭐ 精選</span>' : ''}
+      </td>
+      <td>${catLabel(p.category)}</td>
+      <td style="font-size:11px;color:var(--text-muted);line-height:1.8">
+        ${SPEC_SIZES.filter(s => specs[s]?.enabled).map(s =>
+          `${s}：NT$${Number(specs[s]?.price||0).toLocaleString()}`).join('<br>') || '—'}
+      </td>
+      <td>
+        <div class="stock-bar-wrap">
+          <div class="stock-bar-bg" style="width:60px">
+            <div class="stock-bar-fill ${stockClass}" style="width:${Math.min(100,(totalStock/(maxStock*3))*100)}%"></div>
+          </div>
+          <span style="font-size:11px;color:var(--text-secondary)">${totalStock}</span>
+        </div>
+      </td>
+      <td><span class="badge badge-${p.status === 'active' ? 'success' : 'hidden'}">${p.status === 'active' ? '上架中' : '下架'}</span></td>
+      <td>
+        <div class="flex-row gap-2">
+          <button class="btn btn-sm btn-secondary edit-product-btn" data-id="${p.id}">編輯</button>
+          <button class="btn btn-sm btn-danger delete-product-btn" data-id="${p.id}" data-name="${escHtml(p.name||'')}">刪除</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  $$('.edit-product-btn').forEach(b  => b.addEventListener('click', () => openProductModal(b.dataset.id)));
+  $$('.delete-product-btn').forEach(b => b.addEventListener('click', () => confirmDelete('product', b.dataset.id, b.dataset.name)));
+}
+
+function initProductsPage() {
+  $('#add-product-btn')?.addEventListener('click', () => openProductModal());
+
+  $$('#products-cat-filter .filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      $$('#products-cat-filter .filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      loadProducts($('#product-search')?.value || '', chip.dataset.cat);
+    });
+  });
+
+  $('#product-search')?.addEventListener('input', e => {
+    const activeCat = $('#products-cat-filter .filter-chip.active')?.dataset.cat || '';
+    loadProducts(e.target.value, activeCat);
+  });
+
+  $('#save-product-btn')?.addEventListener('click', saveProduct);
+
+  const uploadZone = $('#product-image-upload');
+  const fileInput  = $('#product-image-input');
+  uploadZone?.addEventListener('click', () => fileInput?.click());
+  uploadZone?.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+  uploadZone?.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+  uploadZone?.addEventListener('drop', e => {
+    e.preventDefault(); uploadZone.classList.remove('dragover');
+    handleProductImages(e.dataTransfer.files);
+  });
+  fileInput?.addEventListener('change', e => handleProductImages(e.target.files));
+}
+
+async function openProductModal(id = null) {
+  editingProductId = id;
+  productImages    = [];
+
+  $$('#product-modal input, #product-modal textarea, #product-modal select').forEach(el => {
+    if (el.type === 'checkbox') el.checked = false;
+    else el.value = '';
+  });
+  $('#product-image-previews').innerHTML = '';
+  setValue('#product-status', 'active');
+  $('#product-modal-title').textContent = id ? '編輯產品' : '新增產品';
+
+  if (id) {
+    try {
+      const data = await safeGetDoc(db.collection('products').doc(id));
+      setValue('#product-name',        data.name        || '');
+      setValue('#product-category',    data.category    || '');
+      setValue('#product-description', data.description || '');
+      setValue('#product-status',      data.status      || 'active');
+      setValue('#product-origin',      data.origin      || '');
+      setValue('#product-extraction',  data.extraction  || '');
+      setValue('#product-plant-part',  data.plantPart   || '');
+      setValue('#product-scent-note',  data.scentNote   || '');
+      setValue('#product-skin-type',   data.skinType    || '');
+      setValue('#product-doc-coa',     data.docCOA      || '');
+      setValue('#product-doc-sds',     data.docSDS      || '');
+      setValue('#product-doc-eu',      data.docEU       || '');
+      // 成分：陣列轉成每行一條 "名稱,百分比" 格式
+      setValue('#product-composition',
+        (data.composition || []).map(c => `${c.name},${c.pct}`).join('
+')
+      );
+      // 清單欄位：陣列轉換行文字
+      setValue('#product-storage', (data.storage || []).join('
+'));
+      setValue('#product-usage',   (data.usage   || []).join('
+'));
+      setValue('#product-caution', (data.caution || []).join('
+'));
+
+      const specs = data.specs || {};
+      SPEC_SIZES.forEach(size => {
+        const row = $(`.spec-row[data-size="${size}"]`);
+        if (!row) return;
+        const sp = specs[size] || {};
+        row.querySelector('.spec-enabled').checked = sp.enabled !== false && !!sp.price;
+        row.querySelector('.spec-price').value     = sp.price || '';
+        row.querySelector('.spec-stock').value     = sp.stock !== undefined ? sp.stock : '';
+      });
+
+      productImages = (data.images || []).map(url => ({ dataUrl: url }));
+      renderProductImagePreviews();
+    } catch (e) { toast('載入產品資料失敗：' + e.message, 'error'); return; }
+  }
+
+  openModal('product-modal');
+}
+
+function handleProductImages(files) {
+  Array.from(files).forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e => { productImages.push({ dataUrl: e.target.result, file }); renderProductImagePreviews(); };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderProductImagePreviews() {
+  const container = $('#product-image-previews');
+  if (!container) return;
+  container.innerHTML = '';
+  productImages.forEach((img, i) => {
+    const div = document.createElement('div');
+    div.className = 'image-preview-item';
+    div.innerHTML = `<img src="${img.dataUrl}" alt=""><button class="image-preview-remove">×</button>`;
+    div.querySelector('button').addEventListener('click', () => { productImages.splice(i, 1); renderProductImagePreviews(); });
+    container.appendChild(div);
+  });
+}
+
+async function saveProduct() {
+  const btn = $('#save-product-btn');
+  btn.disabled = true; btn.textContent = '儲存中…';
+  try {
+    const uploadedUrls = [];
+    for (const img of productImages) {
+      if (img.file) {
+        const ref = storage.ref(`products/${Date.now()}_${img.file.name}`);
+        await ref.put(img.file);
+        uploadedUrls.push(await ref.getDownloadURL());
+      } else {
+        uploadedUrls.push(img.dataUrl);
       }
     }
 
-    msg.textContent = "狀態已更新";
-    await loadDashboardStats();
-  } catch (err) {
-    console.error(err);
-    msg.textContent = `更新失敗：${err.message}`;
-  }
-});
-
-// 新增展開/收合事件
-document.addEventListener("click", (e) => {
-    const btn = e.target.closest(".order-detail-toggle");
-    if (!btn) return;
-
-    const card = btn.closest(".admin-data-card");
-    const panel = card?.querySelector(".order-detail-panel");
-
-    if (!panel) return;
-
-    const isOpen = panel.style.display === "block";
-
-    panel.style.display = isOpen ? "none": "block";
-    btn.textContent = isOpen ? "查看詳情": "收起詳情";
-});
-/* 商品資料 */
-async function loadProductBySlug(slug) {
-    const editMsg = $("editMsg");
-
-    if (!slug) {
-        editMsg.textContent = "請輸入商品 slug";
-        return;
-    }
-
-    editMsg.textContent = "載入中...";
-
-    try {
-        const productRef = doc(db, "products", slug);
-        const snap = await getDoc(productRef);
-
-        if (!snap.exists()) {
-            editMsg.textContent = "找不到這個商品";
-            return;
-        }
-
-        const p = snap.data();
-
-        currentImages = p.images || [];
-        updatePreviewImage(currentImages[0] || "");
-
-        $("name").value = p.name || "";
-        $("en").value = p.en || "";
-        $("slug").value = p.slug || slug;
-        $("category").value = p.category || "single-oil";
-        $("productStatus").value = p.status || "active";
-        $("latin").value = p.latin || "";
-
-        $("price5").value =
-        p.variants?.find((v) => v.label === "5 ml")?.price ?? "";
-
-        $("price10").value =
-        p.variants?.find((v) => v.label === "10 ml")?.price ?? "";
-
-        $("price30").value =
-        p.variants?.find((v) => v.label === "30 ml")?.price ?? "";
-
-        $("family").value = p.overview?.["科屬"] || "";
-        $("extractPart").value = p.overview?.["萃取部位"] || "";
-        $("extractMethod").value = p.overview?.["萃取方法"] || "";
-        $("plantOrigin").value = p.overview?.["植物產地"] || "";
-        $("aroma").value = p.overview?.["香氣概述"] || "";
-        $("usageOverview").value = p.overview?.["建議用途"] || "";
-
-        $("compositionText").value = (p.composition || [])
-        .map((c) => `${c.name},${c.value}`)
-        .join("\n");
-
-        $("description").value = (p.description || []).join("\n");
-
-        $("featured").checked = p.featured === true;
-
-        editMsg.textContent = "商品資料已載入，可以修改後儲存";
-    } catch (err) {
-        console.error(err);
-        editMsg.textContent = `載入失敗：${err.message}`;
-    }
-}
-
-$("loadProductBtn")?.addEventListener("click", async () => {
-    const slug = $("slug").value.trim();
-    await loadProductBySlug(slug);
-});
-
-// 統計
-async function loadDashboardStats() {
-  try {
-    const [productsSnap, usersSnap, ordersSnap] = await Promise.all([
-      getDocs(collection(db, "products")),
-      getDocs(collection(db, "users")),
-      getDocs(collection(db, "orders"))
-    ]);
-
-    const orders = ordersSnap.docs.map((docSnap) => docSnap.data());
-
-    const pendingOrders = orders.filter((order) => {
-      return (order.status || "pending") === "pending";
-    }).length;
-
-    const paidNotShipped = orders.filter((order) => {
-      return (
-        order.payment?.status === "paid" &&
-        (order.status || "pending") === "pending"
-      );
-    }).length;
-
-    const completedOrders = orders.filter((order) => {
-      return (order.status || "") === "completed";
+    const specs = {};
+    SPEC_SIZES.forEach(size => {
+      const row = $(`.spec-row[data-size="${size}"]`);
+      if (!row) return;
+      specs[size] = {
+        enabled: row.querySelector('.spec-enabled').checked,
+        price:   Number(row.querySelector('.spec-price').value) || 0,
+        stock:   Number(row.querySelector('.spec-stock').value) || 0,
+      };
     });
 
-    const totalRevenue = completedOrders.reduce((sum, order) => {
-      return sum + Number(order.total || 0);
-    }, 0);
+    const totalStock = SPEC_SIZES.reduce((s, sz) => s + (specs[sz]?.enabled ? (specs[sz]?.stock || 0) : 0), 0);
+    let status = getValue('#product-status');
+    if (totalStock === 0 && status === 'active') {
+      status = 'hidden';
+      toast('啟用規格庫存為 0，已自動下架', 'info');
+    }
 
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-
-    const monthlyRevenue = completedOrders
-      .filter((order) => {
-        const completedAt = order.completedAt?.toDate
-          ? order.completedAt.toDate()
-          : null;
-        
-        if (!completedAt) return false;
-        
-        return (
-          completedAt.getFullYear() === currentYear &&
-          completedAt.getMonth() === currentMonth
-        );
-
+    // 解析成分（每行 "名稱,百分比"）
+    const compositionRaw = getValue('#product-composition');
+    const composition = compositionRaw
+      .split('
+')
+      .map(line => line.trim())
+      .filter(line => line.includes(','))
+      .map(line => {
+        const [name, pct] = line.split(',').map(s => s.trim());
+        return { name: name || '', pct: Number(pct) || 0 };
       })
-      .reduce((sum, order) => {
-        return sum + Number(order.total || 0);
-      }, 0);
+      .filter(c => c.name);
 
-    const averageOrderValue = completedOrders.length
-      ? Math.round(totalRevenue / completedOrders.length)
-      : 0;
+    // 解析清單欄位（每行一條）
+    const parseList = sel => getValue(sel).split('
+').map(l => l.trim()).filter(Boolean);
 
-    $("statProducts").textContent = String(productsSnap.size);
-    $("statUsers").textContent = String(usersSnap.size);
-    $("statPendingOrders").textContent = String(pendingOrders);
-    $("statPaidNotShipped").textContent = String(paidNotShipped);
+    const data = {
+      name:        getValue('#product-name'),
+      category:    getValue('#product-category'),
+      description: getValue('#product-description'),
+      status,
+      origin:      getValue('#product-origin'),
+      extraction:  getValue('#product-extraction'),
+      plantPart:   getValue('#product-plant-part'),
+      scentNote:   getValue('#product-scent-note'),
+      skinType:    getValue('#product-skin-type'),
+      docCOA:      getValue('#product-doc-coa'),
+      docSDS:      getValue('#product-doc-sds'),
+      docEU:       getValue('#product-doc-eu'),
+      composition,
+      storage:     parseList('#product-storage'),
+      usage:       parseList('#product-usage'),
+      caution:     parseList('#product-caution'),
+      specs,
+      images:      uploadedUrls,
+      updatedAt:   firebase.firestore.FieldValue.serverTimestamp(),
+    };
 
-    $("statTotalRevenue").textContent = fmtCurrency(totalRevenue);
-    $("statMonthlyRevenue").textContent = fmtCurrency(monthlyRevenue);
-    $("statCompletedOrders").textContent = String(completedOrders.length);
-    $("statAverageOrderValue").textContent = fmtCurrency(averageOrderValue);
-  } catch (err) {
-    console.error("Dashboard 統計載入失敗", err);
+    if (!data.name) { toast('請填寫產品名稱', 'error'); return; }
+
+    if (editingProductId) {
+      await db.collection('products').doc(editingProductId).update(data);
+      toast('產品已更新', 'success');
+    } else {
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      data.featured  = false;
+      await db.collection('products').add(data);
+      toast('產品已新增', 'success');
+    }
+
+    closeModal('product-modal');
+    loadProducts();
+  } catch (e) {
+    toast('儲存失敗：' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '儲存產品';
   }
 }
 
-/* 商品列表 */
-async function loadProductsList() {
-    const box = $("productsList");
-    box.innerHTML = `<p class="muted">載入中...</p>`;
+/* ═══════════════════════════════════════════════════════════════
+   文章管理
+════════════════════════════════════════════════════════════ */
+async function loadArticles(filter = '') {
+  const tbody = $('#articles-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = skeletonRow(5);
 
-    try {
-        const snapshot = await getDocs(collection(db, "products"));
+  const articles = await safeGet(db.collection('articles'));
+  articles.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
 
-        allProducts = snapshot.docs.map((docSnap) => ({
-            id: docSnap.id,
-            data: docSnap.data()
-        }));
+  const filtered = filter
+    ? articles.filter(a => a.title?.toLowerCase().includes(filter.toLowerCase()) || a.category?.toLowerCase().includes(filter.toLowerCase()))
+    : articles;
 
-        renderProductsList();
-    } catch (err) {
-        console.error(err);
-        box.innerHTML = `商品列表載入失敗：${err.message}`;
-    }
-}
+  setText('#stat-articles', articles.length);
+  tbody.innerHTML = '';
 
-function matchProductSearch(productItem, keyword) {
-    if (!keyword) return true;
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">目前沒有文章</td></tr>`;
+    return;
+  }
 
-    const p = productItem.data;
-
-    const text = [
-        p.name,
-        p.en,
-        p.slug
-    ].join(" ").toLowerCase();
-
-    return text.includes(keyword.toLowerCase());
-}
-
-function renderProductsList() {
-    const box = $("productsList");
-
-    const filtered = allProducts.filter((item) =>
-        matchProductSearch(item, currentProductSearch)
-    );
-
-    if (!filtered.length) {
-        box.innerHTML = `<p class="muted">找不到商品</p>`;
-        return;
-    }
-
-    box.innerHTML = filtered.map((item) => {
-        const p = item.data;
-        const slug = p.slug || item.id;
-
-        return `
-        <div class="admin-data-card">
-        <h3>${p.name || "未命名商品"}</h3>
-        <p>${p.en || ""}</p>
-
-        <div class="product-card-actions">
-        <label>
-        商品狀態
-        <select class="product-status-select" data-slug="${slug}">
-        <option value="active" ${p.status === "active" ? "selected": ""}>上架</option>
-        <option value="inactive" ${p.status === "inactive" ? "selected": ""}>下架</option>
-        </select>
-        </label>
-
-        <label class="product-featured-toggle">
-        <input
-        type="checkbox"
-        class="product-featured-check"
-        data-slug="${slug}"
-        ${p.featured ? "checked": ""}
-        >
-        精選商品
-        </label>
+  filtered.forEach(a => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="td-name">${escHtml(a.title || '（無標題）')}</td>
+      <td>${escHtml(a.category || '—')}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${escHtml((a.tags||[]).slice(0,3).join(', ') || '—')}</td>
+      <td><span class="badge badge-${a.status === 'published' ? 'success' : 'draft'}">${a.status === 'published' ? '已發布' : '草稿'}</span></td>
+      <td>
+        <div class="flex-row gap-2">
+          <button class="btn btn-sm btn-secondary edit-article-btn" data-id="${a.id}">編輯</button>
+          <button class="btn btn-sm btn-ghost newsletter-btn" data-id="${a.id}" data-title="${escHtml(a.title||'')}" title="發送電子報">📧</button>
+          <button class="btn btn-sm btn-danger delete-article-btn" data-id="${a.id}" data-name="${escHtml(a.title||'')}">刪除</button>
         </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
 
-        <button class="admin-btn edit-product-btn" type="button" data-slug="${slug}">
-        編輯商品
-        </button>
-
-        <p class="admin-msg" id="productMsg-${slug}"></p>
-        </div>
-        `;
-    }).join("");
+  $$('.edit-article-btn').forEach(b    => b.addEventListener('click', () => openArticleModal(b.dataset.id)));
+  $$('.delete-article-btn').forEach(b  => b.addEventListener('click', () => confirmDelete('article', b.dataset.id, b.dataset.name)));
+  $$('.newsletter-btn').forEach(b      => b.addEventListener('click', () => openNewsletterModal(b.dataset.id, b.dataset.title)));
 }
 
-$("loadProductsListBtn")?.addEventListener("click", loadProductsList);
+function initArticlesPage() {
+  $('#add-article-btn')?.addEventListener('click', () => openArticleModal());
+  $('#article-search')?.addEventListener('input', e => loadArticles(e.target.value));
+  $('#save-article-btn')?.addEventListener('click', saveArticle);
 
-$("productSearch")?.addEventListener("input", (e) => {
-    currentProductSearch = e.target.value.trim();
-    renderProductsList();
-});
+  $('#article-cover-upload')?.addEventListener('click', () => $('#article-cover-input')?.click());
+  $('#article-cover-input')?.addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    coverImageFile = file;
+    const reader = new FileReader();
+    reader.onload = ev => { $('#cover-preview').innerHTML = `<img src="${ev.target.result}" alt="">`; };
+    reader.readAsDataURL(file);
+  });
 
-/* 新增商品 */
-$("newProductBtn")?.addEventListener("click", () => {
-    $("productForm")?.reset();
+  initTagInput();
+  initEditor();
+}
 
-    currentImages = [];
-    updatePreviewImage("");
-
-    $("featured").checked = true;
-    $("productStatus").value = "active";
-    $("msg").textContent = "";
-    $("editMsg").textContent = "正在新增商品";
-
-    $("productForm")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
+function initEditor() {
+  $$('.editor-toolbar button[data-cmd]').forEach(btn => {
+    btn.addEventListener('mousedown', e => {
+      e.preventDefault();
+      document.execCommand(btn.dataset.cmd, false, btn.dataset.val || null);
+      updateToolbarState();
     });
-});
+  });
+  const ec = $('#article-editor-content');
+  ['keyup','mouseup','focus'].forEach(ev => ec?.addEventListener(ev, updateToolbarState));
+}
 
-/* 一鍵編輯商品 */
-document.addEventListener("click", async (e) => {
-    const btn = e.target.closest(".edit-product-btn");
-    if (!btn) return;
+function updateToolbarState() {
+  ['bold','italic','underline','insertUnorderedList','insertOrderedList'].forEach(cmd => {
+    const btn = $(`.editor-toolbar button[data-cmd="${cmd}"]`);
+    if (btn) btn.classList.toggle('active', document.queryCommandState(cmd));
+  });
+}
 
-    const slug = btn.dataset.slug;
+function initTagInput() {
+  const area  = $('#tags-input-area');
+  const input = $('#tag-text-input');
+  if (!area || !input) return;
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = input.value.trim().replace(/,/g,'');
+      if (val) addTag(val);
+    }
+    if (e.key === 'Backspace' && !input.value) {
+      const chips = $$('.tag-chip', area);
+      if (chips.length) chips[chips.length-1].remove();
+    }
+  });
+}
 
-    await loadProductBySlug(slug);
+function addTag(value) {
+  const area  = $('#tags-input-area');
+  const input = $('#tag-text-input');
+  const chip  = document.createElement('div');
+  chip.className   = 'tag-chip';
+  chip.dataset.value = value;
+  chip.innerHTML   = `${escHtml(value)} <button type="button">×</button>`;
+  chip.querySelector('button').addEventListener('click', () => chip.remove());
+  area.insertBefore(chip, input);
+  input.value = '';
+}
 
-    $("productForm")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
+function getTags()     { return $$('.tag-chip').map(c => c.dataset.value); }
+function setTags(tags) { $$('.tag-chip').forEach(c => c.remove()); (tags||[]).forEach(t => addTag(t)); }
+
+async function openArticleModal(id = null) {
+  editingArticleId = id;
+  coverImageFile   = null;
+
+  setValue('#article-title', ''); setValue('#article-category', '');
+  setValue('#article-status', 'draft'); setValue('#article-excerpt', '');
+  setTags([]);
+  const editor = $('#article-editor-content');
+  if (editor) editor.innerHTML = '';
+  $('#cover-preview').innerHTML = `
+    <svg width="32" height="32" fill="currentColor" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+    <span style="font-size:12px">點擊上傳封面圖片</span>`;
+
+  if (id) {
+    $('#article-modal-title').textContent = '編輯文章';
+    const d = await safeGetDoc(db.collection('articles').doc(id));
+    setValue('#article-title',    d.title    || '');
+    setValue('#article-category', d.category || '');
+    setValue('#article-status',   d.status   || 'draft');
+    setValue('#article-excerpt',  d.excerpt  || '');
+    setTags(d.tags || []);
+    if (editor) editor.innerHTML = d.content || '';
+    if (d.coverImage) $('#cover-preview').innerHTML = `<img src="${escHtml(d.coverImage)}" alt="">`;
+  } else {
+    $('#article-modal-title').textContent = '發布新文章';
+  }
+  openModal('article-modal');
+}
+
+async function saveArticle() {
+  const btn = $('#save-article-btn');
+  btn.disabled = true; btn.textContent = '儲存中…';
+  try {
+    let coverUrl = '';
+    if (editingArticleId) {
+      const ex = await safeGetDoc(db.collection('articles').doc(editingArticleId));
+      coverUrl = ex.coverImage || '';
+    }
+    if (coverImageFile) {
+      const ref = storage.ref(`articles/${Date.now()}_${coverImageFile.name}`);
+      await ref.put(coverImageFile);
+      coverUrl = await ref.getDownloadURL();
+    }
+    const editor = $('#article-editor-content');
+    const data   = {
+      title:      getValue('#article-title'),
+      category:   getValue('#article-category'),
+      status:     getValue('#article-status'),
+      excerpt:    getValue('#article-excerpt'),
+      content:    editor?.innerHTML || '',
+      tags:       getTags(),
+      coverImage: coverUrl,
+      updatedAt:  firebase.firestore.FieldValue.serverTimestamp(),
+    };
+    if (!data.title) { toast('請填寫文章標題', 'error'); return; }
+
+    if (editingArticleId) {
+      await db.collection('articles').doc(editingArticleId).update(data);
+      toast('文章已更新', 'success');
+    } else {
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('articles').add(data);
+      toast('文章已發布', 'success');
+    }
+    closeModal('article-modal');
+    loadArticles();
+  } catch (e) {
+    toast('儲存失敗：' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '儲存文章';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   電子報
+════════════════════════════════════════════════════════════ */
+async function openNewsletterModal(articleId, articleTitle) {
+  let article = { title: articleTitle, excerpt: '', coverImage: '' };
+  try {
+    const d = await safeGetDoc(db.collection('articles').doc(articleId));
+    if (d.title) article = { id: articleId, ...d };
+  } catch(e) {}
+
+  // 訂閱者：不用 where，在前端篩選避免索引問題
+  const members     = await safeGet(db.collection('members'));
+  const subscribers = members.filter(m => m.subscribed === true);
+
+  setValue('#newsletter-article-id', articleId);
+  setValue('#newsletter-subject',    `【Arochemy】${article.title}`);
+  setText('#nl-subscriber-count',   subscribers.length);
+
+  $('#newsletter-email-preview').innerHTML = `
+    <div class="newsletter-preview">
+      <h2>${escHtml(article.title)}</h2>
+      <div class="nl-meta">Arochemy Newsletter</div>
+      ${article.coverImage ? `<img src="${escHtml(article.coverImage)}" style="width:100%;border-radius:6px;margin-bottom:12px" alt="">` : ''}
+      <div class="nl-excerpt">${escHtml(article.excerpt || '閱讀最新文章…')}</div>
+      <a href="#" class="nl-cta">閱讀完整文章</a>
+    </div>`;
+
+  openModal('newsletter-modal');
+
+  $('#send-newsletter-btn').onclick = async () => {
+    if (!subscribers.length) { toast('目前沒有訂閱會員', 'info'); return; }
+
+    const btn = $('#send-newsletter-btn');
+    btn.disabled = true; btn.textContent = `發送中 (0/${subscribers.length})…`;
+
+    // 初始化 EmailJS
+    if (typeof emailjs !== 'undefined') {
+      emailjs.init(EMAILJS_CONFIG.publicKey);
+    }
+
+    let sent = 0, failed = 0;
+    for (const member of subscribers) {
+      try {
+        await emailjs.send(
+          EMAILJS_CONFIG.serviceId,
+          EMAILJS_CONFIG.templateId,
+          {
+            to_email:       member.email,
+            to_name:        member.name || member.email,
+            subject:        getValue('#newsletter-subject'),
+            article_title:  article.title,
+            article_excerpt:article.excerpt || '',
+            article_link:   `https://lzx9301.github.io/arochemy/article.html?id=${articleId}`,
+            cover_image:    article.coverImage || '',
+          }
+        );
+        sent++;
+      } catch (e) { failed++; console.warn('Email failed:', member.email, e); }
+      btn.textContent = `發送中 (${sent + failed}/${subscribers.length})…`;
+    }
+
+    toast(`電子報發送完成：${sent} 成功 / ${failed} 失敗`, sent > 0 ? 'success' : 'error');
+    btn.disabled = false; btn.textContent = '確認發送';
+    closeModal('newsletter-modal');
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   訂單管理
+════════════════════════════════════════════════════════════ */
+async function loadOrders(statusFilter = null) {
+  const tbody = $('#orders-table-body');
+  if (!tbody) return;
+  if (statusFilter !== null) currentOrderFilter = statusFilter;
+  tbody.innerHTML = skeletonRow(7);
+
+  // 全部抓回，前端排序篩選（避免 Firestore 索引問題）
+  allOrders = await safeGet(db.collection('orders'));
+  allOrders.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
+
+  // 月份篩選
+  const selMonth = $('#order-month-filter')?.value;
+  let filtered = allOrders;
+  if (selMonth) {
+    const [fy, fm] = selMonth.split('-').map(Number);
+    filtered = filtered.filter(o => {
+      const ts = toDate(o.createdAt);
+      return ts.getFullYear() === fy && (ts.getMonth() + 1) === fm;
     });
-});
+  }
 
-/* 商品卡直接更新狀態 */
-document.addEventListener("change", async (e) => {
-    const statusSelect = e.target.closest(".product-status-select");
-    if (!statusSelect) return;
+  // 狀態篩選
+  if (currentOrderFilter && currentOrderFilter !== 'all') {
+    filtered = filtered.filter(o => o.status === currentOrderFilter);
+  }
 
-    const slug = statusSelect.dataset.slug;
-    const newStatus = statusSelect.value;
-    const msg = document.getElementById(`productMsg-${slug}`);
+  // 統計（以全部訂單為基準）
+  const now   = new Date();
+  const month = now.getMonth(), year = now.getFullYear();
+  let monthRevenue = 0, pendingCnt = 0, doneCnt = 0;
 
-    if (msg) msg.textContent = "更新中...";
+  allOrders.forEach(o => {
+    const ts = toDate(o.createdAt);
+    if (ts.getMonth() === month && ts.getFullYear() === year && o.status !== 'cancel')
+      monthRevenue += Number(o.total || 0);
+    if (o.status === 'done') doneCnt++;
+    else if (o.status !== 'cancel') pendingCnt++;
+  });
 
+  setText('#orders-month-revenue', 'NT$ ' + monthRevenue.toLocaleString());
+  setText('#orders-pending-count', pendingCnt);
+  setText('#orders-done-count',    doneCnt);
+  setText('#orders-total-count',   allOrders.length);
+  tbody.innerHTML = '';
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">目前沒有符合的訂單</td></tr>`;
+  } else {
+    filtered.forEach(o => {
+      const shortId = o.id.slice(-6).toUpperCase();
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="font-family:monospace;font-size:11px;color:var(--text-muted)">#${shortId}</td>
+        <td class="td-name">${escHtml(o.customerName || '—')}</td>
+        <td style="font-size:12px;color:var(--text-secondary)">${escHtml(o.customerEmail || '—')}</td>
+        <td style="font-size:12px">${escHtml(o.shippingMethod || '—')}</td>
+        <td style="color:var(--accent);font-weight:500">NT$ ${Number(o.total||0).toLocaleString()}</td>
+        <td>
+          <select class="status-select-inline" data-id="${o.id}">
+            ${['pending','paid','shipped','done','cancel'].map(s =>
+              `<option value="${s}" ${o.status===s?'selected':''}>${statusLabel(s)}</option>`
+            ).join('')}
+          </select>
+        </td>
+        <td>
+          <button class="btn btn-sm btn-secondary view-order-btn" data-id="${o.id}">查看</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    $$('.status-select-inline').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        try {
+          await db.collection('orders').doc(sel.dataset.id).update({
+            status: sel.value,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          toast('訂單狀態已更新', 'success');
+          loadOrders();
+        } catch (e) { toast('更新失敗：' + e.message, 'error'); }
+      });
+    });
+
+    $$('.view-order-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const o = allOrders.find(x => x.id === btn.dataset.id);
+        if (o) openOrderDetail(o);
+      });
+    });
+  }
+
+  await renderSalesRank('#orders-sales-rank', 10, allOrders);
+}
+
+function initOrdersPage() {
+  const now        = new Date();
+  const monthInput = $('#order-month-filter');
+  if (monthInput) {
+    monthInput.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    monthInput.addEventListener('change', () => loadOrders());
+  }
+
+  $$('#orders-status-filter .filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      $$('#orders-status-filter .filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      loadOrders(chip.dataset.status);
+    });
+  });
+}
+
+function openOrderDetail(o) {
+  const shortId = o.id.slice(-6).toUpperCase();
+  setText('#order-detail-id',    '#' + shortId);
+  setText('#order-detail-date',  formatDate(o.createdAt));
+  setText('#order-detail-name',  o.customerName   || '—');
+  setText('#order-detail-email', o.customerEmail  || '—');
+  setText('#order-detail-phone', o.customerPhone  || '—');
+  setText('#order-detail-ship',  o.shippingMethod || '—');
+  setText('#order-detail-addr',  o.address || o.storeInfo || '—');
+  setText('#order-detail-note',  o.note || '（無備註）');
+  setText('#order-detail-status', statusLabel(o.status));
+
+  const itemsEl = $('#order-detail-items');
+  itemsEl.innerHTML = '';
+  let total = 0;
+  (o.items || []).forEach(item => {
+    const sub = Number(item.price || 0) * Number(item.qty || item.quantity || 1);
+    total += sub;
+    const div = document.createElement('div');
+    div.className = 'order-item-row';
+    div.innerHTML = `
+      <div class="order-item-thumb">${item.image ? `<img src="${escHtml(item.image)}" alt="">` : '🌿'}</div>
+      <div class="order-item-info">
+        <div class="order-item-name">${escHtml(item.name || '—')}</div>
+        <div class="order-item-spec">${escHtml(item.spec || item.size || '')}</div>
+      </div>
+      <div class="order-item-qty">× ${item.qty || item.quantity || 1}</div>
+      <div class="order-item-price">NT$ ${sub.toLocaleString()}</div>
+    `;
+    itemsEl.appendChild(div);
+  });
+
+  setText('#order-detail-total', 'NT$ ' + Number(o.total || total).toLocaleString());
+  openModal('order-detail-modal');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   商品銷量排行（共用，傳入 orders 陣列避免重複請求）
+════════════════════════════════════════════════════════════ */
+async function renderSalesRank(containerSel, limit = 5, ordersData = null) {
+  const container = $(containerSel);
+  if (!container) return;
+
+  const orders    = ordersData || await safeGet(db.collection('orders'));
+  const salesMap  = {};
+
+  orders.forEach(o => {
+    if (o.status === 'cancel') return;
+    (o.items || []).forEach(item => {
+      const key = item.productId || item.name || '未知';
+      if (!salesMap[key]) salesMap[key] = { name: item.name || key, qty: 0, category: item.category || '' };
+      salesMap[key].qty += Number(item.qty || item.quantity || 1);
+    });
+  });
+
+  const top    = Object.values(salesMap).sort((a, b) => b.qty - a.qty).slice(0, limit);
+  const maxQty = top[0]?.qty || 1;
+  const rankSyms = ['gold','silver','bronze'];
+
+  container.innerHTML = '';
+  if (!top.length) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><p>尚無銷售紀錄</p></div>`;
+    return;
+  }
+
+  top.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'sales-rank-item';
+    div.innerHTML = `
+      <div class="rank-num ${rankSyms[i] || ''}">${i+1}</div>
+      <div class="rank-info">
+        <div class="rank-name">${escHtml(item.name)}</div>
+        <div class="rank-cat">${escHtml(item.category || '—')}</div>
+      </div>
+      <div class="rank-bar-wrap">
+        <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${Math.round((item.qty/maxQty)*100)}%"></div></div>
+      </div>
+      <div class="rank-qty">售出 ${item.qty}</div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   會員管理
+════════════════════════════════════════════════════════════ */
+async function loadMembers(filter = '') {
+  const tbody = $('#members-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = skeletonRow(5);
+
+  // 直接 get 全部，前端篩選
+  const members = await safeGet(db.collection('members'));
+  members.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
+
+  const filtered  = filter
+    ? members.filter(m => m.name?.toLowerCase().includes(filter.toLowerCase()) || m.email?.toLowerCase().includes(filter.toLowerCase()))
+    : members;
+
+  const subCount = members.filter(m => m.subscribed === true).length;
+  setText('#stat-members',       members.length);
+  setText('#members-sub-count',  subCount);
+
+  tbody.innerHTML = '';
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">目前沒有會員資料</td></tr>`;
+    return;
+  }
+
+  filtered.forEach(m => {
+    const initials = (m.name || m.email || '?')[0].toUpperCase();
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <div class="member-name-cell">
+          <div class="member-avatar">${initials}</div>
+          <span class="td-name">${escHtml(m.name || '（未填寫）')}</span>
+        </div>
+      </td>
+      <td style="color:var(--text-secondary);font-size:12px">${escHtml(m.email || '—')}</td>
+      <td style="font-size:12px;color:var(--text-secondary)">${escHtml(m.phone || '—')}</td>
+      <td><span class="badge badge-${m.subscribed ? 'success' : 'hidden'}">${m.subscribed ? '✓ 已訂閱' : '未訂閱'}</span></td>
+      <td style="font-size:12px;color:var(--text-muted)">${formatDate(m.createdAt)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function initMembersPage() {
+  $('#member-search')?.addEventListener('input', e => loadMembers(e.target.value));
+
+  $('#export-subscribers-btn')?.addEventListener('click', async () => {
+    const members     = await safeGet(db.collection('members'));
+    const subscribers = members.filter(m => m.subscribed === true);
+    if (!subscribers.length) { toast('目前沒有訂閱者', 'info'); return; }
+
+    const rows = [['姓名','Email','電話','加入日期']];
+    subscribers.forEach(m => rows.push([m.name||'', m.email||'', m.phone||'', formatDate(m.createdAt)]));
+    const csv  = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const a    = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    a.download = `arochemy_subscribers_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    toast(`已匯出 ${subscribers.length} 位訂閱者`, 'success');
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   網站設定
+════════════════════════════════════════════════════════════ */
+async function loadSiteSettings() {
+  const d = await safeGetDoc(db.collection('settings').doc('site'));
+  setValue('#site-name',        d.siteName        || '');
+  setValue('#site-description', d.siteDescription || '');
+  setValue('#contact-email',    d.contactEmail    || '');
+  setValue('#contact-phone',    d.contactPhone    || '');
+  setValue('#contact-address',  d.contactAddress  || '');
+  setValue('#social-ig',        d.socialIG        || '');
+  setValue('#social-fb',        d.socialFB        || '');
+  setValue('#social-line',      d.socialLine      || '');
+}
+
+function initSettingsPage() {
+  $('#save-site-settings-btn')?.addEventListener('click', async () => {
     try {
-        await updateDoc(doc(db, "products", slug), {
-            status: newStatus
-        });
-
-        const target = allProducts.find((item) => {
-            const p = item.data;
-            return (p.slug || item.id) === slug;
-        });
-
-        if (target) {
-            target.data.status = newStatus;
-        }
-
-        if (msg) msg.textContent = "商品狀態已更新";
-    } catch (err) {
-        console.error(err);
-        if (msg) msg.textContent = `更新失敗：${err.message}`;
+      await db.collection('settings').doc('site').set({
+        siteName:        getValue('#site-name'),
+        siteDescription: getValue('#site-description'),
+        contactEmail:    getValue('#contact-email'),
+        contactPhone:    getValue('#contact-phone'),
+        contactAddress:  getValue('#contact-address'),
+        socialIG:        getValue('#social-ig'),
+        socialFB:        getValue('#social-fb'),
+        socialLine:      getValue('#social-line'),
+        updatedAt:       firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      toast('設定已儲存', 'success');
+    } catch (e) {
+      toast('儲存失敗：' + e.message, 'error');
     }
-});
+  });
+}
 
-/* 商品卡直接更新精選 */
-document.addEventListener("change", async (e) => {
-    const featuredCheck = e.target.closest(".product-featured-check");
-    if (!featuredCheck) return;
+/* ═══════════════════════════════════════════════════════════════
+   Modal 系統
+════════════════════════════════════════════════════════════ */
+function openModal(id)  { document.getElementById(id)?.classList.add('open');    document.body.style.overflow = 'hidden'; }
+function closeModal(id) { document.getElementById(id)?.classList.remove('open'); document.body.style.overflow = ''; }
 
-    const slug = featuredCheck.dataset.slug;
-    const isFeatured = featuredCheck.checked;
-    const msg = document.getElementById(`productMsg-${slug}`);
+function initModals() {
+  $$('.modal-close').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const m = btn.closest('.modal-overlay');
+      if (m) { m.classList.remove('open'); document.body.style.overflow = ''; }
+    });
+  });
+  $$('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) { overlay.classList.remove('open'); document.body.style.overflow = ''; }
+    });
+  });
+}
 
-    if (msg) msg.textContent = "更新中...";
+/* ═══════════════════════════════════════════════════════════════
+   刪除確認
+════════════════════════════════════════════════════════════ */
+function confirmDelete(type, id, name) {
+  $('#confirm-message').textContent =
+    type === 'product'
+      ? `確定要刪除產品「${name}」嗎？此操作無法復原。`
+      : `確定要刪除文章「${name}」嗎？此操作無法復原。`;
 
+  const doBtn = $('#confirm-do-btn');
+  doBtn.onclick = async () => {
+    doBtn.disabled = true;
     try {
-        await updateDoc(doc(db, "products", slug), {
-            featured: isFeatured
-        });
-
-        const target = allProducts.find((item) => {
-            const p = item.data;
-            return (p.slug || item.id) === slug;
-        });
-
-        if (target) {
-            target.data.featured = isFeatured;
-        }
-
-        if (msg) msg.textContent = "精選狀態已更新";
-    } catch (err) {
-        console.error(err);
-        if (msg) msg.textContent = `更新失敗：${err.message}`;
+      await db.collection(type === 'product' ? 'products' : 'articles').doc(id).delete();
+      toast(type === 'product' ? '產品已刪除' : '文章已刪除', 'success');
+      closeModal('confirm-modal');
+      type === 'product' ? loadProducts() : loadArticles();
+    } catch (e) {
+      toast('刪除失敗：' + e.message, 'error');
+    } finally {
+      doBtn.disabled = false;
     }
-});
+  };
+  openModal('confirm-modal');
+}
 
-/* 新增或更新商品 */
-$("productForm")?.addEventListener("submit", async (e) => {
+/* ═══════════════════════════════════════════════════════════════
+   Toast
+════════════════════════════════════════════════════════════ */
+function toast(msg, type = 'info') {
+  const icons     = { success: '✓', error: '✕', info: 'ℹ' };
+  const container = $('#toast-container');
+  const div       = document.createElement('div');
+  div.className   = `toast ${type}`;
+  div.innerHTML   = `<span class="toast-icon">${icons[type]}</span><span>${escHtml(msg)}</span>`;
+  container.appendChild(div);
+  setTimeout(() => {
+    div.style.cssText += 'opacity:0;transform:translateX(20px);transition:0.3s';
+    setTimeout(() => div.remove(), 300);
+  }, 3500);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   工具函式
+════════════════════════════════════════════════════════════ */
+const getValue   = sel => document.querySelector(sel)?.value || '';
+const setValue   = (sel, val)  => { const el = document.querySelector(sel); if (el) el.value = val; };
+const setText    = (sel, val)  => { const el = document.querySelector(sel); if (el) el.textContent = val; };
+const escHtml    = str => String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const catLabel   = v => ({ single:'單方精油', compound:'複方精油', spray:'噴霧', massage:'按摩油', 'eye-mask':'眼罩' }[v] || v || '—');
+const statusLabel= s => ({ pending:'待處理', paid:'已付款', shipped:'已出貨', done:'已完成', cancel:'已取消' }[s] || '待處理');
+
+// Firestore Timestamp / Date / 字串 都能轉成 Date
+function toDate(ts) {
+  if (!ts) return new Date(0);
+  if (ts.toDate) return ts.toDate();
+  if (ts.seconds) return new Date(ts.seconds * 1000);
+  return new Date(ts);
+}
+
+function formatDate(ts) {
+  const d = toDate(ts);
+  return d.getTime() === 0 ? '—' : d.toLocaleDateString('zh-TW');
+}
+
+function skeletonRow(cols) {
+  return `<tr><td colspan="${cols}"><div class="skeleton" style="height:14px;margin:8px 0"></div></td></tr>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   啟動
+════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  // EmailJS 初始化
+  if (typeof emailjs !== 'undefined') {
+    emailjs.init(EMAILJS_CONFIG.publicKey);
+  }
+
+  initAuth();
+  initNav();
+  initModals();
+  initHomepageSettings();
+  initProductsPage();
+  initArticlesPage();
+  initOrdersPage();
+  initMembersPage();
+  initSettingsPage();
+
+  // 插入連結
+  $('#insert-link-btn')?.addEventListener('mousedown', e => {
     e.preventDefault();
-
-    const msg = $("msg");
-    msg.textContent = "儲存中...";
-
-    const slug = $("slug").value.trim();
-
-    if (!slug) {
-        msg.textContent = "請填寫 slug";
-        return;
-    }
-
-    try {
-        const uploadedImageUrl = await uploadProductImage(slug);
-        const images = uploadedImageUrl ? [uploadedImageUrl]: currentImages;
-
-        const product = {
-            slug,
-            name: $("name").value.trim(),
-            en: $("en").value.trim(),
-            latin: $("latin").value.trim(),
-            category: $("category").value,
-            status: $("productStatus").value,
-            featured: $("featured").checked,
-            salesCount: 0,
-            images,
-            variants: makeVariants(),
-            overview: {
-                "科屬": $("family").value.trim(),
-                "萃取部位": $("extractPart").value.trim(),
-                "萃取方法": $("extractMethod").value.trim(),
-                "植物產地": $("plantOrigin").value.trim(),
-                "香氣概述": $("aroma").value.trim(),
-                "建議用途": $("usageOverview").value.trim()
-            },
-            composition: parseComposition($("compositionText").value),
-            docs: {
-                coa: "",
-                sds: "",
-                eu: ""
-            },
-            description: splitLines($("description").value)
-        };
-
-        await setDoc(doc(db, "products", slug), product);
-
-        currentImages = images;
-
-        msg.textContent = `儲存成功：${product.name}`;
-
-        e.target.reset();
-        $("featured").checked = true;
-        currentImages = [];
-        updatePreviewImage("");
-
-        await loadProductsList();
-        await loadDashboardStats();
-    } catch (err) {
-        console.error(err);
-        msg.textContent = `儲存失敗：${err.message}`;
-    }
+    const url = prompt('請輸入連結網址：');
+    if (url) document.execCommand('createLink', false, url);
+  });
 });

@@ -538,6 +538,25 @@ async function openProductModal(id = null) {
       setValue('#product-description', data.description || '');
       setValue('#product-status',      data.status      || 'active');
       setValue('#product-origin',      data.origin      || '');
+      setValue('#product-extraction',  data.extraction  || '');
+      setValue('#product-plant-part',  data.plantPart   || '');
+      setValue('#product-scent-note',  data.scentNote   || '');
+      setValue('#product-skin-type',   data.skinType    || '');
+      setValue('#product-doc-coa',     data.docCOA      || '');
+      setValue('#product-doc-sds',     data.docSDS      || '');
+      setValue('#product-doc-eu',      data.docEU       || '');
+      // 成分：陣列轉成每行一條 "名稱,百分比" 格式
+      setValue('#product-composition',
+        (data.composition || []).map(c => `${c.name},${c.pct}`).join('
+')
+      );
+      // 清單欄位：陣列轉換行文字
+      setValue('#product-storage', (data.storage || []).join('
+'));
+      setValue('#product-usage',   (data.usage   || []).join('
+'));
+      setValue('#product-caution', (data.caution || []).join('
+'));
 
       const specs = data.specs || {};
       SPEC_SIZES.forEach(size => {
@@ -612,12 +631,40 @@ async function saveProduct() {
       toast('啟用規格庫存為 0，已自動下架', 'info');
     }
 
+    // 解析成分（每行 "名稱,百分比"）
+    const compositionRaw = getValue('#product-composition');
+    const composition = compositionRaw
+      .split('
+')
+      .map(line => line.trim())
+      .filter(line => line.includes(','))
+      .map(line => {
+        const [name, pct] = line.split(',').map(s => s.trim());
+        return { name: name || '', pct: Number(pct) || 0 };
+      })
+      .filter(c => c.name);
+
+    // 解析清單欄位（每行一條）
+    const parseList = sel => getValue(sel).split('
+').map(l => l.trim()).filter(Boolean);
+
     const data = {
       name:        getValue('#product-name'),
       category:    getValue('#product-category'),
       description: getValue('#product-description'),
       status,
       origin:      getValue('#product-origin'),
+      extraction:  getValue('#product-extraction'),
+      plantPart:   getValue('#product-plant-part'),
+      scentNote:   getValue('#product-scent-note'),
+      skinType:    getValue('#product-skin-type'),
+      docCOA:      getValue('#product-doc-coa'),
+      docSDS:      getValue('#product-doc-sds'),
+      docEU:       getValue('#product-doc-eu'),
+      composition,
+      storage:     parseList('#product-storage'),
+      usage:       parseList('#product-usage'),
+      caution:     parseList('#product-caution'),
       specs,
       images:      uploadedUrls,
       updatedAt:   firebase.firestore.FieldValue.serverTimestamp(),

@@ -542,6 +542,68 @@
         <textarea id="product-description" rows="4" placeholder="詳細說明產品特性、香調、使用方式…"></textarea>
       </div>
 
+      <!-- 成分總覽 -->
+      <div class="form-group" style="margin-bottom:16px">
+        <label>成分總覽</label>
+        <div class="hint" style="margin-bottom:8px">每行一個成分，格式：成分名稱,百分比　例如：沉香醇,42</div>
+        <textarea id="product-composition" rows="5" placeholder="沉香醇,42&#10;乙酸沉香酯,28&#10;樟腦,8"></textarea>
+      </div>
+
+      <!-- 產品額外資訊 -->
+      <div class="form-grid form-grid-2" style="margin-bottom:16px">
+        <div class="form-group">
+          <label>萃取方式</label>
+          <input type="text" id="product-extraction" placeholder="蒸氣蒸餾法">
+        </div>
+        <div class="form-group">
+          <label>植物部位</label>
+          <input type="text" id="product-plant-part" placeholder="花頂、葉片">
+        </div>
+        <div class="form-group">
+          <label>香調</label>
+          <input type="text" id="product-scent-note" placeholder="清新花香、木質底調">
+        </div>
+        <div class="form-group">
+          <label>適合膚質</label>
+          <input type="text" id="product-skin-type" placeholder="所有膚質、敏感肌適用">
+        </div>
+      </div>
+
+      <!-- 保存方式（每行一條） -->
+      <div class="form-group" style="margin-bottom:16px">
+        <label>保存方式</label>
+        <div class="hint" style="margin-bottom:8px">每行一條，Enter 換行</div>
+        <textarea id="product-storage" rows="3" placeholder="避光保存，存放於陰涼乾燥處&#10;開封後建議於 12 個月內使用&#10;避免高溫與潮濕環境"></textarea>
+      </div>
+
+      <!-- 使用建議 -->
+      <div class="form-group" style="margin-bottom:16px">
+        <label>使用建議</label>
+        <textarea id="product-usage" rows="3" placeholder="稀釋至 1–3% 後塗抹肌膚&#10;可搭配擴香儀進行空間擴香&#10;與基底油調和後使用效果更佳"></textarea>
+      </div>
+
+      <!-- 注意事項 -->
+      <div class="form-group" style="margin-bottom:16px">
+        <label>注意事項</label>
+        <textarea id="product-caution" rows="3" placeholder="孕婦、嬰幼兒請在專業人士指導下使用&#10;避免接觸眼睛及黏膜&#10;如有過敏反應請立即停用並就醫"></textarea>
+      </div>
+
+      <!-- 文件下載連結 -->
+      <div class="form-grid form-grid-3" style="margin-bottom:16px">
+        <div class="form-group">
+          <label>COA 檢驗報告網址</label>
+          <input type="url" id="product-doc-coa" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label>SDS 安全資料表網址</label>
+          <input type="url" id="product-doc-sds" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label>歐盟過敏原聲明網址</label>
+          <input type="url" id="product-doc-eu" placeholder="https://...">
+        </div>
+      </div>
+
       <!-- 圖片上傳 -->
       <div class="form-group">
         <label>產品圖片</label>

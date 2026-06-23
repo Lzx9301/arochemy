@@ -1568,3 +1568,50 @@ details p {
     grid-template-columns: 1fr;
   }
 }
+/* 規格按鈕 */
+.spec-selector { display: flex; gap: 6px; margin: 8px 0; flex-wrap: wrap; }
+.spec-btn {
+  padding: 4px 14px;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.spec-btn.active, .spec-btn:hover {
+  border-color: #111;
+  background: #111;
+  color: #fff;
+}
+
+/* 已售完 */
+.sold-out-tag {
+  font-size: 13px;
+  color: #999;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  padding: 8px 16px;
+}
+
+/* 精選徽章 */
+.product-badge {
+  position: absolute; top: 10px; left: 10px;
+  background: #b8975a;
+  color: #fff;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* Skeleton 動畫 */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}

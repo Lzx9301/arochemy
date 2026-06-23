@@ -73,38 +73,28 @@ async function safeGetDoc(ref) {
 // 1. 先確認 admins collection 是否有任何文件
 // 2. 若 admins collection 是空的（尚未設定），放行所有登入者進後台
 // 3. 若 admins collection 已有資料，則嚴格驗證 uid
+// 管理員 Email 白名單（與 Firestore 規則的 isAdmin() 保持一致）
+const ADMIN_EMAILS = [
+  'nicoliu930226@gmail.com',
+  // 如需新增其他管理員，在這裡加 email
+];
+
 async function checkIsAdmin(uid) {
-  // 直接嘗試讀取自己的 admins/{uid} 文件
+  // 直接比對登入者的 email，不需要讀 Firestore
+  // 與你的 Firestore 規則 isAdmin() 邏輯完全一致
   try {
-    const docSnap = await db.collection('admins').doc(uid).get();
-    if (docSnap.exists) return true;
+    const user = adminApp.auth().currentUser;
+    if (!user) return false;
 
-    // 文件不存在 → 嘗試讀 collection 判斷是否尚未設定
-    try {
-      const collSnap = await db.collection('admins').limit(1).get();
-      if (collSnap.empty) {
-        // Collection 是空的 → 尚未設定，暫時放行
-        console.warn('[Admin] admins collection 是空的，暫時放行。');
-        return true;
-      }
-    } catch (_) {}
-
-    // Collection 有資料但此 uid 不在裡面
-    return false;
-
-  } catch (e) {
-    console.warn('[Admin] checkIsAdmin error:', e.code, e.message);
-
-    // ── Firestore 規則擋住時的處理 ──────────────────────
-    // permission-denied 通常是安全規則問題，暫時放行並警告
-    if (e.code === 'permission-denied') {
-      console.warn('[Admin] Firestore 安全規則擋住了 admins 讀取，暫時放行。請更新 Firestore 規則！');
+    const email = user.email || '';
+    if (ADMIN_EMAILS.includes(email)) {
       return true;
     }
 
-    // 其他錯誤（網路等）→ 顯示在登入畫面讓使用者知道
-    const loginErr = document.getElementById('login-error');
-    if (loginErr) loginErr.textContent = '驗證失敗：' + (e.message || e.code);
+    // Email 不在白名單
+    return false;
+  } catch (e) {
+    console.warn('[Admin] checkIsAdmin error:', e.message);
     return false;
   }
 }

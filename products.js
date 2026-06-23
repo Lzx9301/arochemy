@@ -1,7 +1,4 @@
-/**
- * Arochemy — js/products.js
- * 從 Firestore 讀取產品，渲染商品卡片，支援分類篩選、規格選擇、加入購物車
- */
+/** v1782197764 */
 
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore,

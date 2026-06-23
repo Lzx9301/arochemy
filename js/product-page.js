@@ -36,17 +36,32 @@ const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replac
    初始化
 ══════════════════════════════════════════════════════════════ */
 async function init() {
-  const id = new URLSearchParams(location.search).get('id');
-  if (!id) { showError('找不到商品 ID，請回到產品列表重新選擇。'); return; }
+  // 支援多種 URL 格式：?id=xxx 或 #id=xxx 或 ?productId=xxx
+  const params  = new URLSearchParams(location.search);
+  const hashParams = new URLSearchParams(location.hash.replace('#',''));
+  const id = params.get('id') || params.get('productId') || hashParams.get('id') || null;
+
+  console.log('[product-page] URL:', location.href);
+  console.log('[product-page] product id:', id);
+
+  if (!id) {
+    showError('找不到商品 ID。<br><small style="color:#bbb">目前網址：' + location.href + '</small>');
+    return;
+  }
 
   try {
     const snap = await getDoc(doc(db, 'products', id));
-    if (!snap.exists()) { showError('此商品不存在或已下架。'); return; }
+    console.log('[product-page] Firestore snap exists:', snap.exists());
+
+    if (!snap.exists()) {
+      showError('此商品不存在或已下架。<br><small style="color:#bbb">ID：' + id + '</small>');
+      return;
+    }
 
     product = { id: snap.id, ...snap.data() };
     render(product);
   } catch (e) {
-    showError('商品資料載入失敗，請稍後再試。');
+    showError('商品資料載入失敗，請稍後再試。<br><small style="color:#bbb">' + e.message + '</small>');
     console.error(e);
   }
 }

@@ -1,185 +1,312 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+/**
+ * Arochemy — js/products.js
+ * 從 Firestore 讀取產品，渲染商品卡片，支援分類篩選、規格選擇、加入購物車
+ */
 
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore,
+         collection,
+         getDocs }         from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+/* ── Firebase ──────────────────────────────────────────────── */
 const firebaseConfig = {
-  apiKey: "AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",
-  authDomain: "trying-89dc6.firebaseapp.com",
-  projectId: "trying-89dc6",
-  storageBucket: "trying-89dc6.firebasestorage.app",
-  messagingSenderId: "115559148124",
-  appId: "1:115559148124:web:ac37b9c249183a919b5499",
-  measurementId: "G-KHR4PVKJCK"
+  apiKey:            'AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI',
+  authDomain:        'trying-89dc6.firebaseapp.com',
+  projectId:         'trying-89dc6',
+  storageBucket:     'trying-89dc6.firebasestorage.app',
+  messagingSenderId: '115559148124',
+  appId:             '1:115559148124:web:ac37b9c249183a919b5499',
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const db  = getFirestore(app);
 
+/* ── 分類對照表（前台 data-cat ↔ Firestore category 值）────── */
+const CAT_MAP = {
+  'all':        null,          // 全部
+  'single-oil': 'single',      // 單方精油
+  'blend-oil':  'compound',    // 複方精油
+  'spray':      'spray',       // 噴霧
+  'massage':    'massage',     // 按摩油
+  'eyemask':    'eye-mask',    // 眼罩
+};
+
+const CAT_LABEL = {
+  single:    '單方精油',
+  compound:  '複方精油',
+  spray:     '噴霧',
+  massage:   '按摩油',
+  'eye-mask':'眼罩',
+};
+
+const SPEC_SIZES = ['5ml', '10ml', '30ml'];
+
+/* ── 全域暫存 ──────────────────────────────────────────────── */
+let allProducts     = [];
+let currentCatKey   = 'all';
+
+/* ── DOM ───────────────────────────────────────────────────── */
+const grid        = document.getElementById('productGrid');
+const totalCount  = document.getElementById('totalCount');
+const currentCat  = document.getElementById('currentCat');
+const catToggle   = document.getElementById('catToggle');
+const catMenu     = document.getElementById('catMenu');
+const catDropdown = document.getElementById('catDropdown');
+
+/* ── 初始化 ────────────────────────────────────────────────── */
+async function init() {
+  await loadProducts();
+  initCategoryFilter();
+  initDropdownClose();
+}
+
+/* ── 讀取產品 ──────────────────────────────────────────────── */
 async function loadProducts() {
-  const snapshot = await getDocs(collection(db, "products"));
+  grid.innerHTML = renderSkeletons(6);
 
-  return snapshot.docs
-    .map((doc) => ({
-      id: doc.id,
-      ...doc.data()
-    }))
-    .filter((p) => p.status === "active");
+  try {
+    const snap = await getDocs(collection(db, 'products'));
+    allProducts = [];
+    snap.forEach(d => {
+      const p = { id: d.id, ...d.data() };
+      // 只顯示上架中的商品
+      if (p.status === 'active') allProducts.push(p);
+    });
+
+    // 前端排序：createdAt 新到舊
+    allProducts.sort((a, b) => {
+      const ta = a.createdAt?.seconds || 0;
+      const tb = b.createdAt?.seconds || 0;
+      return tb - ta;
+    });
+
+    renderProducts(allProducts);
+  } catch (e) {
+    grid.innerHTML = `<p style="color:#888;padding:40px 0">商品載入失敗，請重新整理頁面。</p>`;
+    console.error('loadProducts error:', e);
+  }
 }
 
-function fmtPrice(n) {
-  return `NT$ ${Number(n).toLocaleString("zh-Hant-TW")}`;
+/* ── 渲染商品列表 ──────────────────────────────────────────── */
+function renderProducts(list) {
+  totalCount.textContent = list.length;
+
+  if (!list.length) {
+    grid.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:60px 0;color:#999">
+        <div style="font-size:36px;margin-bottom:12px">🌿</div>
+        <p>此分類目前沒有商品</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(p => productCard(p)).join('');
+
+  // 綁定每張卡片的規格切換 & 加入購物車
+  list.forEach(p => bindCardEvents(p));
 }
 
-function cardHTML(p) {
-  const prices = (p.variants || [])
-    .map((v) => Number(v.price))
-    .filter((n) => !Number.isNaN(n));
-
-  const minPrice = prices.length ? Math.min(...prices) : 0;
-  const img = p.images && p.images[0] ? p.images[0] : "";
+/* ── 商品卡片 HTML ─────────────────────────────────────────── */
+function productCard(p) {
+  const specs   = p.specs || {};
+  const enabled = SPEC_SIZES.filter(s => specs[s]?.enabled && specs[s]?.stock > 0);
+  const defaultSpec = enabled[0] || null;
+  const defaultPrice = defaultSpec ? specs[defaultSpec].price : 0;
+  const img = p.images?.[0] || '';
+  const catName = CAT_LABEL[p.category] || '';
 
   return `
-    <a class="p-card" href="product.html?slug=${encodeURIComponent(p.slug)}">
-      <div class="p-media">
-        ${
-          img
-            ? `<img src="${img}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;display:block;">`
-            : `<div class="p-img plant"></div>`
-        }
+    <div class="product-card" data-id="${p.id}">
+      <a class="product-img-wrap" href="product.html?id=${p.id}" aria-label="${esc(p.name)}">
+        ${img
+          ? `<img src="${esc(img)}" alt="${esc(p.name)}" class="product-img" loading="lazy">`
+          : `<div class="product-img-placeholder">🌿</div>`}
+        ${p.featured ? `<span class="product-badge">精選</span>` : ''}
+      </a>
+
+      <div class="product-info">
+        ${catName ? `<div class="product-cat muted">${catName}</div>` : ''}
+        <h3 class="product-name">
+          <a href="product.html?id=${p.id}">${esc(p.name)}</a>
+        </h3>
+
+        ${p.description
+          ? `<p class="product-desc muted">${esc(p.description).slice(0, 60)}${p.description.length > 60 ? '…' : ''}</p>`
+          : ''}
+
+        <!-- 規格選擇 -->
+        ${enabled.length > 1 ? `
+        <div class="spec-selector" data-id="${p.id}">
+          ${enabled.map(s => `
+            <button
+              class="spec-btn ${s === defaultSpec ? 'active' : ''}"
+              data-size="${s}"
+              data-price="${specs[s].price}"
+              data-stock="${specs[s].stock}"
+              type="button"
+            >${s}</button>
+          `).join('')}
+        </div>` : enabled.length === 1 ? `
+        <div class="spec-single muted">${enabled[0]}</div>
+        ` : ''}
+
+        <div class="product-footer">
+          <div class="product-price" data-id="${p.id}">
+            NT$ ${Number(defaultPrice).toLocaleString()}
+          </div>
+          ${enabled.length
+            ? `<button class="btn primary add-cart-btn"
+                data-id="${p.id}"
+                data-name="${esc(p.name)}"
+                data-size="${defaultSpec}"
+                data-price="${defaultPrice}"
+                data-img="${esc(img)}"
+                type="button">
+                加入購物車
+              </button>`
+            : `<span class="sold-out-tag">已售完</span>`}
+        </div>
       </div>
-      <div class="p-body">
-        <div class="p-name">${p.name || ""}</div>
-        <div class="p-meta">${p.en || ""}</div>
-        <div class="p-meta">${minPrice ? `${fmtPrice(minPrice)} 起` : ""}</div>
-      </div>
-    </a>
+    </div>
   `;
 }
 
-const CAT_LABEL = {
-  all: "全部商品",
-  "single-oil": "單方精油",
-  blend: "複方精油",
-  spray: "噴霧",
-  massage: "按摩油",
-  eyemask: "眼罩"
-};
+/* ── 綁定卡片互動 ──────────────────────────────────────────── */
+function bindCardEvents(p) {
+  const card    = document.querySelector(`.product-card[data-id="${p.id}"]`);
+  if (!card) return;
+  const specs   = p.specs || {};
+  const cartBtn = card.querySelector('.add-cart-btn');
 
-function getCategoryFromURL() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("category") || "all";
-}
+  // 規格按鈕切換
+  card.querySelectorAll('.spec-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      card.querySelectorAll('.spec-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
 
-function updateURL(cat) {
-  const url = new URL(window.location.href);
+      const size  = btn.dataset.size;
+      const price = btn.dataset.price;
 
-  if (cat === "all") {
-    url.searchParams.delete("category");
-  } else {
-    url.searchParams.set("category", cat);
-  }
+      // 更新價格顯示
+      const priceEl = card.querySelector('.product-price');
+      if (priceEl) priceEl.textContent = `NT$ ${Number(price).toLocaleString()}`;
 
-  history.replaceState(null, "", url.toString());
-}
-
-function filterProducts(products, cat) {
-  if (cat === "all") return products;
-  return products.filter((p) => p.category === cat);
-}
-
-function renderProducts(allProducts, activeCat, grid, currentCat, totalCount) {
-  const filtered = filterProducts(allProducts, activeCat);
-
-  if (currentCat) {
-    currentCat.textContent = CAT_LABEL[activeCat] || "全部商品";
-  }
-
-  if (totalCount) {
-    totalCount.textContent = String(filtered.length);
-  }
-
-  if (grid) {
-    grid.innerHTML = filtered.length
-      ? filtered.map(cardHTML).join("")
-      : `<p class="muted">此分類目前沒有商品</p>`;
-  }
-}
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const grid = document.getElementById("productGrid");
-  const catDropdown = document.getElementById("catDropdown");
-  const catToggle = document.getElementById("catToggle");
-  const catMenu = document.getElementById("catMenu");
-  const currentCat = document.getElementById("currentCat");
-  const totalCount = document.getElementById("totalCount");
-  const catItems = document.querySelectorAll(".cat-item");
-
-  if (!grid || !catDropdown || !catToggle || !catMenu) return;
-
-  let allProducts = [];
-  let activeCat = getCategoryFromURL();
-
-  function openMenu() {
-    catMenu.classList.add("open");
-    catToggle.setAttribute("aria-expanded", "true");
-  }
-
-  function closeMenu() {
-    catMenu.classList.remove("open");
-    catToggle.setAttribute("aria-expanded", "false");
-  }
-
-  function toggleMenu() {
-    const isOpen = catMenu.classList.contains("open");
-    if (isOpen) {
-      closeMenu();
-    } else {
-      openMenu();
-    }
-  }
-
-  catToggle.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleMenu();
-  });
-
-  catMenu.addEventListener("pointerdown", (e) => {
-    e.stopPropagation();
-  });
-
-  catItems.forEach((item) => {
-    item.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      activeCat = item.dataset.cat || "all";
-      renderProducts(allProducts, activeCat, grid, currentCat, totalCount);
-      updateURL(activeCat);
-      closeMenu();
+      // 更新購物車按鈕 data 屬性
+      if (cartBtn) {
+        cartBtn.dataset.size  = size;
+        cartBtn.dataset.price = price;
+      }
     });
   });
 
-  document.addEventListener("pointerdown", (e) => {
-    if (!catDropdown.contains(e.target)) {
-      closeMenu();
-    }
-  });
+  // 加入購物車
+  cartBtn?.addEventListener('click', () => {
+    const size  = cartBtn.dataset.size;
+    const price = Number(cartBtn.dataset.price);
+    const name  = cartBtn.dataset.name;
+    const img   = cartBtn.dataset.img;
+    const id    = cartBtn.dataset.id;
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      closeMenu();
-    }
-  });
+    addToCart({ id, name, size, price, img, qty: 1 });
 
-  try {
-    allProducts = await loadProducts();
-    renderProducts(allProducts, activeCat, grid, currentCat, totalCount);
-  } catch (err) {
-    console.error(err);
-    grid.innerHTML = `<p class="muted">商品載入失敗：${err.message}</p>`;
+    // 視覺回饋
+    const orig = cartBtn.textContent;
+    cartBtn.textContent = '✓ 已加入';
+    cartBtn.disabled = true;
+    setTimeout(() => {
+      cartBtn.textContent = orig;
+      cartBtn.disabled = false;
+    }, 1200);
+  });
+}
+
+/* ── 購物車（localStorage）─────────────────────────────────── */
+function addToCart(item) {
+  const cart = getCart();
+  // 同商品同規格 → 數量 +1
+  const key   = `${item.id}_${item.size}`;
+  const exist = cart.find(c => `${c.id}_${c.size}` === key);
+  if (exist) {
+    exist.qty += 1;
+  } else {
+    cart.push({ ...item });
   }
-});
+  saveCart(cart);
+  updateCartBadge(cart);
+}
+
+function getCart() {
+  try { return JSON.parse(localStorage.getItem('arochemy_cart') || '[]'); }
+  catch { return []; }
+}
+
+function saveCart(cart) {
+  localStorage.setItem('arochemy_cart', JSON.stringify(cart));
+}
+
+function updateCartBadge(cart) {
+  const total = cart.reduce((s, c) => s + c.qty, 0);
+  const badge = document.getElementById('cartCount');
+  if (badge) badge.textContent = total;
+}
+
+/* ── 分類篩選 ──────────────────────────────────────────────── */
+function initCategoryFilter() {
+  catToggle?.addEventListener('click', () => {
+    const open = catToggle.getAttribute('aria-expanded') === 'true';
+    catToggle.setAttribute('aria-expanded', !open);
+    catMenu?.classList.toggle('open', !open);
+  });
+
+  catMenu?.querySelectorAll('.cat-item').forEach(item => {
+    item.addEventListener('click', () => {
+      currentCatKey = item.dataset.cat;
+      if (currentCat) currentCat.textContent = item.textContent;
+      catToggle?.setAttribute('aria-expanded', 'false');
+      catMenu?.classList.remove('open');
+
+      // 篩選
+      const firestoreCat = CAT_MAP[currentCatKey];
+      const filtered = firestoreCat
+        ? allProducts.filter(p => p.category === firestoreCat)
+        : allProducts;
+      renderProducts(filtered);
+    });
+  });
+}
+
+/* ── 點外側關閉下拉 ────────────────────────────────────────── */
+function initDropdownClose() {
+  document.addEventListener('click', e => {
+    if (catDropdown && !catDropdown.contains(e.target)) {
+      catToggle?.setAttribute('aria-expanded', 'false');
+      catMenu?.classList.remove('open');
+    }
+  });
+}
+
+/* ── Skeleton 骨架 ─────────────────────────────────────────── */
+function renderSkeletons(n) {
+  return Array(n).fill(0).map(() => `
+    <div class="product-card skeleton-card">
+      <div class="skeleton" style="height:220px;border-radius:12px;margin-bottom:14px"></div>
+      <div class="skeleton" style="height:14px;width:40%;margin-bottom:8px"></div>
+      <div class="skeleton" style="height:18px;width:80%;margin-bottom:8px"></div>
+      <div class="skeleton" style="height:14px;margin-bottom:16px"></div>
+      <div class="skeleton" style="height:40px;border-radius:999px"></div>
+    </div>
+  `).join('');
+}
+
+/* ── 工具 ──────────────────────────────────────────────────── */
+function esc(str) {
+  return String(str || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── 初始化購物車數量 ──────────────────────────────────────── */
+updateCartBadge(getCart());
+
+/* ── 啟動 ──────────────────────────────────────────────────── */
+init();

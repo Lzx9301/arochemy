@@ -64,8 +64,20 @@ async function safeGetDoc(ref) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   認證
+   認證（含管理員角色驗證）
 ════════════════════════════════════════════════════════════ */
+
+// 管理員驗證：Firestore admins/{uid} 存在才能進後台
+async function checkIsAdmin(uid) {
+  try {
+    const docSnap = await db.collection('admins').doc(uid).get();
+    return docSnap.exists;
+  } catch (e) {
+    console.warn('Admin check failed:', e.message);
+    return false;
+  }
+}
+
 function initAuth() {
   const loginScreen = $('#login-screen');
   const appLayout   = $('#app-layout');
@@ -74,8 +86,19 @@ function initAuth() {
   const emailInput  = $('#login-email');
   const passInput   = $('#login-password');
 
-  auth.onAuthStateChanged(user => {
+  auth.onAuthStateChanged(async user => {
     if (user) {
+      // ── 管理員驗證 ──────────────────────────────────────
+      const isAdmin = await checkIsAdmin(user.uid);
+      if (!isAdmin) {
+        // 前台會員或非管理員 → 立即登出並顯示提示
+        await auth.signOut();
+        loginErr.textContent = '此帳號沒有後台管理權限。';
+        loginScreen.style.display = 'flex';
+        appLayout.style.display   = 'none';
+        return;
+      }
+      // ── 通過驗證 → 進入後台 ────────────────────────────
       currentUser = user;
       loginScreen.style.display = 'none';
       appLayout.style.display   = 'flex';
@@ -98,14 +121,15 @@ function initAuth() {
     const pass  = passInput.value;
     loginErr.textContent = '';
     loginBtn.disabled    = true;
-    loginBtn.textContent = '登入中…';
+    loginBtn.textContent = '驗證中…';
     try {
       await auth.signInWithEmailAndPassword(email, pass);
+      // onAuthStateChanged 接手後續管理員驗證
     } catch (err) {
       const msgs = {
         'auth/user-not-found':    '找不到此帳號',
         'auth/wrong-password':    '密碼錯誤',
-        'auth/invalid-email':     '電子郵件格式不正確',
+        'auth/invalid-email':     'Email 格式不正確',
         'auth/invalid-credential':'帳號或密碼錯誤',
         'auth/too-many-requests': '嘗試次數過多，請稍後再試',
       };

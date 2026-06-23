@@ -1,652 +1,745 @@
-<!doctype html>
-<html lang="zh-Hant">
+<!DOCTYPE html>
+<html lang="zh-TW">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>商品後台｜Arochemy</title>
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="icon" type="image/png" href="./images/logo.png" />
-    <link rel="apple-touch-icon" href="./images/logo.png" />
-    <style>
-        .admin-page {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 24px;
-        }
-
-        .admin-form {
-            display: grid;
-            gap: 16px;
-        }
-
-        .admin-field {
-            display: grid;
-            gap: 6px;
-        }
-
-        .admin-field label {
-            font-weight: 700;
-        }
-
-        .admin-field input,
-        .admin-field textarea,
-        .admin-field select {
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            font-size: 16px;
-        }
-
-        .admin-field textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-
-        .admin-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .admin-check {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .admin-btn {
-            padding: 14px 20px;
-            border: none;
-            border-radius: 999px;
-            background: #111;
-            color: white;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .admin-msg {
-            margin-top: 16px;
-            color: #456b55;
-            font-weight: 700;
-        }
-
-@media (max-width: 640px) {
-            .admin-row {
-                grid-template-columns: 1fr;
-            }
-
-        }
-        .admin-header {
-            border-bottom: 1px solid #eee;
-            background: #fff;
-        }
-
-        .admin-nav {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 16px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .admin-logo {
-            font-weight: 700;
-            text-decoration: none;
-            color: #111;
-        }
-
-        .admin-menu {
-            display: flex;
-            gap: 20px;
-        }
-
-        .admin-menu a {
-            text-decoration: none;
-            color: #555;
-            font-size: 14px;
-        }
-
-        .admin-menu a:hover {
-            color: #111;
-        }
-
-        .admin-logout {
-            border: 1px solid #ddd;
-            background: #fff;
-            border-radius: 999px;
-            padding: 6px 14px;
-            cursor: pointer;
-        }
-
-        .admin-panel {
-            display: none;
-        }
-
-        .admin-panel.active {
-            display: block;
-        }
-
-        .admin-list {
-            display: grid;
-            gap: 14px;
-            margin-top: 20px;
-        }
-
-        .admin-data-card {
-            border: 1px solid #eee;
-            border-radius: 20px;
-            padding: 18px;
-            background: #fff;
-        }
-
-        .admin-data-card h3 {
-            margin: 0 0 8px;
-        }
-
-        .admin-data-card p {
-            margin: 4px 0;
-            color: #555;
-        }
-
-        .admin-menu .admin-tab {
-            border: none;
-            background: transparent;
-            border-radius: 0;
-            padding: 0;
-            color: #555;
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 500;
-        }
-
-        .admin-menu .admin-tab:hover {
-            color: #111;
-        }
-
-        .admin-menu .admin-tab.active {
-            color: #111;
-            font-weight: 700;
-        }
-
-        .admin-menu .admin-tab.active::after {
-            content: "";
-            display: block;
-            height: 2px;
-            background: #111;
-            margin-top: 6px;
-        }
-
-        .admin-status-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr auto;
-            gap: 12px;
-            align-items: end;
-            margin: 16px 0;
-        }
-
-        .admin-status-row label {
-            display: grid;
-            gap: 6px;
-            font-weight: 700;
-        }
-
-        .admin-status-row select {
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            font-size: 15px;
-        }
-
-@media (max-width: 720px) {
-            .admin-status-row {
-                grid-template-columns: 1fr;
-            }
-        }
-        .image-preview-wrap {
-            margin-top: 12px;
-        }
-
-        #previewImage {
-            display: none;
-            width: 300px;
-            height: 300px;
-            object-fit: cover;
-            border-radius: 20px;
-            border: 1px solid #ddd;
-        }
-
-        .order-tools {
-            display: grid;
-            gap: 14px;
-            margin: 18px 0 22px;
-        }
-
-        .order-filter-tabs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .order-filter {
-            border: 1px solid #ddd;
-            background: #fff;
-            border-radius: 999px;
-            padding: 8px 14px;
-            cursor: pointer;
-            font-weight: 700;
-        }
-
-        .order-filter.active {
-            background: #111;
-            color: #fff;
-            border-color: #111;
-        }
-
-        .order-search {
-            width: 100%;
-            box-sizing: border-box;
-            padding: 12px 14px;
-            border: 1px solid #ddd;
-            border-radius: 14px;
-            font-size: 15px;
-        }
-        .product-tools {
-            display: flex;
-            gap: 12px;
-            margin-top: 16px;
-            margin-bottom: 24px;
-        }
-
-        .product-tools .admin-btn {
-            width: auto;
-            min-width: 180px;
-        }
-
-        .product-search {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid #ddd;
-            border-radius: 14px;
-        }
-        .admin-btn.primary{
-          background:#4f6f57;
-          color:#fff;
-        }
-
-        .admin-btn.secondary {
-            background: #fff;
-            color: #111;
-            border: 1px solid #ddd;
-        }
-        .product-card-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 14px;
-            align-items: center;
-            margin: 14px 0;
-        }
-
-        .product-card-actions label {
-            display: grid;
-            gap: 6px;
-            font-weight: 700;
-        }
-
-        .product-card-actions select {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            font-size: 14px;
-        }
-
-        .product-featured-toggle {
-            display: flex !important;
-            grid-template-columns: none !important;
-            flex-direction: row;
-            gap: 8px !important;
-            align-items: center;
-            margin-top: 22px;
-        }
-
-        .dashboard-cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin: 24px 0;
-}
-        @media (max-width: 520px) {
-  .dashboard-cards {
-    grid-template-columns: 1fr;
-  }
-}
-        
-        .dashboard-card {
-          border: 1px solid #eee;
-          border-radius: 20px;
-          background: #fff;
-          padding: 18px;
-        }
-        
-        .dashboard-card span {
-          display: block;
-          color: #666;
-          font-size: 14px;
-          margin-bottom: 8px;
-        }
-        
-        .dashboard-card strong {
-          font-size: 30px;
-          font-size: 36px;
-          font-weight: 800;
-          color: #111;
-        }
-        
-        @media (max-width: 800px) {
-          .dashboard-cards {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-
-        .dashboard-card {
-          transition: 0.2s;
-        }
-        
-        .dashboard-card:hover {
-          transform: translateY(-2px);
-        }
-
-        .order-detail-toggle {
-          margin-top: 8px;
-        }
-        
-        .order-detail-panel {
-          margin-top: 16px;
-          color: #555;
-        }
-        
-        .order-detail-panel hr {
-          border: none;
-          border-top: 1px solid #eee;
-          margin: 16px 0;
-        }
-        
-        .order-detail-panel ul {
-          margin-top: 8px;
-          padding-left: 20px;
-        }
-        
-
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arochemy 後台管理</title>
+  <link rel="stylesheet" href="admin.css">
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+  <!-- EmailJS（填入 Key 後自動生效） -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
-
 <body>
-    <header class="admin-header">
-        <div class="admin-nav">
-            <a href="admin.html" class="admin-logo">Arochemy Admin</a>
 
-            <nav class="admin-menu">
-                <a href="#" class="admin-tab active" data-panel="productsPanel">商品</a>
-                <a href="#" class="admin-tab" data-panel="usersPanel">會員</a>
-                <a href="#" class="admin-tab" data-panel="ordersPanel">訂單</a>
-            </nav>
+<!-- 登入 -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">Arochemy</div>
+    <div class="login-subtitle">後台管理系統</div>
+    <div class="form-group">
+      <label>電子郵件</label>
+      <input type="email" id="login-email" placeholder="admin@arochemy.com" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>密碼</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <div id="login-error" class="login-error"></div>
+    <button class="btn btn-primary" id="login-btn">登入</button>
+  </div>
+</div>
 
-            <button id="logoutBtn" class="admin-logout">登出</button>
+<div id="toast-container" class="toast-container"></div>
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+<!-- ══════════ 主介面 ══════════ -->
+<div id="app-layout" style="display:none">
+
+  <!-- ── 側邊欄 ── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="sidebar-logo">Arochemy</span>
+      <div class="sidebar-tagline">後台管理系統</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">總覽</div>
+        <div class="nav-item active" data-page="page-dashboard">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          儀表板
         </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">前台內容</div>
+        <div class="nav-item" data-page="page-hero">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          首頁設定
+        </div>
+        <div class="nav-item" data-page="page-products">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0"/></svg>
+          產品管理
+        </div>
+        <div class="nav-item" data-page="page-articles">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          文章管理
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">數據</div>
+        <div class="nav-item" data-page="page-orders">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+          訂單管理
+        </div>
+        <div class="nav-item" data-page="page-members">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          會員管理
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">系統</div>
+        <div class="nav-item" data-page="page-settings">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          網站設定
+        </div>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar"><span id="user-avatar-initials">A</span></div>
+        <div class="user-email" id="user-email-display">admin</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="logout-btn" style="width:100%;justify-content:center">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        登出
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── 主內容 ── -->
+  <div class="main-content">
+    <header class="topbar">
+      <button id="hamburger-btn" class="hamburger">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="topbar-title" id="topbar-title">儀表板</div>
+      <div class="topbar-actions">
+        <div class="status-dot" title="Firebase 已連線"></div>
+        <a href="index.html" target="_blank" class="btn btn-secondary btn-sm">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          前台
+        </a>
+      </div>
     </header>
-    <main class="admin-page">
 
-        <!-- 🔐 登入區 -->
-        <section id="loginBox">
-            <h1>管理員登入</h1>
+    <!-- ══ 儀表板 ══ -->
+    <main id="page-dashboard" class="page active">
+      <div class="page-hero"><h1>歡迎回來</h1><p>Arochemy 後台管理系統概覽</p></div>
 
-            <div class="admin-form">
-                <div class="admin-field">
-                    <label>Email</label>
-                    <input id="adminEmail" type="email" />
-                </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">產品總數</div><div class="stat-value" id="stat-products">—</div></div>
+        <div class="stat-card"><div class="stat-label">文章總數</div><div class="stat-value" id="stat-articles">—</div></div>
+        <div class="stat-card"><div class="stat-label">訂單總數</div><div class="stat-value" id="stat-orders">—</div></div>
+        <div class="stat-card"><div class="stat-label">會員人數</div><div class="stat-value" id="stat-members">—</div></div>
+      </div>
 
-                <div class="admin-field">
-                    <label>密碼</label>
-                    <input id="adminPassword" type="password" />
-                </div>
-
-                <button class="admin-btn" id="loginBtn" type="button">登入</button>
-
-                <div class="admin-msg" id="loginMsg"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+        <div class="revenue-card">
+          <div class="revenue-label">本月營收</div>
+          <div class="revenue-amount"><span class="revenue-unit">NT$</span><span id="stat-revenue">0</span></div>
+          <div class="revenue-meta">
+            <span>⏳ 待處理 <strong id="stat-pending">0</strong></span>
+            <span>✅ 已完成 <strong id="stat-done">0</strong></span>
+          </div>
+        </div>
+        <div class="card" style="margin:0">
+          <div class="card-header"><span class="card-title">🏆 熱銷排行（前 5）</span></div>
+          <div class="card-body" style="padding:12px 16px">
+            <div class="sales-rank-list" id="dashboard-sales-rank">
+              <div style="color:var(--text-muted);font-size:12px;text-align:center;padding:12px">計算中…</div>
             </div>
-        </section>
+          </div>
+        </div>
+      </div>
 
-        <!-- 🛠 後台區 -->
-
-
-        <section id="adminBox" style="display:none;">
-            <h1>後台管理</h1>
-            <section class="dashboard-cards">
-              <div class="dashboard-card">
-                <span>商品總數</span>
-                <strong id="statProducts">0</strong>
-              </div>
-            
-              <div class="dashboard-card">
-                <span>會員總數</span>
-                <strong id="statUsers">0</strong>
-              </div>
-            
-              <div class="dashboard-card">
-                <span>待處理訂單</span>
-                <strong id="statPendingOrders">0</strong>
-              </div>
-            
-              <div class="dashboard-card">
-                <span>已付款待出貨</span>
-                <strong id="statPaidNotShipped">0</strong>
-              </div>
-
-            <div class="dashboard-card">
-              <span>累積營收</span>
-              <strong id="statTotalRevenue">NT$ 0</strong>
-            </div>
-            
-            <div class="dashboard-card">
-              <span>本月營收</span>
-              <strong id="statMonthlyRevenue">NT$ 0</strong>
-            </div>
-            
-            <div class="dashboard-card">
-              <span>已完成訂單</span>
-              <strong id="statCompletedOrders">0</strong>
-            </div>
-            
-            <div class="dashboard-card">
-              <span>平均客單價</span>
-              <strong id="statAverageOrderValue">NT$ 0</strong>
-            </div>
-            <hr style="margin:32px 0;">
-            </section>
-
-
-            <section id="productsPanel" class="admin-panel active">
-                <h2>編輯商品</h2>
-                <div class="product-tools">
-                  <input
-                    id="productSearch"
-                    class="product-search"
-                    placeholder="搜尋商品名稱、英文名稱、slug"
-                  >
-                
-                  <button id="loadProductsListBtn" class="admin-btn secondary" type="button">
-                    重新整理
-                  </button>
-                
-                  <button id="newProductBtn" class="admin-btn primary" type="button">
-                    新增商品
-                  </button>
-                </div>
-                
-                <div id="productsList" class="admin-list"></div>
-
-                <button class="admin-btn" id="loadProductBtn" type="button">
-                    載入商品資料
-                </button>
-
-                <div class="admin-msg" id="editMsg"></div>
-
-                <form class="admin-form" id="productForm">
-                    <div class="admin-row">
-                        <div class="admin-field">
-                            <label for="name">商品中文名稱</label>
-                            <input id="name" required placeholder="例如：臺灣杉" />
-                        </div>
-
-                        <div class="admin-field">
-                            <label for="en">英文名稱</label>
-                            <input id="en" placeholder="例如：Taiwania" />
-                        </div>
-                    </div>
-
-                    <div class="admin-row">
-                        <div class="admin-field">
-                            <label for="slug">Slug</label>
-                            <input id="slug" required placeholder="例如：taiwania" />
-                        </div>
-
-                        <div class="admin-field">
-                            <label for="category">分類</label>
-                            <select id="category">
-                                <option value="single-oil">單方精油</option>
-                                <option value="blend-oil">複方精油</option>
-                                <option value="spray">噴霧</option>
-                                <option value="massage-oil">按摩油</option>
-                                <option value="other">其他</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="admin-field">
-                        <label for="productStatus">商品狀態</label>
-                        <select id="productStatus">
-                            <option value="active">上架</option>
-                            <option value="inactive">下架</option>
-                        </select>
-                    </div>
-
-                    <div class="admin-field">
-                        <label for="latin">拉丁學名</label>
-                        <input id="latin" placeholder="例如：Taiwania cryptomerioides Hayata" />
-                    </div>
-
-                    <div class="admin-row">
-                        <div class="admin-field">
-                            <label for="price5">5 ml 價格</label>
-                            <input id="price5" type="number" min="0" placeholder="666" />
-                        </div>
-
-                        <div class="admin-field">
-                            <label for="price10">10 ml 價格</label>
-                            <input id="price10" type="number" min="0" placeholder="1166" />
-                        </div>
-                    </div>
-
-                    <div class="admin-field">
-                        <label for="price30">30 ml 價格</label>
-                        <input id="price30" type="number" min="0" placeholder="2666" />
-                    </div>
-
-                    <div class="admin-field">
-                        <label>商品圖片</label>
-                        <input type="file" id="productImage">
-
-                        <div class="image-preview-wrap">
-                            <img id="previewImage">
-                        </div>
-                    </div>
-
-                    <div class="admin-field">
-                        <label for="aroma">香氣概述</label>
-                        <input id="aroma" placeholder="例如：油潤柔和的木質香調" />
-                    </div>
-
-                    <div class="admin-row">
-                        <div class="admin-field">
-                            <label for="plantOrigin">植物產地</label>
-                            <input id="plantOrigin" placeholder="例如：臺灣" />
-                        </div>
-
-                        <div class="admin-field">
-                            <label for="extractPart">萃取部位</label>
-                            <input id="extractPart" placeholder="例如：木材" />
-                        </div>
-                    </div>
-
-                    <div class="admin-row">
-                        <div class="admin-field">
-                            <label for="extractMethod">萃取方法</label>
-                            <input id="extractMethod" placeholder="例如：蒸餾" />
-                        </div>
-
-                        <div class="admin-field">
-                            <label for="family">科屬</label>
-                            <input id="family" placeholder="例如：柏科臺灣杉屬" />
-                        </div>
-                    </div>
-
-                    <div class="admin-field">
-                        <label for="usageOverview">建議用途（概述）</label>
-                        <input id="usageOverview" placeholder="例如：芳香療法、製作香水、擴香" />
-                    </div>
-
-
-                    <div class="admin-field">
-                        <label for="compositionText">成分總覽</label>
-                        <textarea id="compositionText" placeholder="每行一個成分，格式：名稱,百分比&#10;例如：倍半萜類-醇類,51.2&#10;倍半萜類,34.7&#10;其他,14.1"></textarea>
-                    </div>
-                    <div class="admin-field">
-                        <label for="description">商品說明</label>
-                        <textarea id="description" placeholder="每一段請換行，系統會自動轉成 description 陣列"></textarea>
-                    </div>
-
-                    <label class="admin-check">
-                        <input id="featured" type="checkbox" checked />
-                        設為精選商品
-                    </label>
-
-                    <button class="admin-btn" type="submit">儲存商品</button>
-
-                    <div class="admin-msg" id="msg"></div>
-
-                </form>
-            </section>
-
-            <section id="usersPanel" class="admin-panel">
-                <h2>會員資料</h2>
-                <button type="button" class="admin-btn" id="loadUsersBtn">重新整理會員資料</button>
-                <div id="usersList" class="admin-list"></div>
-            </section>
-
-            <section id="ordersPanel" class="admin-panel">
-                <h2>訂單管理</h2>
-
-                <div class="order-tools">
-                    <div class="order-filter-tabs">
-                        <button type="button" class="order-filter active" data-filter="all">全部</button>
-                        <button type="button" class="order-filter" data-filter="pending">待處理</button>
-                        <button type="button" class="order-filter" data-filter="paid_not_shipped">待出貨</button>
-                        <button type="button" class="order-filter" data-filter="shipped">已出貨</button>
-                        <button type="button" class="order-filter" data-filter="completed">已完成</button>
-                        <button type="button" class="order-filter" data-filter="cancelled">已取消</button>
-                    </div>
-
-                    <input id="orderSearch" class="order-search" placeholder="搜尋姓名、Email、電話、訂單編號" />
-
-                    <button type="button" class="admin-btn" id="loadOrdersBtn">重新整理訂單資料</button>
-                </div>
-
-                <div id="ordersList" class="admin-list"></div>
-            </section>
-        </section>
-
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">最新訂單</span>
+          <button class="btn btn-secondary btn-sm" onclick="document.querySelector('[data-page=page-orders]').click()">查看全部</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr><th>客戶</th><th>金額</th><th>狀態</th><th>日期</th></tr></thead>
+            <tbody id="recent-orders-list">
+              <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">載入中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </main>
-    <script src="js/cart-badge.js"></script>
-    <script type="module" src="js/admin.js"></script>
+
+    <!-- ══ 首頁設定 ══ -->
+    <main id="page-hero" class="page">
+      <div class="page-hero"><h1>首頁設定</h1><p>管理前台首頁各區塊的文字內容與精選產品</p></div>
+
+      <div class="section-tabs">
+        <button class="section-tab active" data-panel="panel-hero">Hero 橫幅</button>
+        <button class="section-tab" data-panel="panel-brand">品牌故事</button>
+        <button class="section-tab" data-panel="panel-faq">FAQ</button>
+        <button class="section-tab" data-panel="panel-featured">精選產品</button>
+      </div>
+
+      <div class="section-panel active" id="panel-hero">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Hero 橫幅文字</span></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group"><label>主標題</label><input type="text" id="hero-title" placeholder="植物精萃．自然香氛"></div>
+              <div class="form-group"><label>副標題</label><textarea id="hero-subtitle" rows="3" placeholder="簡短的品牌介紹文字…"></textarea></div>
+              <div class="form-grid form-grid-2">
+                <div class="form-group"><label>按鈕文字</label><input type="text" id="hero-btn-text" placeholder="探索系列"></div>
+                <div class="form-group"><label>按鈕連結</label><input type="text" id="hero-btn-link" placeholder="products.html"></div>
+              </div>
+            </div>
+            <div style="margin-top:20px"><button class="btn btn-accent" id="save-hero-btn">儲存 Hero 設定</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-panel" id="panel-brand">
+        <div class="card">
+          <div class="card-header"><span class="card-title">品牌故事區塊</span></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group"><label>區塊標題</label><input type="text" id="brand-title" placeholder="我們的故事"></div>
+              <div class="form-group"><label>故事內文</label><textarea id="brand-body" rows="8" placeholder="品牌理念與故事…"></textarea></div>
+            </div>
+            <div style="margin-top:20px"><button class="btn btn-accent" id="save-brand-btn">儲存品牌故事</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-panel" id="panel-faq">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">常見問題 FAQ</span>
+            <button class="btn btn-secondary btn-sm" id="add-faq-btn">＋ 新增問題</button>
+          </div>
+          <div class="card-body">
+            <div id="faq-editor-list"></div>
+            <div style="margin-top:16px"><button class="btn btn-accent" id="save-faq-btn">儲存 FAQ</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-panel" id="panel-featured">
+        <div class="card">
+          <div class="card-header"><span class="card-title">⭐ 精選產品（首頁展示）</span></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;line-height:1.7">
+              根據所有訂單的銷售數量，自動計算出熱銷前三名並設為首頁精選產品。<br>
+              點擊按鈕後，系統會掃描全部訂單資料、計算各商品售出數量，並更新 Firestore 中的 <code style="background:var(--bg-elevated);padding:2px 6px;border-radius:3px;font-size:11px">featured</code> 欄位。
+            </p>
+            <button class="featured-update-btn" id="update-featured-btn">
+              <span class="icon">🔥</span>
+              <span class="text">
+                <strong>一鍵更新本月熱銷精選</strong>
+                <span>自動計算銷量 → 更新前台精選產品顯示</span>
+              </span>
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ══ 產品管理 ══ -->
+    <main id="page-products" class="page">
+      <div class="page-hero"><h1>產品管理</h1><p>管理商品目錄、規格價格與庫存</p></div>
+
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="search-wrapper">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="search-input" id="product-search" placeholder="搜尋產品名稱…">
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <button class="btn btn-accent" id="add-product-btn">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新增產品
+          </button>
+        </div>
+      </div>
+
+      <div class="filter-chips" id="products-cat-filter">
+        <button class="filter-chip active" data-cat="">全部</button>
+        <button class="filter-chip" data-cat="single">單方精油</button>
+        <button class="filter-chip" data-cat="compound">複方精油</button>
+        <button class="filter-chip" data-cat="spray">噴霧</button>
+        <button class="filter-chip" data-cat="massage">按摩油</button>
+        <button class="filter-chip" data-cat="eye-mask">眼罩</button>
+      </div>
+
+      <div class="card">
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:52px">圖片</th>
+                <th>產品名稱</th>
+                <th>分類</th>
+                <th>規格 / 售價</th>
+                <th>庫存</th>
+                <th>狀態</th>
+                <th style="width:140px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="products-table-body">
+              <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">點擊「新增產品」開始建立商品</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- ══ 文章管理 ══ -->
+    <main id="page-articles" class="page">
+      <div class="page-hero"><h1>文章管理</h1><p>發布品牌文章與電子報</p></div>
+
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="search-wrapper">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="search-input" id="article-search" placeholder="搜尋標題或分類…">
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <button class="btn btn-accent" id="add-article-btn">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            發布新文章
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr><th>標題</th><th>分類</th><th>標籤</th><th>狀態</th><th style="width:160px">操作</th></tr></thead>
+            <tbody id="articles-table-body">
+              <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">點擊「發布新文章」開始撰寫</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- ══ 訂單管理 ══ -->
+    <main id="page-orders" class="page">
+      <div class="page-hero"><h1>訂單管理</h1><p>查看客戶訂單、更新狀態與分析銷售數據</p></div>
+
+      <!-- 統計數字 -->
+      <div class="summary-row">
+        <div class="summary-pill"><span class="s-icon">💰</span><div class="s-info"><div class="s-val" id="orders-month-revenue">NT$ 0</div><div class="s-lbl">本月營收</div></div></div>
+        <div class="summary-pill"><span class="s-icon">⏳</span><div class="s-info"><div class="s-val" id="orders-pending-count">0</div><div class="s-lbl">待處理訂單</div></div></div>
+        <div class="summary-pill"><span class="s-icon">✅</span><div class="s-info"><div class="s-val" id="orders-done-count">0</div><div class="s-lbl">已完成訂單</div></div></div>
+        <div class="summary-pill"><span class="s-icon">📦</span><div class="s-info"><div class="s-val" id="orders-total-count">0</div><div class="s-lbl">訂單總數</div></div></div>
+      </div>
+
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="month-filter">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <input type="month" id="order-month-filter">
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-chips" id="orders-status-filter">
+        <button class="filter-chip active" data-status="all">全部</button>
+        <button class="filter-chip" data-status="pending">待處理</button>
+        <button class="filter-chip" data-status="paid">已付款</button>
+        <button class="filter-chip" data-status="shipped">已出貨</button>
+        <button class="filter-chip" data-status="done">已完成</button>
+        <button class="filter-chip" data-status="cancel">已取消</button>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>訂單編號</th>
+                <th>客戶姓名</th>
+                <th>Email</th>
+                <th>配送方式</th>
+                <th>金額</th>
+                <th>狀態</th>
+                <th style="width:80px">查看</th>
+              </tr>
+            </thead>
+            <tbody id="orders-table-body">
+              <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">載入中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 商品銷量排行 -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">🏆 商品銷售排行（全部時間）</span></div>
+        <div class="card-body">
+          <div class="sales-rank-list" id="orders-sales-rank">
+            <div style="color:var(--text-muted);font-size:12px;text-align:center;padding:12px">計算中…</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ══ 會員管理 ══ -->
+    <main id="page-members" class="page">
+      <div class="page-hero"><h1>會員管理</h1><p>查看會員資料與電子報訂閱狀態</p></div>
+
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="search-wrapper">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="search-input" id="member-search" placeholder="搜尋姓名或 Email…">
+          </div>
+          <div class="subscriber-count-badge">
+            <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            電子報訂閱：<strong id="members-sub-count">0</strong> 人
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <button class="btn btn-secondary" id="export-subscribers-btn">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            匯出訂閱名單 CSV
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr><th>會員姓名</th><th>Email</th><th>電話</th><th>電子報</th><th>加入日期</th></tr>
+            </thead>
+            <tbody id="members-table-body">
+              <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">載入中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- ══ 網站設定 ══ -->
+    <main id="page-settings" class="page">
+      <div class="page-hero"><h1>網站設定</h1><p>聯絡資訊、社群連結與基本網站資料</p></div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">基本資訊</span></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group"><label>網站名稱</label><input type="text" id="site-name" placeholder="Arochemy｜精油與香氛"></div>
+            <div class="form-group"><label>網站描述（SEO）</label><textarea id="site-description" rows="3" placeholder="簡短的品牌描述，用於搜尋引擎…"></textarea></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">聯絡資訊</span></div>
+        <div class="card-body">
+          <div class="form-grid form-grid-2">
+            <div class="form-group"><label>聯絡電子郵件</label><input type="email" id="contact-email" placeholder="contact@arochemy.com"></div>
+            <div class="form-group"><label>聯絡電話</label><input type="text" id="contact-phone" placeholder="+886 912 345 678"></div>
+          </div>
+          <div class="form-group" style="margin-top:16px"><label>地址</label><input type="text" id="contact-address" placeholder="台灣 台中市…"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">社群連結</span></div>
+        <div class="card-body">
+          <div class="form-grid form-grid-3">
+            <div class="form-group"><label>Instagram</label><input type="url" id="social-ig" placeholder="https://instagram.com/arochemy"></div>
+            <div class="form-group"><label>Facebook</label><input type="url" id="social-fb" placeholder="https://facebook.com/arochemy"></div>
+            <div class="form-group"><label>LINE 官方帳號</label><input type="url" id="social-line" placeholder="https://line.me/R/ti/p/@arochemy"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-accent btn-lg" id="save-site-settings-btn">儲存所有設定</button>
+    </main>
+
+  </div><!-- /main-content -->
+</div><!-- /app-layout -->
+
+
+<!-- ════════ Modal：新增/編輯產品 ════════ -->
+<div id="product-modal" class="modal-overlay">
+  <div class="modal" style="max-width:740px">
+    <div class="modal-header">
+      <h2 class="modal-title" id="product-modal-title">新增產品</h2>
+      <button class="btn btn-icon modal-close"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid form-grid-2" style="margin-bottom:16px">
+        <div class="form-group">
+          <label>產品名稱 <span style="color:#e07070">*</span></label>
+          <input type="text" id="product-name" placeholder="e.g. 薰衣草純精油">
+        </div>
+        <div class="form-group">
+          <label>分類</label>
+          <select id="product-category">
+            <option value="">請選擇分類</option>
+            <option value="single">單方精油</option>
+            <option value="compound">複方精油</option>
+            <option value="spray">噴霧</option>
+            <option value="massage">按摩油</option>
+            <option value="eye-mask">眼罩</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>產地來源</label>
+          <input type="text" id="product-origin" placeholder="法國普羅旺斯">
+        </div>
+        <div class="form-group">
+          <label>上架狀態</label>
+          <select id="product-status">
+            <option value="active">上架中</option>
+            <option value="hidden">下架</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 規格 / 售價 / 庫存表 -->
+      <div class="form-group" style="margin-bottom:16px">
+        <label>規格 · 售價 · 庫存</label>
+        <table class="spec-price-table">
+          <thead>
+            <tr>
+              <th style="width:36px">啟用</th>
+              <th>規格</th>
+              <th>售價（NT$）</th>
+              <th>庫存數量</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="spec-row" data-size="5ml">
+              <td><label class="toggle" style="margin:0"><input type="checkbox" class="spec-enabled"><span class="toggle-track"></span></label></td>
+              <td style="font-size:13px;color:var(--text-primary);font-weight:500">5 ml</td>
+              <td><input type="number" class="spec-price" placeholder="380" min="0"></td>
+              <td><input type="number" class="spec-stock stock-input" placeholder="50" min="0"></td>
+            </tr>
+            <tr class="spec-row" data-size="10ml">
+              <td><label class="toggle" style="margin:0"><input type="checkbox" class="spec-enabled"><span class="toggle-track"></span></label></td>
+              <td style="font-size:13px;color:var(--text-primary);font-weight:500">10 ml</td>
+              <td><input type="number" class="spec-price" placeholder="680" min="0"></td>
+              <td><input type="number" class="spec-stock stock-input" placeholder="50" min="0"></td>
+            </tr>
+            <tr class="spec-row" data-size="30ml">
+              <td><label class="toggle" style="margin:0"><input type="checkbox" class="spec-enabled"><span class="toggle-track"></span></label></td>
+              <td style="font-size:13px;color:var(--text-primary);font-weight:500">30 ml</td>
+              <td><input type="number" class="spec-price" placeholder="1580" min="0"></td>
+              <td><input type="number" class="spec-stock stock-input" placeholder="30" min="0"></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="hint">庫存歸零時系統將自動下架該商品</div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label>產品描述</label>
+        <textarea id="product-description" rows="4" placeholder="詳細說明產品特性、香調、使用方式…"></textarea>
+      </div>
+
+      <!-- 圖片上傳 -->
+      <div class="form-group">
+        <label>產品圖片</label>
+        <div class="image-upload-zone" id="product-image-upload">
+          <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+          <p>拖曳或點擊上傳圖片</p>
+          <div class="hint">支援 JPG、PNG、WebP，可多張上傳</div>
+        </div>
+        <input type="file" id="product-image-input" accept="image/*" multiple style="display:none">
+        <div class="image-preview-grid" id="product-image-previews"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary modal-close">取消</button>
+      <button class="btn btn-accent" id="save-product-btn">儲存產品</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════ Modal：新增/編輯文章 ════════ -->
+<div id="article-modal" class="modal-overlay">
+  <div class="modal" style="max-width:800px">
+    <div class="modal-header">
+      <h2 class="modal-title" id="article-modal-title">發布新文章</h2>
+      <button class="btn btn-icon modal-close"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid form-grid-2" style="margin-bottom:16px">
+        <div class="form-group" style="grid-column:1/-1">
+          <label>文章標題 <span style="color:#e07070">*</span></label>
+          <input type="text" id="article-title" placeholder="e.g. 薰衣草精油的五大功效">
+        </div>
+        <div class="form-group">
+          <label>文章分類</label>
+          <select id="article-category">
+            <option value="">請選擇分類</option>
+            <option value="knowledge">精油知識</option>
+            <option value="lifestyle">生活應用</option>
+            <option value="diy">DIY 教學</option>
+            <option value="brand-story">品牌故事</option>
+            <option value="news">最新消息</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>發布狀態</label>
+          <select id="article-status">
+            <option value="draft">草稿</option>
+            <option value="published">立即發布</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label>摘要（顯示於文章列表卡片）</label>
+        <textarea id="article-excerpt" rows="2" placeholder="100 字以內的文章簡介…"></textarea>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label>標籤</label>
+        <div id="tags-input-area" class="tag-input-area">
+          <input type="text" id="tag-text-input" class="tag-text-input" placeholder="輸入標籤後按 Enter">
+        </div>
+        <div class="hint">按 Enter 或逗號新增標籤</div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label>封面圖片</label>
+        <div class="cover-preview" id="cover-preview">
+          <svg width="32" height="32" fill="currentColor" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+          <span style="font-size:12px">點擊上傳封面圖片</span>
+        </div>
+        <input type="file" id="article-cover-input" accept="image/*" style="display:none">
+        <button class="btn btn-secondary btn-sm" id="article-cover-upload" style="margin-top:8px">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          上傳封面
+        </button>
+      </div>
+
+      <div class="form-group">
+        <label>文章內文</label>
+        <div class="editor-toolbar">
+          <button data-cmd="bold" title="粗體"><b>B</b></button>
+          <button data-cmd="italic" title="斜體"><i>I</i></button>
+          <button data-cmd="underline" title="底線"><u>U</u></button>
+          <div class="divider"></div>
+          <button data-cmd="formatBlock" data-val="h2" title="大標題">H2</button>
+          <button data-cmd="formatBlock" data-val="h3" title="小標題">H3</button>
+          <button data-cmd="formatBlock" data-val="p" title="段落">P</button>
+          <div class="divider"></div>
+          <button data-cmd="insertUnorderedList" title="無序列表">≡</button>
+          <button data-cmd="insertOrderedList" title="有序列表">1.</button>
+          <div class="divider"></div>
+          <button data-cmd="formatBlock" data-val="blockquote" title="引用">❝</button>
+          <button id="insert-link-btn" title="插入連結">🔗</button>
+          <div class="divider"></div>
+          <button data-cmd="removeFormat" title="清除格式">✕</button>
+        </div>
+        <div class="editor-content" id="article-editor-content" contenteditable="true"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary modal-close">取消</button>
+      <button class="btn btn-accent" id="save-article-btn">儲存文章</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════ Modal：發送電子報 ════════ -->
+<div id="newsletter-modal" class="modal-overlay">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-header">
+      <h2 class="modal-title">📧 發送電子報</h2>
+      <button class="btn btn-icon modal-close"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="newsletter-article-id">
+      <div class="subscriber-count-badge" style="margin-bottom:16px">
+        <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        將發送給 <strong id="nl-subscriber-count">0</strong> 位訂閱會員
+      </div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label>郵件主旨</label>
+        <input type="text" id="newsletter-subject" placeholder="【Arochemy】文章標題">
+      </div>
+      <div id="newsletter-email-preview"></div>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:12px;line-height:1.6">
+        ⚠️ 發送前請確認 EmailJS 設定已填入（admin.js 第 16–18 行）。<br>
+        EmailJS 免費方案每月可發送 200 封。
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary modal-close">取消</button>
+      <button class="btn btn-accent" id="send-newsletter-btn">確認發送</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════ Modal：訂單詳細 ════════ -->
+<div id="order-detail-modal" class="modal-overlay">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">訂單詳細 <span id="order-detail-id" style="color:var(--accent);font-size:16px"></span></h2>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">建立於 <span id="order-detail-date"></span>・狀態：<span id="order-detail-status"></span></div>
+      </div>
+      <button class="btn btn-icon modal-close"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="order-detail-section">
+        <h4>客戶資訊</h4>
+        <div class="order-info-grid">
+          <div class="order-info-row"><span class="label">姓名</span><span class="value" id="order-detail-name"></span></div>
+          <div class="order-info-row"><span class="label">Email</span><span class="value" id="order-detail-email"></span></div>
+          <div class="order-info-row"><span class="label">電話</span><span class="value" id="order-detail-phone"></span></div>
+          <div class="order-info-row"><span class="label">配送方式</span><span class="value" id="order-detail-ship"></span></div>
+        </div>
+      </div>
+      <div class="order-detail-section">
+        <h4>收件資訊</h4>
+        <div class="order-info-row"><span class="label">地址 / 門市</span><span class="value" id="order-detail-addr"></span></div>
+        <div class="order-info-row" style="margin-top:8px"><span class="label">訂單備註</span><span class="value" id="order-detail-note" style="color:var(--text-secondary)"></span></div>
+      </div>
+      <div class="order-detail-section">
+        <h4>商品清單</h4>
+        <div class="order-items-list" id="order-detail-items"></div>
+        <div class="order-total-row">
+          <span class="order-total-label">訂單總計</span>
+          <span class="order-total-value" id="order-detail-total"></span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary modal-close">關閉</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════ Modal：刪除確認 ════════ -->
+<div id="confirm-modal" class="modal-overlay confirm-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">確認刪除</h2>
+      <button class="btn btn-icon modal-close"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p class="confirm-body-text" id="confirm-message">確定要刪除此項目嗎？</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary modal-close">取消</button>
+      <button class="btn btn-danger" id="confirm-do-btn">確認刪除</button>
+    </div>
+  </div>
+</div>
+
+<script src="admin.js"></script>
 </body>
 </html>

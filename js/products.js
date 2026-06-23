@@ -308,5 +308,171 @@ function esc(str) {
 /* ── 初始化購物車數量 ──────────────────────────────────────── */
 updateCartBadge(getCart());
 
+/* ── 注入商品卡片樣式（確保不依賴外部 CSS）───────────────── */
+(function injectProductStyles() {
+  if (document.getElementById('arochemy-product-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'arochemy-product-styles';
+  style.textContent = `
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 24px;
+      padding: 24px 0;
+    }
+    .product-card {
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 16px;
+      overflow: hidden;
+      transition: box-shadow 0.2s, transform 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .product-card:hover {
+      box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+      transform: translateY(-2px);
+    }
+    .product-img-wrap {
+      display: block;
+      position: relative;
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      background: #f7f5f0;
+      text-decoration: none;
+    }
+    .product-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s;
+    }
+    .product-card:hover .product-img {
+      transform: scale(1.04);
+    }
+    .product-img-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      color: #ccc;
+    }
+    .product-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: #b8975a;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.05em;
+    }
+    .product-info {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 6px;
+    }
+    .product-cat {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #999;
+    }
+    .product-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0;
+      line-height: 1.4;
+    }
+    .product-name a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .product-name a:hover { color: #b8975a; }
+    .product-desc {
+      font-size: 13px;
+      color: #888;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .spec-selector {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin: 4px 0;
+    }
+    .spec-btn {
+      padding: 4px 12px;
+      border: 1px solid #ddd;
+      border-radius: 999px;
+      background: #fff;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .spec-btn.active, .spec-btn:hover {
+      border-color: #111;
+      background: #111;
+      color: #fff;
+    }
+    .spec-single { font-size: 12px; color: #999; }
+    .product-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .product-price {
+      font-size: 17px;
+      font-weight: 700;
+      color: #111;
+      letter-spacing: 0.02em;
+    }
+    .add-cart-btn {
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      border-radius: 999px;
+      background: #111;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+    .add-cart-btn:hover { background: #b8975a; }
+    .add-cart-btn:disabled { opacity: 0.6; cursor: default; }
+    .sold-out-tag {
+      font-size: 12px;
+      color: #bbb;
+      border: 1px solid #eee;
+      border-radius: 999px;
+      padding: 6px 14px;
+    }
+    .skeleton-card { border-radius: 16px; overflow: hidden; }
+    @media (max-width: 600px) {
+      .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .product-info { padding: 12px; }
+      .product-name { font-size: 14px; }
+      .add-cart-btn { padding: 7px 12px; font-size: 12px; }
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
 /* ── 啟動 ──────────────────────────────────────────────────── */
 init();

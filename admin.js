@@ -69,12 +69,27 @@ async function safeGetDoc(ref) {
    認證（含管理員角色驗證）
 ════════════════════════════════════════════════════════════ */
 
-// 管理員驗證：Firestore admins/{uid} 存在才能進後台
+// 管理員驗證：
+// 1. 先確認 admins collection 是否有任何文件
+// 2. 若 admins collection 是空的（尚未設定），放行所有登入者進後台
+// 3. 若 admins collection 已有資料，則嚴格驗證 uid
 async function checkIsAdmin(uid) {
   try {
+    // 先檢查 admins collection 是否已建立（有任何文件）
+    const collSnap = await db.collection('admins').limit(1).get();
+    
+    if (collSnap.empty) {
+      // admins collection 尚未設定 → 暫時放行，讓你可以進後台去設定
+      console.warn('[Admin] admins collection 尚未設定，暫時放行。請盡快在 Firestore 建立 admins collection！');
+      return true;
+    }
+    
+    // admins collection 已有資料 → 嚴格驗證
     const docSnap = await db.collection('admins').doc(uid).get();
     return docSnap.exists;
+    
   } catch (e) {
+    // 權限問題或網路錯誤 → 為安全起見拒絕
     console.warn('Admin check failed:', e.message);
     return false;
   }

@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>文章｜Arochemy</title>
+  <meta name="description" content="" id="metaDesc" />
+  <link rel="icon" type="image/png" href="./images/logo.png" />
+  <link rel="apple-touch-icon" href="./images/logo.png" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+  <header class="header" id="top">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="回到首頁">
+        <img src="./images/head-logo.png" alt="Arochemy Essential Oil" class="brand-logo" />
+      </a>
+      <nav class="nav">
+        <a href="brand.html">品牌故事</a>
+        <a href="products.html">產品</a>
+        <a href="service.html">服務</a>
+        <a href="articles.html">文章</a>
+        <a href="contact.html">聯絡</a>
+        <a href="faq.html">FAQ</a>
+      </nav>
+      <a id="userArea" class="nav-user" href="login.html" aria-label="會員登入">
+        <svg class="user-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M4 21c1.6-4.5 4.6-7 8-7s6.4 2.5 8 7"></path>
+        </svg>
+        <span id="userEmail"></span>
+      </a>
+      <a href="cart.html" class="nav-cart" aria-label="購物車">
+        <svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6h15l-1.5 9h-12z"></path>
+          <path d="M6 6 5.2 3H3"></path>
+          <circle cx="9" cy="20" r="1.5"></circle>
+          <circle cx="18" cy="20" r="1.5"></circle>
+        </svg>
+        <span id="cartCount" class="cart-count">0</span>
+      </a>
+      <div class="header-cta">
+        <button class="burger" id="burgerBtn" type="button" aria-label="開啟選單" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
+    <div class="mobile-dropdown" role="dialog" aria-modal="true" aria-label="手機選單">
+      <nav class="mobile-nav">
+        <a href="brand.html">品牌故事</a>
+        <a href="products.html">產品</a>
+        <a href="service.html">服務</a>
+        <a href="articles.html">文章</a>
+        <a href="contact.html">聯絡</a>
+        <a href="faq.html">FAQ</a>
+      </nav>
+      <div class="mobile-panel-actions">
+        <a class="btn" href="products.html">探索精油</a>
+        <a class="btn primary" href="contact.html">立即聯絡</a>
+      </div>
+    </div>
+  </div>
+
+  <main id="article-main">
+
+    <!-- 載入中骨架 -->
+    <div id="article-skeleton" class="container" style="padding-top:48px;padding-bottom:48px">
+      <div class="skel-line" style="height:14px;width:120px;margin-bottom:32px"></div>
+      <div class="skel-line" style="height:40px;width:80%;margin-bottom:16px"></div>
+      <div class="skel-line" style="height:40px;width:60%;margin-bottom:24px"></div>
+      <div class="skel-line" style="height:18px;width:200px;margin-bottom:40px"></div>
+      <div class="skel-line" style="height:340px;border-radius:16px;margin-bottom:48px"></div>
+      <div class="skel-line" style="height:16px;margin-bottom:12px"></div>
+      <div class="skel-line" style="height:16px;width:90%;margin-bottom:12px"></div>
+      <div class="skel-line" style="height:16px;width:95%;margin-bottom:12px"></div>
+      <div class="skel-line" style="height:16px;width:75%"></div>
+    </div>
+
+    <!-- 文章內容（JS 填入） -->
+    <div id="article-content" style="display:none">
+
+      <!-- Breadcrumb -->
+      <div class="container" style="padding-top:32px">
+        <nav class="art-breadcrumb">
+          <a href="articles.html">文章</a>
+          <span class="art-sep">/</span>
+          <span id="art-cat-crumb" class="muted">—</span>
+        </nav>
+      </div>
+
+      <!-- 文章頭部 -->
+      <header class="art-header container">
+        <div id="art-category" class="art-kicker"></div>
+        <h1 id="art-title" class="art-title"></h1>
+        <div class="art-meta">
+          <span id="art-date" class="muted"></span>
+          <span id="art-tags" class="art-tag-row"></span>
+        </div>
+      </header>
+
+      <!-- 封面圖 -->
+      <div id="art-cover-wrap" class="container art-cover-wrap" style="display:none">
+        <img id="art-cover" src="" alt="" class="art-cover-img" loading="eager">
+      </div>
+
+      <!-- 文章本文 -->
+      <article class="container art-body">
+        <div id="art-prose" class="art-prose"></div>
+      </article>
+
+      <!-- 分享列 -->
+      <div class="container art-share">
+        <span class="muted" style="font-size:13px">分享這篇文章：</span>
+        <button class="art-share-btn" id="shareLineBtn">LINE</button>
+        <button class="art-share-btn" id="shareFbBtn">Facebook</button>
+        <button class="art-share-btn" id="shareCopyBtn">複製連結</button>
+      </div>
+
+      <hr class="container" style="border:none;border-top:1px solid #eee;margin:0 auto 48px;max-width:720px">
+
+      <!-- 相關文章 -->
+      <section class="section soft" id="related-section" style="display:none">
+        <div class="container">
+          <div class="section-head">
+            <h2>你可能也喜歡</h2>
+          </div>
+          <div class="grid-3" id="related-grid"></div>
+        </div>
+      </section>
+
+      <!-- 回列表 -->
+      <div class="container" style="padding-bottom:56px;text-align:center">
+        <a class="btn" href="articles.html">← 回到文章列表</a>
+      </div>
+
+    </div><!-- /article-content -->
+
+    <!-- 錯誤狀態 -->
+    <div id="article-error" class="container" style="display:none;text-align:center;padding:80px 20px">
+      <div style="font-size:48px;margin-bottom:16px">📄</div>
+      <p id="article-error-msg" class="muted" style="margin-bottom:24px">找不到此文章</p>
+      <a class="btn" href="articles.html">回到文章列表</a>
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <div class="footer-brand">Arochemy</div>
+        <div class="muted">櫟嶼國際有限公司<br>Liyu International Co., Ltd.</div>
+        <div class="muted" style="margin-top:8px;">Tel：0911505015</div>
+        <div class="muted">Email：lyu.aroma@gmail.com</div>
+        <div class="muted">地址：你的地址</div>
+        <div class="muted" style="margin-top:10px;">© <span id="year"></span> Arochemy</div>
+      </div>
+      <div class="footer-links">
+        <a href="brand.html">品牌故事</a>
+        <a href="products.html">產品</a>
+        <a href="service.html">服務</a>
+        <a href="articles.html">文章</a>
+        <a href="contact.html">聯絡</a>
+        <a href="faq.html">FAQ</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="social-fab">
+    <a class="fab ig" href="https://instagram.com/你的帳號" aria-label="Instagram" target="_blank" rel="noopener">
+      <span class="fab-text">IG</span>
+    </a>
+    <a class="fab line" href="https://line.me/R/ti/p/@yourlineid" aria-label="LINE" target="_blank" rel="noopener">
+      <span class="fab-text">LINE</span>
+    </a>
+  </div>
+
+  <script src="js/cart-badge.js"></script>
+  <script src="./main.js"></script>
+  <script type="module" src="js/article-page.js"></script>
+</body>
+</html>

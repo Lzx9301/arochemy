@@ -824,20 +824,42 @@ async function openArticleModal(id = null) {
 async function saveArticle() {
   const btn = $('#save-article-btn');
   btn.disabled = true; btn.textContent = '儲存中…';
+
   try {
+    // ── 步驟1：取得現有封面（編輯模式）──────────────────
     let coverUrl = '';
     if (editingArticleId) {
       const ex = await safeGetDoc(db.collection('articles').doc(editingArticleId));
       coverUrl = ex.coverImage || '';
     }
+
+    // ── 步驟2：上傳新封面圖（若有選擇）─────────────────
     if (coverImageFile) {
-      const ref = storage.ref(`articles/${Date.now()}_${coverImageFile.name}`);
-      await ref.put(coverImageFile);
-      coverUrl = await ref.getDownloadURL();
+      btn.textContent = '上傳封面中…';
+      try {
+        const ref = storage.ref(`articles/${Date.now()}_${coverImageFile.name}`);
+        await ref.put(coverImageFile);
+        coverUrl = await ref.getDownloadURL();
+      } catch (uploadErr) {
+        // Storage 上傳失敗不中斷，跳過封面繼續儲存文字內容
+        console.warn('封面上傳失敗，略過：', uploadErr.message);
+        toast('封面圖上傳失敗（將略過封面繼續儲存）', 'info');
+        coverUrl = '';
+      }
     }
+
+    // ── 步驟3：組合文章資料 ───────────────────────────
+    btn.textContent = '儲存中…';
     const editor = $('#article-editor-content');
-    const data   = {
-      title:      getValue('#article-title'),
+    const title  = getValue('#article-title');
+
+    if (!title) {
+      toast('請填寫文章標題', 'error');
+      return;
+    }
+
+    const data = {
+      title,
       category:   getValue('#article-category'),
       status:     getValue('#article-status'),
       excerpt:    getValue('#article-excerpt'),
@@ -846,8 +868,8 @@ async function saveArticle() {
       coverImage: coverUrl,
       updatedAt:  firebase.firestore.FieldValue.serverTimestamp(),
     };
-    if (!data.title) { toast('請填寫文章標題', 'error'); return; }
 
+    // ── 步驟4：寫入 Firestore ─────────────────────────
     if (editingArticleId) {
       await db.collection('articles').doc(editingArticleId).update(data);
       toast('文章已更新', 'success');
@@ -856,12 +878,20 @@ async function saveArticle() {
       await db.collection('articles').add(data);
       toast('文章已發布', 'success');
     }
+
     closeModal('article-modal');
     loadArticles();
+
   } catch (e) {
-    toast('儲存失敗：' + e.message, 'error');
+    // 顯示詳細錯誤幫助 debug
+    console.error('saveArticle error:', e);
+    const errMsg = e.code === 'permission-denied'
+      ? '權限不足：請確認 Firestore 規則允許寫入 articles'
+      : `儲存失敗：${e.message}`;
+    toast(errMsg, 'error');
   } finally {
-    btn.disabled = false; btn.textContent = '儲存文章';
+    btn.disabled = false;
+    btn.textContent = '儲存文章';
   }
 }
 

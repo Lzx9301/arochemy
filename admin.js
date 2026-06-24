@@ -870,12 +870,18 @@ async function saveArticle() {
     };
 
     // ── 步驟4：寫入 Firestore ─────────────────────────
+    btn.textContent = '寫入資料庫…';
+    console.log('[saveArticle] 開始寫入 Firestore，data:', data);
+    console.log('[saveArticle] 當前登入用戶：', auth.currentUser?.email);
+
     if (editingArticleId) {
       await db.collection('articles').doc(editingArticleId).update(data);
+      console.log('[saveArticle] 更新成功');
       toast('文章已更新', 'success');
     } else {
       data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      await db.collection('articles').add(data);
+      const docRef = await db.collection('articles').add(data);
+      console.log('[saveArticle] 新增成功，ID:', docRef.id);
       toast('文章已發布', 'success');
     }
 
@@ -883,11 +889,16 @@ async function saveArticle() {
     loadArticles();
 
   } catch (e) {
-    // 顯示詳細錯誤幫助 debug
-    console.error('saveArticle error:', e);
-    const errMsg = e.code === 'permission-denied'
-      ? '權限不足：請確認 Firestore 規則允許寫入 articles'
-      : `儲存失敗：${e.message}`;
+    console.error('[saveArticle] 完整錯誤：', e);
+    console.error('[saveArticle] 錯誤代碼：', e.code);
+    console.error('[saveArticle] 錯誤訊息：', e.message);
+
+    let errMsg = '儲存失敗';
+    if (e.code === 'permission-denied')  errMsg = '❌ 權限不足：Firestore 規則擋住寫入';
+    else if (e.code === 'unavailable')   errMsg = '❌ Firebase 服務暫時無法使用，請稍後再試';
+    else if (e.code === 'unauthenticated') errMsg = '❌ 未登入狀態，請重新整理頁面';
+    else errMsg = `❌ 儲存失敗（${e.code || 'unknown'}）：${e.message}`;
+
     toast(errMsg, 'error');
   } finally {
     btn.disabled = false;

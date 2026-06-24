@@ -16,9 +16,9 @@
   --accent-dim:    rgba(184, 151, 90, 0.15);
   --accent-border: rgba(184, 151, 90, 0.35);
 
-  --text-primary:  #f0ece3;
-  --text-secondary:#a09880;
-  --text-muted:    #5a5748;
+  --text-primary:  #f5f2ec;
+  --text-secondary:#c4b99a;
+  --text-muted:    #8a8070;
 
   --border:        rgba(255,255,255,0.07);
   --border-strong: rgba(255,255,255,0.14);
@@ -40,14 +40,15 @@
 
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 14px; scroll-behavior: smooth; }
+html { font-size: 15px; scroll-behavior: smooth; }
 
 body {
   font-family: 'Inter', sans-serif;
-  font-weight: 400;
+  font-weight: 450;
   background: var(--bg-base);
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -261,8 +262,9 @@ body {
   align-items: center;
   gap: 10px;
   padding: 9px 20px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   font-size: 13px;
+  font-weight: 450;
   cursor: pointer;
   transition: all var(--transition);
   border-left: 2px solid transparent;
@@ -340,8 +342,8 @@ body {
 
 .topbar-title {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 18px;
-  font-weight: 400;
+  font-size: 20px;
+  font-weight: 500;
   color: var(--text-primary);
   flex: 1;
 }
@@ -382,10 +384,11 @@ body {
 .stat-card:hover { border-color: var(--accent-border); }
 
 .stat-label {
-  font-size: 10px;
-  letter-spacing: 0.15em;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin-bottom: 10px;
 }
 
@@ -422,10 +425,10 @@ body {
 }
 
 .card-title {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--text-primary);
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
 }
 
 .card-body {
@@ -445,15 +448,15 @@ body {
 
 .form-group label {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .form-group .hint {
-  font-size: 11px;
-  color: var(--text-muted);
+  font-size: 12px;
+  color: var(--text-secondary);
   margin-top: 4px;
 }
 
@@ -469,7 +472,8 @@ select {
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 400;
   padding: 9px 12px;
   outline: none;
   transition: border-color var(--transition), box-shadow var(--transition);
@@ -582,7 +586,8 @@ select option { background: var(--bg-elevated); }
   padding: 12px 14px;
   border-bottom: 1px solid var(--border);
   font-size: 13px;
-  color: var(--text-secondary);
+  font-weight: 450;
+  color: var(--text-primary);
   vertical-align: middle;
 }
 

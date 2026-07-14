@@ -206,7 +206,10 @@ function bindCardEvents(p) {
 
     addToCart({ id, name, size, price, img, qty: 1 });
 
-    // 視覺回饋
+    // Toast 提示
+    showCartToast(name, size);
+
+    // 按鈕視覺回饋
     const orig = cartBtn.textContent;
     cartBtn.textContent = '✓ 已加入';
     cartBtn.disabled = true;
@@ -251,6 +254,41 @@ function updateCartBadge(cart) {
   const total = cart.reduce((s, c) => s + c.qty, 0);
   const badge = document.getElementById('cartCount');
   if (badge) badge.textContent = total;
+}
+
+/* ── Toast 加入購物車提示 ──────────────────────────────────── */
+function showCartToast(name, size) {
+  let toast = document.getElementById('products-cart-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'products-cart-toast';
+    toast.style.cssText = `
+      position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+      background:#111;color:#fff;border-radius:999px;
+      padding:12px 24px;font-size:14px;font-weight:500;
+      display:flex;align-items:center;gap:10px;
+      box-shadow:0 4px 20px rgba(0,0,0,0.25);
+      z-index:9999;opacity:0;
+      transition:opacity 0.2s,transform 0.2s;
+      white-space:nowrap;pointer-events:none;
+    `;
+    document.body.appendChild(toast);
+  }
+
+  const label = size ? `${name}（${size}）` : name;
+  toast.innerHTML = `<span style="color:#7ac48a;font-size:16px">✓</span> ${esc(label)} 已加入購物車
+    <a href="cart.html" style="color:#b8975a;text-decoration:none;margin-left:8px;font-size:13px;pointer-events:auto">查看購物車</a>`;
+
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+  });
+
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(20px)';
+  }, 2800);
 }
 
 /* ── 分類篩選 ──────────────────────────────────────────────── */

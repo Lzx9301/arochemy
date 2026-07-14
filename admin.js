@@ -728,13 +728,18 @@ function initArticlesPage() {
   $('#article-search')?.addEventListener('input', e => loadArticles(e.target.value));
   $('#save-article-btn')?.addEventListener('click', saveArticle);
 
-  $('#article-cover-upload')?.addEventListener('click', () => $('#article-cover-input')?.click());
-  $('#article-cover-input')?.addEventListener('change', e => {
-    const file = e.target.files[0]; if (!file) return;
-    coverImageFile = file;
-    const reader = new FileReader();
-    reader.onload = ev => { $('#cover-preview').innerHTML = `<img src="${ev.target.result}" alt="">`; };
-    reader.readAsDataURL(file);
+  // 封面網址即時預覽
+  const coverUrlInput = document.getElementById('article-cover-url');
+  coverUrlInput?.addEventListener('input', () => {
+    const url = coverUrlInput.value.trim();
+    const preview = document.getElementById('cover-preview');
+    const img     = document.getElementById('cover-preview-img');
+    if (url && preview && img) {
+      img.src = url;
+      preview.style.display = '';
+    } else if (preview) {
+      preview.style.display = 'none';
+    }
   });
 
   initTagInput();
@@ -794,16 +799,16 @@ function setTags(tags) { $$('.tag-chip').forEach(c => c.remove()); (tags||[]).fo
 
 async function openArticleModal(id = null) {
   editingArticleId = id;
-  coverImageFile   = null;
+  coverImageFile = null;
 
   setValue('#article-title', ''); setValue('#article-category', '');
   setValue('#article-status', 'draft'); setValue('#article-excerpt', '');
+  setValue('#article-cover-url', '');
+  const coverPreview = document.getElementById('cover-preview');
+  if (coverPreview) coverPreview.style.display = 'none';
   setTags([]);
   const editor = $('#article-editor-content');
   if (editor) editor.innerHTML = '';
-  $('#cover-preview').innerHTML = `
-    <svg width="32" height="32" fill="currentColor" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-    <span style="font-size:12px">點擊上傳封面圖片</span>`;
 
   if (id) {
     $('#article-modal-title').textContent = '編輯文章';
@@ -814,7 +819,12 @@ async function openArticleModal(id = null) {
     setValue('#article-excerpt',  d.excerpt  || '');
     setTags(d.tags || []);
     if (editor) editor.innerHTML = d.content || '';
-    if (d.coverImage) $('#cover-preview').innerHTML = `<img src="${escHtml(d.coverImage)}" alt="">`;
+    if (d.coverImage) {
+      setValue('#article-cover-url', d.coverImage);
+      const preview = document.getElementById('cover-preview');
+      const img     = document.getElementById('cover-preview-img');
+      if (preview && img) { img.src = d.coverImage; preview.style.display = ''; }
+    }
   } else {
     $('#article-modal-title').textContent = '發布新文章';
   }
@@ -826,30 +836,11 @@ async function saveArticle() {
   btn.disabled = true; btn.textContent = '儲存中…';
 
   try {
-    // ── 步驟1：取得現有封面（編輯模式）──────────────────
-    let coverUrl = '';
-    if (editingArticleId) {
-      const ex = await safeGetDoc(db.collection('articles').doc(editingArticleId));
-      coverUrl = ex.coverImage || '';
-    }
+    // ── 步驟1：直接讀封面網址欄位（不需上傳，無 CORS 問題）─
+    const coverUrl = (document.getElementById('article-cover-url')?.value || '').trim();
 
-    // ── 步驟2：上傳新封面圖（若有選擇）─────────────────
-    if (coverImageFile) {
-      btn.textContent = '上傳封面中…';
-      try {
-        const ref = storage.ref(`articles/${Date.now()}_${coverImageFile.name}`);
-        await ref.put(coverImageFile);
-        coverUrl = await ref.getDownloadURL();
-      } catch (uploadErr) {
-        // Storage 上傳失敗不中斷，跳過封面繼續儲存文字內容
-        console.warn('封面上傳失敗，略過：', uploadErr.message);
-        toast('封面圖上傳失敗（將略過封面繼續儲存）', 'info');
-        coverUrl = '';
-      }
-    }
-
-    // ── 步驟3：組合文章資料 ───────────────────────────
-    btn.textContent = '儲存中…';
+    // ── 步驟2：組合文章資料 ───────────────────────────
+    btn.textContent = '寫入資料庫…';
     const editor = $('#article-editor-content');
     const title  = getValue('#article-title');
 

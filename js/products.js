@@ -242,6 +242,12 @@ function saveCart(cart) {
 }
 
 function updateCartBadge(cart) {
+  // 優先使用 cart-badge.js 提供的全域函式（確保所有頁面同步）
+  if (typeof window.updateCartBadge === 'function') {
+    window.updateCartBadge();
+    return;
+  }
+  // fallback：直接更新徽章
   const total = cart.reduce((s, c) => s + c.qty, 0);
   const badge = document.getElementById('cartCount');
   if (badge) badge.textContent = total;

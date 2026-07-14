@@ -263,31 +263,38 @@ function showCartToast(name, size) {
     toast = document.createElement('div');
     toast.id = 'products-cart-toast';
     toast.style.cssText = `
-      position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
-      background:#111;color:#fff;border-radius:999px;
-      padding:12px 24px;font-size:14px;font-weight:500;
-      display:flex;align-items:center;gap:10px;
-      box-shadow:0 4px 20px rgba(0,0,0,0.25);
+      position:fixed;right:24px;top:96px;
+      width:280px;padding:18px 20px;
+      border-radius:20px;background:#fff;color:#333;
+      border:1px solid #e8e8e8;
+      box-shadow:0 18px 50px rgba(0,0,0,.12);
       z-index:9999;opacity:0;
-      transition:opacity 0.2s,transform 0.2s;
-      white-space:nowrap;pointer-events:none;
+      transform:translateY(-12px);
+      transition:opacity 0.25s ease,transform 0.25s ease;
+      pointer-events:none;
     `;
     document.body.appendChild(toast);
   }
 
   const label = size ? `${name}（${size}）` : name;
-  toast.innerHTML = `<span style="color:#7ac48a;font-size:16px">✓</span> ${esc(label)} 已加入購物車
-    <a href="cart.html" style="color:#b8975a;text-decoration:none;margin-left:8px;font-size:13px;pointer-events:auto">查看購物車</a>`;
+  toast.innerHTML = `
+    <div style="font-size:14px;font-weight:500;color:#111;margin-bottom:6px">
+      <span style="color:#5a8c6a">✓</span> ${esc(label)} 已加入購物車
+    </div>
+    <a href="cart.html" style="color:#111;font-weight:700;text-decoration:none;font-size:13px;display:inline-block">查看購物車</a>
+  `;
 
   requestAnimationFrame(() => {
     toast.style.opacity = '1';
-    toast.style.transform = 'translateX(-50%) translateY(0)';
+    toast.style.transform = 'translateY(0)';
+    toast.style.pointerEvents = 'auto';
   });
 
   clearTimeout(toast._timer);
   toast._timer = setTimeout(() => {
     toast.style.opacity = '0';
-    toast.style.transform = 'translateX(-50%) translateY(20px)';
+    toast.style.transform = 'translateY(-12px)';
+    toast.style.pointerEvents = 'none';
   }, 2800);
 }
 

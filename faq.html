@@ -143,9 +143,7 @@
 
       </div>
 
-      <div class="muted">
-        地址：你的地址
-      </div>
+      <div class="muted" id="footer-address">地址：台灣</div>
 
       <div class="muted" style="margin-top:10px;">
         © <span id="year"></span> Arochemy
@@ -166,15 +164,33 @@
   </div>
 </footer>
   <div class="social-fab">
-    <a class="fab ig" href="https://instagram.com/你的帳號" aria-label="Instagram" target="_blank" rel="noopener">
+    <a class="fab ig" id="social-ig-btn" href="#" aria-label="Instagram" target="_blank" rel="noopener">
       <span class="fab-text">IG</span>
     </a>
-    <a class="fab line" href="https://line.me/R/ti/p/@yourlineid" aria-label="LINE" target="_blank" rel="noopener">
+    <a class="fab line" id="social-line-btn" href="#" aria-label="LINE" target="_blank" rel="noopener">
       <span class="fab-text">LINE</span>
     </a>
   </div>
-<script src="js/cart-badge.js"></script>
+  <script src="js/cart-badge.js"></script>
   <script src="./main.js"></script>
   <script type="module" src="js/user.js"></script>
+  <script type="module" src="js/user.js"></script>
+  <script type="module">
+    import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    const cfg = {apiKey:"AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",authDomain:"trying-89dc6.firebaseapp.com",projectId:"trying-89dc6",storageBucket:"trying-89dc6.firebasestorage.app",messagingSenderId:"115559148124",appId:"1:115559148124:web:ac37b9c249183a919b5499"};
+    const app = getApps().find(a=>a.name==='[DEFAULT]') || initializeApp(cfg);
+    const db  = getFirestore(app);
+    getDoc(doc(db,'settings','site')).then(snap=>{
+      if(!snap.exists()) return;
+      const d = snap.data();
+      if(d.socialIG)   { document.getElementById('social-ig-btn').href   = d.socialIG; }
+      if(d.socialLine) { document.getElementById('social-line-btn').href = d.socialLine; }
+      if(d.contactAddress) {
+        const el = document.getElementById('footer-address');
+        if(el) el.textContent = '地址：' + d.contactAddress;
+      }
+    }).catch(()=>{});
+  </script>
 </body>
 </html>

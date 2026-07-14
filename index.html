@@ -323,109 +323,38 @@
 
         <!-- Floating Social Buttons -->
     <div class="social-fab">
-        <a class="fab ig" href="https://instagram.com/你的帳號" aria-label="Instagram" target="_blank" rel="noopener">
+        <a class="fab ig" id="social-ig-btn" href="#" aria-label="Instagram" target="_blank" rel="noopener">
             <span class="fab-text">IG</span>
         </a>
 
-        <a class="fab line" href="https://line.me/R/ti/p/@yourlineid" aria-label="LINE" target="_blank" rel="noopener">
+        <a class="fab line" id="social-line-btn" href="#" aria-label="LINE" target="_blank" rel="noopener">
             <span class="fab-text">LINE</span>
         </a>
     </div>
 
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",
-  authDomain: "trying-89dc6.firebaseapp.com",
-  projectId: "trying-89dc6",
-  storageBucket: "trying-89dc6.firebasestorage.app",
-  messagingSenderId: "115559148124",
-  appId: "1:115559148124:web:ac37b9c249183a919b5499",
-  measurementId: "G-KHR4PVKJCK"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const params = new URLSearchParams(window.location.search);
-const slug = params.get("slug");
-
-async function loadProduct() {
-  if (!slug) {
-    console.log("沒有 slug");
-    return;
-  }
-
-  try {
-    const productRef = doc(db, "products", slug);
-    const productSnap = await getDoc(productRef);
-
-    if (!productSnap.exists()) {
-      console.log("商品不存在");
-      return;
-    }
-
-    const product = productSnap.data();
-
-    const defaultRef = doc(db, "site_settings", "product_defaults");
-    const defaultSnap = await getDoc(defaultRef);
-
-    const defaults = defaultSnap.exists() ? defaultSnap.data() : {};
-
-    console.log("商品:", product);
-    console.log("預設:", defaults);
-
-    renderProduct(product, defaults);
-  } catch (error) {
-    console.error("讀取商品失敗：", error);
-  }
-}
-
-loadProduct();
-
-function renderProduct(product, defaults) {
-  const titleEl = document.getElementById("title");
-  const variantEl = document.getElementById("variants");
-  const storageEl = document.getElementById("storage");
-  const usageEl = document.getElementById("usage");
-  const cautionEl = document.getElementById("caution");
-
-  if (titleEl) {
-    titleEl.textContent = product.name || "";
-  }
-
-  if (variantEl) {
-    variantEl.innerHTML = (product.variants || [])
-      .map(v => `<li>${v.label} - NT$ ${v.price}</li>`)
-      .join("");
-  }
-
-  if (storageEl) {
-    storageEl.innerHTML = (defaults.storage || [])
-      .map(s => `<li>${s}</li>`)
-      .join("");
-  }
-
-  if (usageEl) {
-    usageEl.innerHTML = (defaults.usage || [])
-      .map(s => `<li>${s}</li>`)
-      .join("");
-  }
-
-  if (cautionEl) {
-    cautionEl.innerHTML = (defaults.caution || [])
-      .map(s => `<li>${s}</li>`)
-      .join("");
-  }
-}
-</script>
     <script src="./main.js"></script>
     <script src="js/cart-badge.js"></script>
     <script type="module" src="./index.js"></script>
     <script type="module" src="js/user.js"></script>
+  <script type="module">
+    import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    const cfg = {apiKey:"AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",authDomain:"trying-89dc6.firebaseapp.com",projectId:"trying-89dc6",storageBucket:"trying-89dc6.firebasestorage.app",messagingSenderId:"115559148124",appId:"1:115559148124:web:ac37b9c249183a919b5499"};
+    const app = getApps().find(a=>a.name==='[DEFAULT]') || initializeApp(cfg);
+    const db  = getFirestore(app);
+    getDoc(doc(db,'settings','site')).then(snap=>{
+      if(!snap.exists()) return;
+      const d = snap.data();
+      if(d.socialIG)   { document.getElementById('social-ig-btn').href   = d.socialIG; }
+      if(d.socialLine) { document.getElementById('social-line-btn').href = d.socialLine; }
+      if(d.contactAddress) {
+        const el = document.getElementById('footer-address');
+        if(el) el.textContent = '地址：' + d.contactAddress;
+      }
+    }).catch(()=>{});
+  </script>
 </body>
 </html>
 

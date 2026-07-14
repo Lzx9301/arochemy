@@ -2,35 +2,141 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>訂單完成｜Arochemy</title>
+  <link rel="icon" type="image/png" href="./images/logo.png" />
+  <link rel="apple-touch-icon" href="./images/logo.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
-  <main class="container" style="padding:90px 20px; max-width:720px;">
-    <div class="card" style="padding:40px; text-align:center;">
-      <h1>訂單已建立</h1>
-      <p class="muted">感謝您的訂購，我們已收到您的訂單資料。</p>
 
-      <p id="orderIdText" style="margin-top:20px;"></p>
+  <!-- Sticky Header -->
+  <header class="header" id="top">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="回到首頁">
+        <img src="./images/head-logo.png" alt="Arochemy Essential Oil" class="brand-logo" />
+      </a>
+      <nav class="nav">
+        <a href="brand.html">品牌故事</a>
+        <a href="products.html">產品</a>
+        <a href="service.html">服務</a>
+        <a href="articles.html">文章</a>
+        <a href="contact.html">聯絡</a>
+        <a href="faq.html">FAQ</a>
+      </nav>
+      <a id="userArea" class="nav-user" href="login.html" aria-label="會員登入">
+        <svg class="user-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M4 21c1.6-4.5 4.6-7 8-7s6.4 2.5 8 7"></path>
+        </svg>
+        <span id="userEmail"></span>
+      </a>
+      <a href="cart.html" class="nav-cart" aria-label="購物車">
+        <svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6h15l-1.5 9h-12z"></path>
+          <path d="M6 6 5.2 3H3"></path>
+          <circle cx="9" cy="20" r="1.5"></circle>
+          <circle cx="18" cy="20" r="1.5"></circle>
+        </svg>
+        <span id="cartCount" class="cart-count">0</span>
+      </a>
+      <div class="header-cta">
+        <button class="burger" id="burgerBtn" type="button" aria-label="開啟選單" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
 
-      <div style="margin-top:32px;">
-        <a class="btn primary" href="products.html">繼續逛商品</a>
+  <!-- Mobile Drawer -->
+  <div class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
+    <div class="mobile-dropdown" role="dialog" aria-modal="true" aria-label="手機選單">
+      <nav class="mobile-nav">
+        <a href="brand.html">品牌故事</a>
+        <a href="products.html">產品</a>
+        <a href="service.html">服務</a>
+        <a href="articles.html">文章</a>
+        <a href="contact.html">聯絡</a>
+        <a href="faq.html">FAQ</a>
+      </nav>
+      <div class="mobile-panel-actions">
+        <a class="btn" href="products.html">探索精油</a>
+        <a class="btn primary" href="contact.html">立即聯絡</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="container" style="padding:60px 20px;max-width:640px;margin:0 auto">
+    <div class="card" style="padding:48px 40px;text-align:center">
+      <div style="font-size:56px;margin-bottom:16px">✅</div>
+      <h1 style="font-size:28px;margin-bottom:8px">訂單已建立</h1>
+      <p class="muted" style="margin-bottom:8px">感謝您的訂購，我們已收到您的訂單資料。</p>
+      <p id="orderIdText" class="muted" style="font-size:13px;margin-bottom:32px"></p>
+      <p class="muted" style="font-size:13px;margin-bottom:32px;line-height:1.7">
+        我們將盡快處理您的訂單，<br>如有問題歡迎透過 Email 或 LINE 聯繫。
+      </p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a class="btn primary" href="products.html">繼續購物</a>
         <a class="btn" href="index.html">回到首頁</a>
       </div>
     </div>
   </main>
 
-  <script>
-    const params = new URLSearchParams(location.search);
-    const orderId = params.get("orderId");
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <div class="footer-brand">Arochemy</div>
+        <div class="muted">櫟嶼國際有限公司<br>Liyu International Co., Ltd.</div>
+        <div class="muted" style="margin-top:8px;">Tel：0911505015</div>
+        <div class="muted">Email：lyu.aroma@gmail.com</div>
+        <div class="muted" id="footer-address">地址：台灣</div>
+        <div class="muted" style="margin-top:10px;">© <span id="year"></span> Arochemy</div>
+      </div>
+      <div class="footer-links">
+        <a href="brand.html">品牌故事</a>
+        <a href="products.html">產品</a>
+        <a href="service.html">服務</a>
+        <a href="articles.html">文章</a>
+        <a href="contact.html">聯絡</a>
+        <a href="faq.html">FAQ</a>
+      </div>
+    </div>
+  </footer>
 
-    if (orderId) {
-      document.getElementById("orderIdText").textContent =
-        `訂單編號：${orderId}`;
-    }
-  </script>
+  <div class="social-fab">
+    <a class="fab ig" id="social-ig-btn" href="#" aria-label="Instagram" target="_blank" rel="noopener">
+      <span class="fab-text">IG</span>
+    </a>
+    <a class="fab line" id="social-line-btn" href="#" aria-label="LINE" target="_blank" rel="noopener">
+      <span class="fab-text">LINE</span>
+    </a>
+  </div>
+
+  <script src="js/cart-badge.js"></script>
+  <script src="./main.js"></script>
   <script type="module" src="js/user.js"></script>
+  <script type="module">
+    import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    const cfg = {apiKey:"AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",authDomain:"trying-89dc6.firebaseapp.com",projectId:"trying-89dc6",storageBucket:"trying-89dc6.firebasestorage.app",messagingSenderId:"115559148124",appId:"1:115559148124:web:ac37b9c249183a919b5499"};
+    const app = getApps().find(a=>a.name==='[DEFAULT]') || initializeApp(cfg);
+    const db  = getFirestore(app);
+    getDoc(doc(db,'settings','site')).then(snap=>{
+      if(!snap.exists()) return;
+      const d = snap.data();
+      if(d.socialIG)   { document.getElementById('social-ig-btn').href   = d.socialIG; }
+      if(d.socialLine) { document.getElementById('social-line-btn').href = d.socialLine; }
+      if(d.contactAddress) {
+        const el = document.getElementById('footer-address');
+        if(el) el.textContent = '地址：' + d.contactAddress;
+      }
+    }).catch(()=>{});
+  </script>
+  <script>
+    const params  = new URLSearchParams(location.search);
+    const orderId = params.get('orderId');
+    const el      = document.getElementById('orderIdText');
+    if (orderId && el) el.textContent = '訂單編號：#' + orderId.slice(-6).toUpperCase();
+  </script>
 </body>
 </html>

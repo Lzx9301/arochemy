@@ -110,7 +110,7 @@
 
         <div class="card" style="margin-top:16px;">
           <h3>聯絡表單</h3>
-          <form>
+          <div id="contactForm">
             <div class="grid-2" style="margin-top:16px;">
               <div>
                 <label for="name">姓名</label>
@@ -134,9 +134,10 @@
             </div>
 
             <div style="margin-top:16px;">
-              <button type="submit" class="btn primary">送出訊息</button>
+              <button type="button" class="btn primary" id="contactSubmitBtn">送出訊息</button>
+            <p id="contactMsg" class="muted" style="margin-top:12px"></p>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </section>
@@ -188,15 +189,70 @@
 </footer>
   
   <div class="social-fab">
-    <a class="fab ig" href="https://instagram.com/你的帳號" aria-label="Instagram" target="_blank" rel="noopener">
+    <a class="fab ig" id="social-ig-btn" href="#" aria-label="Instagram" target="_blank" rel="noopener">
       <span class="fab-text">IG</span>
     </a>
-    <a class="fab line" href="https://line.me/R/ti/p/@yourlineid" aria-label="LINE" target="_blank" rel="noopener">
+    <a class="fab line" id="social-line-btn" href="#" aria-label="LINE" target="_blank" rel="noopener">
       <span class="fab-text">LINE</span>
     </a>
   </div>
-<script src="js/cart-badge.js"></script>
+  <script src="js/cart-badge.js"></script>
   <script src="./main.js"></script>
   <script type="module" src="js/user.js"></script>
+  <script type="module" src="js/user.js"></script>
+  <script type="module">
+    import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    const cfg = {apiKey:"AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",authDomain:"trying-89dc6.firebaseapp.com",projectId:"trying-89dc6",storageBucket:"trying-89dc6.firebasestorage.app",messagingSenderId:"115559148124",appId:"1:115559148124:web:ac37b9c249183a919b5499"};
+    const app = getApps().find(a=>a.name==='[DEFAULT]') || initializeApp(cfg);
+    const db  = getFirestore(app);
+
+    // 動態讀取社群連結
+    getDoc(doc(db,'settings','site')).then(snap=>{
+      if(!snap.exists()) return;
+      const d = snap.data();
+      if(d.socialIG)       { const el=document.getElementById('social-ig-btn');   if(el) el.href=d.socialIG; }
+      if(d.socialLine)     { const el=document.getElementById('social-line-btn'); if(el) el.href=d.socialLine; }
+      if(d.contactAddress) { const el=document.getElementById('footer-address');  if(el) el.textContent='地址：'+d.contactAddress; }
+    }).catch(()=>{});
+
+    // 聯絡表單送出
+    document.getElementById('contactSubmitBtn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('contactSubmitBtn');
+      const msg = document.getElementById('contactMsg');
+      const name    = document.getElementById('name')?.value.trim();
+      const email   = document.getElementById('email')?.value.trim();
+      const subject = document.getElementById('subject')?.value.trim();
+      const message = document.getElementById('message')?.value.trim();
+
+      if (!name || !email || !message) {
+        msg.textContent = '請填寫姓名、Email 與訊息內容。';
+        msg.style.color = '#b94a48';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '送出中…';
+
+      try {
+        await addDoc(collection(db, 'b2b_inquiries'), {
+          name, email, subject: subject || '（無主旨）', message,
+          createdAt: serverTimestamp(), status: 'unread'
+        });
+        msg.textContent = '✓ 訊息已送出，我們會盡快回覆！';
+        msg.style.color = '#456b55';
+        ['name','email','subject','message'].forEach(id => {
+          const el = document.getElementById(id);
+          if(el) el.value = '';
+        });
+      } catch(e) {
+        msg.textContent = '送出失敗，請稍後再試或直接 Email 聯絡。';
+        msg.style.color = '#b94a48';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '送出訊息';
+      }
+    });
+  </script>
 </body>
 </html>

@@ -6,7 +6,7 @@
   <title>Arochemy｜FAQ</title>
   <meta name="description" content="常見問題整理：產品、使用方式、訂購與聯絡資訊。" />
   <link rel="icon" type="image/png" href="./images/logo.png" />
-<link rel="apple-touch-icon" href="./images/logo.png" />
+  <link rel="apple-touch-icon" href="./images/logo.png" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -14,8 +14,8 @@
   <header class="header" id="top">
     <div class="container header-inner">
       <a class="brand" href="index.html" aria-label="回到首頁">
-  <img src="./images/head-logo.png" alt="Arochemy Essential Oil" class="brand-logo" />
-</a>
+        <img src="./images/head-logo.png" alt="Arochemy Essential Oil" class="brand-logo" />
+      </a>
       <nav class="nav">
         <a href="brand.html">品牌故事</a>
         <a href="products.html">產品</a>
@@ -24,22 +24,22 @@
         <a href="contact.html">聯絡</a>
         <a href="faq.html">FAQ</a>
       </nav>
-<a id="userArea" class="nav-user" href="login.html" aria-label="會員登入">
-  <svg class="user-icon" viewBox="0 0 24 24" aria-hidden="true">
-    <circle cx="12" cy="8" r="4"></circle>
-    <path d="M4 21c1.6-4.5 4.6-7 8-7s6.4 2.5 8 7"></path>
-  </svg>
-  <span id="userEmail"></span>
-</a>
-            <a href="cart.html" class="nav-cart" aria-label="購物車">
-  <svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M6 6h15l-1.5 9h-12z"></path>
-    <path d="M6 6 5.2 3H3"></path>
-    <circle cx="9" cy="20" r="1.5"></circle>
-    <circle cx="18" cy="20" r="1.5"></circle>
-  </svg>
-  <span id="cartCount" class="cart-count">0</span>
-</a>
+      <a id="userArea" class="nav-user" href="login.html" aria-label="會員登入">
+        <svg class="user-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M4 21c1.6-4.5 4.6-7 8-7s6.4 2.5 8 7"></path>
+        </svg>
+        <span id="userEmail"></span>
+      </a>
+      <a href="cart.html" class="nav-cart" aria-label="購物車">
+        <svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6h15l-1.5 9h-12z"></path>
+          <path d="M6 6 5.2 3H3"></path>
+          <circle cx="9" cy="20" r="1.5"></circle>
+          <circle cx="18" cy="20" r="1.5"></circle>
+        </svg>
+        <span id="cartCount" class="cart-count">0</span>
+      </a>
       <div class="header-cta">
         <button class="burger" id="burgerBtn" type="button" aria-label="開啟選單" aria-expanded="false">
           <span></span><span></span><span></span>
@@ -58,7 +58,6 @@
         <a href="contact.html">聯絡</a>
         <a href="faq.html">FAQ</a>
       </nav>
-
       <div class="mobile-panel-actions">
         <a class="btn" href="products.html">探索精油</a>
         <a class="btn primary" href="contact.html">立即聯絡</a>
@@ -77,7 +76,6 @@
             可以先從這裡找到基本答案。
           </p>
         </div>
-
         <div class="hero-card">
           <div class="hero-image">FAQ 主視覺預留</div>
           <div class="hero-card-note">可放品牌包裝、客服視覺或常見問題插圖。</div>
@@ -87,82 +85,65 @@
 
     <section class="section">
       <div class="container">
-        <div class="card">
+        <!-- 動態 FAQ 容器 -->
+        <div class="card" id="faq-container">
+          <!-- 靜態預設內容（Firestore 無資料時顯示） -->
           <details open>
             <summary>精油新手適合從哪一類產品開始？</summary>
             <p>建議先從用途清楚、氣味接受度較高的單方精油或複方產品開始，並搭配簡單的使用說明。</p>
           </details>
-
           <details>
             <summary>產品頁面之後會提供 COA / SDS 嗎？</summary>
             <p>可以，未來可依品項陸續補上 COA、SDS 或其他檢驗與安全資訊下載連結。</p>
           </details>
-
           <details>
             <summary>可以客製送禮或企業合作嗎？</summary>
             <p>可以，歡迎透過聯絡頁表單、Email 或社群訊息與我們討論合作需求。</p>
           </details>
-
           <details>
             <summary>香氛產品適合每天使用嗎？</summary>
             <p>可依產品類型、使用方式與個人習慣調整頻率，建議先從少量、低頻率開始，觀察自己的接受度。</p>
           </details>
-
           <details>
             <summary>如果我不確定自己適合什麼香氣怎麼辦？</summary>
             <p>你可以先描述自己偏好的感受，例如想放鬆、想提振精神、想要清新或溫暖感，我們可再協助你選擇方向。</p>
           </details>
-
           <details>
             <summary>訂購或聯絡後多久會收到回覆？</summary>
             <p>一般會在 1–3 個工作天內回覆，實際仍可依品牌營運狀況調整。</p>
           </details>
         </div>
+
+        <!-- 聯絡引導 -->
+        <div class="section-actions" style="margin-top:32px">
+          <p class="muted" style="margin-bottom:16px">沒有找到你的問題？</p>
+          <a class="btn primary" href="contact.html">直接聯絡我們</a>
+        </div>
       </div>
     </section>
   </main>
-<footer class="footer">
-  <div class="container footer-inner">
 
-    <!-- 左側：品牌資訊 -->
-    <div>
-      <div class="footer-brand">Arochemy</div>
-
-      <div class="muted">
-        櫟嶼國際有限公司<br>
-        Liyu International Co., Ltd.
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <div class="footer-brand">Arochemy</div>
+        <div class="muted">櫟嶼國際有限公司<br>Liyu International Co., Ltd.</div>
+        <div class="muted" style="margin-top:8px;">Tel：0911505015</div>
+        <div class="muted">Email：lyu.aroma@gmail.com</div>
+        <div class="muted" id="footer-address">地址：台灣</div>
+        <div class="muted" style="margin-top:10px;">© <span id="year"></span> Arochemy</div>
       </div>
-
-      <div class="muted" style="margin-top:8px;">
-        Tel：0911505015
-
-      </div>
-
-      <div class="muted">
-        Email：lyu.aroma@gmail.com
-
-      </div>
-
-      <div class="muted" id="footer-address">地址：台灣</div>
-
-      <div class="muted" style="margin-top:10px;">
-        © <span id="year"></span> Arochemy
+      <div class="footer-links">
+        <a href="brand.html">品牌故事</a>
+        <a href="products.html">產品</a>
+        <a href="service.html">服務</a>
+        <a href="articles.html">文章</a>
+        <a href="contact.html">聯絡</a>
+        <a href="faq.html">FAQ</a>
       </div>
     </div>
+  </footer>
 
-
-    <!-- 右側：網站導覽 -->
-    <div class="footer-links">
-      <a href="brand.html">品牌故事</a>
-      <a href="products.html">產品</a>
-      <a href="service.html">服務</a>
-      <a href="articles.html">文章</a>
-      <a href="contact.html">聯絡</a>
-      <a href="faq.html">FAQ</a>
-    </div>
-
-  </div>
-</footer>
   <div class="social-fab">
     <a class="fab ig" id="social-ig-btn" href="#" aria-label="Instagram" target="_blank" rel="noopener">
       <span class="fab-text">IG</span>
@@ -171,26 +152,54 @@
       <span class="fab-text">LINE</span>
     </a>
   </div>
+
   <script src="js/cart-badge.js"></script>
   <script src="./main.js"></script>
-  <script type="module" src="js/user.js"></script>
   <script type="module" src="js/user.js"></script>
   <script type="module">
     import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-    const cfg = {apiKey:"AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",authDomain:"trying-89dc6.firebaseapp.com",projectId:"trying-89dc6",storageBucket:"trying-89dc6.firebasestorage.app",messagingSenderId:"115559148124",appId:"1:115559148124:web:ac37b9c249183a919b5499"};
-    const app = getApps().find(a=>a.name==='[DEFAULT]') || initializeApp(cfg);
+
+    const cfg = {
+      apiKey: "AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",
+      authDomain: "trying-89dc6.firebaseapp.com",
+      projectId: "trying-89dc6",
+      storageBucket: "trying-89dc6.firebasestorage.app",
+      messagingSenderId: "115559148124",
+      appId: "1:115559148124:web:ac37b9c249183a919b5499"
+    };
+
+    const app = getApps().find(a => a.name === '[DEFAULT]') || initializeApp(cfg);
     const db  = getFirestore(app);
-    getDoc(doc(db,'settings','site')).then(snap=>{
-      if(!snap.exists()) return;
+
+    const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    // 讀取 FAQ 和社群連結
+    getDoc(doc(db, 'settings', 'homepage')).then(snap => {
+      if (!snap.exists()) return;
+      const faqs = snap.data().faqs || [];
+      if (!faqs.length) return; // 無資料 → 保留靜態內容
+
+      // 有後台 FAQ → 完全取代靜態內容
+      const container = document.getElementById('faq-container');
+      if (!container) return;
+
+      container.innerHTML = faqs.map((f, i) => `
+        <details ${i === 0 ? 'open' : ''}>
+          <summary>${esc(f.q)}</summary>
+          <p>${esc(f.a)}</p>
+        </details>
+      `).join('');
+    }).catch(() => {}); // 失敗時靜默保留靜態內容
+
+    // 讀取社群連結和地址
+    getDoc(doc(db, 'settings', 'site')).then(snap => {
+      if (!snap.exists()) return;
       const d = snap.data();
-      if(d.socialIG)   { document.getElementById('social-ig-btn').href   = d.socialIG; }
-      if(d.socialLine) { document.getElementById('social-line-btn').href = d.socialLine; }
-      if(d.contactAddress) {
-        const el = document.getElementById('footer-address');
-        if(el) el.textContent = '地址：' + d.contactAddress;
-      }
-    }).catch(()=>{});
+      if (d.socialIG)       { const el = document.getElementById('social-ig-btn');   if (el) el.href = d.socialIG; }
+      if (d.socialLine)     { const el = document.getElementById('social-line-btn'); if (el) el.href = d.socialLine; }
+      if (d.contactAddress) { const el = document.getElementById('footer-address');  if (el) el.textContent = '地址：' + d.contactAddress; }
+    }).catch(() => {});
   </script>
 </body>
 </html>

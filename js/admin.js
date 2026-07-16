@@ -728,13 +728,18 @@ function initArticlesPage() {
   $('#article-search')?.addEventListener('input', e => loadArticles(e.target.value));
   $('#save-article-btn')?.addEventListener('click', saveArticle);
 
-  $('#article-cover-upload')?.addEventListener('click', () => $('#article-cover-input')?.click());
-  $('#article-cover-input')?.addEventListener('change', e => {
-    const file = e.target.files[0]; if (!file) return;
-    coverImageFile = file;
-    const reader = new FileReader();
-    reader.onload = ev => { $('#cover-preview').innerHTML = `<img src="${ev.target.result}" alt="">`; };
-    reader.readAsDataURL(file);
+  // 封面網址即時預覽
+  const coverUrlInput = document.getElementById('article-cover-url');
+  coverUrlInput?.addEventListener('input', () => {
+    const url = coverUrlInput.value.trim();
+    const preview = document.getElementById('cover-preview');
+    const img     = document.getElementById('cover-preview-img');
+    if (url && preview && img) {
+      img.src = url;
+      preview.style.display = '';
+    } else if (preview) {
+      preview.style.display = 'none';
+    }
   });
 
   initTagInput();
@@ -794,16 +799,16 @@ function setTags(tags) { $$('.tag-chip').forEach(c => c.remove()); (tags||[]).fo
 
 async function openArticleModal(id = null) {
   editingArticleId = id;
-  coverImageFile   = null;
+  coverImageFile = null;
 
   setValue('#article-title', ''); setValue('#article-category', '');
   setValue('#article-status', 'draft'); setValue('#article-excerpt', '');
+  setValue('#article-cover-url', '');
+  const coverPreview = document.getElementById('cover-preview');
+  if (coverPreview) coverPreview.style.display = 'none';
   setTags([]);
   const editor = $('#article-editor-content');
   if (editor) editor.innerHTML = '';
-  $('#cover-preview').innerHTML = `
-    <svg width="32" height="32" fill="currentColor" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-    <span style="font-size:12px">點擊上傳封面圖片</span>`;
 
   if (id) {
     $('#article-modal-title').textContent = '編輯文章';
@@ -814,7 +819,12 @@ async function openArticleModal(id = null) {
     setValue('#article-excerpt',  d.excerpt  || '');
     setTags(d.tags || []);
     if (editor) editor.innerHTML = d.content || '';
-    if (d.coverImage) $('#cover-preview').innerHTML = `<img src="${escHtml(d.coverImage)}" alt="">`;
+    if (d.coverImage) {
+      setValue('#article-cover-url', d.coverImage);
+      const preview = document.getElementById('cover-preview');
+      const img     = document.getElementById('cover-preview-img');
+      if (preview && img) { img.src = d.coverImage; preview.style.display = ''; }
+    }
   } else {
     $('#article-modal-title').textContent = '發布新文章';
   }
@@ -824,20 +834,40 @@ async function openArticleModal(id = null) {
 async function saveArticle() {
   const btn = $('#save-article-btn');
   btn.disabled = true; btn.textContent = '儲存中…';
+
   try {
-    let coverUrl = '';
-    if (editingArticleId) {
+    // ── 步驟1：封面圖片處理（優先上傳檔案，其次讀網址欄位）─
+    let coverUrl = (document.getElementById('article-cover-url')?.value || '').trim();
+
+    if (coverImageFile) {
+      btn.textContent = '上傳封面中…';
+      try {
+        const fd  = new FormData();
+        fd.append('file', coverImageFile);
+        fd.append('folder', 'articles');
+        const res  = await fetch('https://arochemy-backend-production.up.railway.app/api/upload/image', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.url) coverUrl = data.url;
+      } catch (e) {
+        console.warn('封面上傳失敗，使用網址欄位：', e.message);
+      }
+    } else if (editingArticleId && !coverUrl) {
       const ex = await safeGetDoc(db.collection('articles').doc(editingArticleId));
       coverUrl = ex.coverImage || '';
     }
-    if (coverImageFile) {
-      const ref = storage.ref(`articles/${Date.now()}_${coverImageFile.name}`);
-      await ref.put(coverImageFile);
-      coverUrl = await ref.getDownloadURL();
-    }
+
+    // ── 步驟2：組合文章資料 ───────────────────────────
+    btn.textContent = '寫入資料庫…';
     const editor = $('#article-editor-content');
-    const data   = {
-      title:      getValue('#article-title'),
+    const title  = getValue('#article-title');
+
+    if (!title) {
+      toast('請填寫文章標題', 'error');
+      return;
+    }
+
+    const data = {
+      title,
       category:   getValue('#article-category'),
       status:     getValue('#article-status'),
       excerpt:    getValue('#article-excerpt'),
@@ -846,22 +876,41 @@ async function saveArticle() {
       coverImage: coverUrl,
       updatedAt:  firebase.firestore.FieldValue.serverTimestamp(),
     };
-    if (!data.title) { toast('請填寫文章標題', 'error'); return; }
+
+    // ── 步驟4：寫入 Firestore ─────────────────────────
+    btn.textContent = '寫入資料庫…';
+    console.log('[saveArticle] 開始寫入 Firestore，data:', data);
+    console.log('[saveArticle] 當前登入用戶：', auth.currentUser?.email);
 
     if (editingArticleId) {
       await db.collection('articles').doc(editingArticleId).update(data);
+      console.log('[saveArticle] 更新成功');
       toast('文章已更新', 'success');
     } else {
       data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      await db.collection('articles').add(data);
+      const docRef = await db.collection('articles').add(data);
+      console.log('[saveArticle] 新增成功，ID:', docRef.id);
       toast('文章已發布', 'success');
     }
+
     closeModal('article-modal');
     loadArticles();
+
   } catch (e) {
-    toast('儲存失敗：' + e.message, 'error');
+    console.error('[saveArticle] 完整錯誤：', e);
+    console.error('[saveArticle] 錯誤代碼：', e.code);
+    console.error('[saveArticle] 錯誤訊息：', e.message);
+
+    let errMsg = '儲存失敗';
+    if (e.code === 'permission-denied')  errMsg = '❌ 權限不足：Firestore 規則擋住寫入';
+    else if (e.code === 'unavailable')   errMsg = '❌ Firebase 服務暫時無法使用，請稍後再試';
+    else if (e.code === 'unauthenticated') errMsg = '❌ 未登入狀態，請重新整理頁面';
+    else errMsg = `❌ 儲存失敗（${e.code || 'unknown'}）：${e.message}`;
+
+    toast(errMsg, 'error');
   } finally {
-    btn.disabled = false; btn.textContent = '儲存文章';
+    btn.disabled = false;
+    btn.textContent = '儲存文章';
   }
 }
 
@@ -898,37 +947,25 @@ async function openNewsletterModal(articleId, articleTitle) {
     if (!subscribers.length) { toast('目前沒有訂閱會員', 'info'); return; }
 
     const btn = $('#send-newsletter-btn');
-    btn.disabled = true; btn.textContent = `發送中 (0/${subscribers.length})…`;
+    btn.disabled = true; btn.textContent = '發送中…';
 
-    // 初始化 EmailJS
-    if (typeof emailjs !== 'undefined') {
-      emailjs.init(EMAILJS_CONFIG.publicKey);
+    try {
+      const res  = await fetch('https://arochemy-backend-production.up.railway.app/api/email/newsletter', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          articleId,
+          subject: getValue('#newsletter-subject'),
+        }),
+      });
+      const data = await res.json();
+      toast(`電子報發送完成：${data.sent} 成功 / ${data.failed} 失敗`, data.sent > 0 ? 'success' : 'error');
+    } catch (e) {
+      toast('發送失敗：' + e.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = '確認發送';
+      closeModal('newsletter-modal');
     }
-
-    let sent = 0, failed = 0;
-    for (const member of subscribers) {
-      try {
-        await emailjs.send(
-          EMAILJS_CONFIG.serviceId,
-          EMAILJS_CONFIG.templateId,
-          {
-            to_email:       member.email,
-            to_name:        member.name || member.email,
-            subject:        getValue('#newsletter-subject'),
-            article_title:  article.title,
-            article_excerpt:article.excerpt || '',
-            article_link:   `https://lzx9301.github.io/arochemy/article.html?id=${articleId}`,
-            cover_image:    article.coverImage || '',
-          }
-        );
-        sent++;
-      } catch (e) { failed++; console.warn('Email failed:', member.email, e); }
-      btn.textContent = `發送中 (${sent + failed}/${subscribers.length})…`;
-    }
-
-    toast(`電子報發送完成：${sent} 成功 / ${failed} 失敗`, sent > 0 ? 'success' : 'error');
-    btn.disabled = false; btn.textContent = '確認發送';
-    closeModal('newsletter-modal');
   };
 }
 

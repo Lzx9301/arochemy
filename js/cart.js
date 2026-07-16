@@ -6,7 +6,7 @@
 
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, addDoc, doc, getDoc, updateDoc, increment, serverTimestamp }
+import { getFirestore, doc, getDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 /* ── Firebase ──────────────────────────────────────────────── */
@@ -284,43 +284,32 @@ async function submitOrder() {
 
   try {
     // 寫入 orders collection
-    const orderData = {
-      customerName:   name,
-      customerPhone:  phone,
-      customerEmail:  email || (currentUser?.email || ''),
-      uid:            currentUser?.uid || '',
-      shippingMethod: ship,
-      address:        isStore ? '' : address,
-      storeInfo:      isStore ? address : '',
-      note:           note || '',
-      items:          cart.map(c => ({
-        productId: c.id,
-        name:      c.name,
-        spec:      c.size,
-        price:     c.price,
-        qty:       c.qty,
-        image:     c.img || '',
-      })),
-      total,
-      status:    'pending',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    };
+    // 呼叫後端 API 建立訂單（自動寄確認信 + 扣庫存）
+    const res = await fetch('https://arochemy-backend-production.up.railway.app/api/orders', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customerName:   name,
+        customerPhone:  phone,
+        customerEmail:  email || (currentUser?.email || ''),
+        shippingMethod: ship,
+        address:        isStore ? '' : address,
+        storeInfo:      isStore ? address : '',
+        note:           note || '',
+        items: cart.map(c => ({
+          productId: c.id    || '',
+          name:      c.name  || '',
+          spec:      c.size  || c.spec || '',
+          price:     Number(c.price)  || 0,
+          qty:       Number(c.qty)    || 1,
+          image:     c.img   || c.image || '',
+        })),
+        total,
+      }),
+    });
 
-    const orderRef = await addDoc(collection(db, 'orders'), orderData);
-
-    // 扣庫存（每個商品的對應規格）
-    for (const item of cart) {
-      if (!item.id || !item.size) continue;
-      try {
-        const prodRef = doc(db, 'products', item.id);
-        await updateDoc(prodRef, {
-          [`specs.${item.size}.stock`]: increment(-item.qty),
-        });
-      } catch (e) {
-        console.warn('庫存扣除失敗：', item.name, e.message);
-      }
-    }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '送出失敗');
 
     // 清空購物車
     saveCart([]);
@@ -329,7 +318,7 @@ async function submitOrder() {
     // 關閉 modal，顯示成功畫面
     document.getElementById('checkout-modal')?.remove();
     document.body.style.overflow = '';
-    showSuccess(orderRef.id);
+    showSuccess(data.orderId);
 
   } catch (e) {
     errorEl.textContent   = '送出失敗：' + e.message;

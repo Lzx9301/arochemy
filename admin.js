@@ -586,8 +586,17 @@ function renderProductImagePreviews() {
   productImages.forEach((img, i) => {
     const div = document.createElement('div');
     div.className = 'image-preview-item';
-    div.innerHTML = `<img src="${img.dataUrl}" alt=""><button class="image-preview-remove">×</button>`;
-    div.querySelector('button').addEventListener('click', () => { productImages.splice(i, 1); renderProductImagePreviews(); });
+    // 支援 dataUrl（新上傳預覽）或 url 字串（已儲存的圖片）
+    const src = img.dataUrl || img.url || (typeof img === 'string' ? img : '');
+    div.innerHTML = `
+      <img src="${escHtml(src)}" alt="圖片 ${i+1}"
+           style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit">
+      <button class="image-preview-remove" title="移除此圖片">×</button>
+    `;
+    div.querySelector('.image-preview-remove').addEventListener('click', () => {
+      productImages.splice(i, 1);
+      renderProductImagePreviews();
+    });
     container.appendChild(div);
   });
 }
@@ -750,6 +759,17 @@ function initArticlesPage() {
   $('#article-cover-input')?.addEventListener('change', e => {
     const file = e.target.files[0]; if (!file) return;
     coverImageFile = file;
+
+    // 顯示檔名
+    const uploadBtn = $('#article-cover-upload');
+    if (uploadBtn) uploadBtn.innerHTML = `
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+        <polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      ${escHtml(file.name)}`;
+
+    // 顯示預覽
     const reader = new FileReader();
     reader.onload = ev => {
       const preview = document.getElementById('cover-preview');

@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>會員登入 / 註冊｜Arochemy</title>
+  <title>會員中心｜Arochemy</title>
+  <link rel="icon" type="image/png" href="./images/logo.png" />
   <link rel="stylesheet" href="styles.css" />
-
   <style>
     .auth-page {
       min-height: 100vh;
@@ -14,133 +14,114 @@
       padding: 40px 20px;
       background: #fafafa;
     }
-
     .auth-card {
-      width: min(100%, 460px);
+      width: min(100%, 480px);
       background: #fff;
       border: 1px solid #e8e8e8;
       border-radius: 28px;
       padding: 36px;
       box-shadow: 0 18px 50px rgba(0,0,0,.06);
     }
-
-    .auth-logo {
-      display: block;
-      width: 220px;
-      margin: 0 auto 28px;
-    }
-
-    .auth-title {
-      font-size: 32px;
-      margin: 0 0 8px;
-      letter-spacing: .04em;
-    }
-
-    .auth-subtitle {
-      color: #666;
-      margin: 0 0 28px;
-      line-height: 1.7;
-    }
-
-    .auth-field {
-      margin-bottom: 16px;
-    }
-
-    .auth-field label {
-      display: block;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
+    .auth-logo { display:block; width:180px; margin:0 auto 24px; }
+    .auth-title { font-size:28px; margin:0 0 6px; letter-spacing:.04em; }
+    .auth-subtitle { color:#666; margin:0 0 24px; line-height:1.7; font-size:14px; }
+    .auth-field { margin-bottom:14px; }
+    .auth-field label { display:block; font-weight:700; margin-bottom:6px; font-size:14px; }
     .auth-field input {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 14px 16px;
-      border: 1px solid #ddd;
-      border-radius: 999px;
-      font-size: 16px;
-      outline: none;
+      width:100%; box-sizing:border-box;
+      padding:12px 16px; border:1px solid #ddd;
+      border-radius:999px; font-size:15px; outline:none;
+      font-family:inherit;
     }
-
-    .auth-field input:focus {
-      border-color: #111;
-    }
-
+    .auth-field input:focus { border-color:#111; }
+    .auth-field input:disabled { background:#f5f5f5; color:#999; }
     .auth-check {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin: 10px 0 22px;
-      color: #555;
+      display:flex; gap:8px; align-items:center;
+      margin:10px 0 22px; color:#555; font-size:14px; cursor:pointer;
     }
-
-    .auth-actions {
-      display: grid;
-      gap: 12px;
-    }
-
+    .auth-check input { accent-color:#111; width:16px; height:16px; flex-shrink:0; }
+    .auth-actions { display:grid; gap:10px; }
     .auth-btn {
-      width: 100%;
-      border: none;
-      border-radius: 999px;
-      padding: 14px 18px;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
+      width:100%; border:none; border-radius:999px;
+      padding:13px 18px; font-size:15px; font-weight:700;
+      cursor:pointer; font-family:inherit; transition:all 0.15s;
+    }
+    .auth-btn.primary { background:#111; color:#fff; }
+    .auth-btn.primary:hover { background:#333; }
+    .auth-btn.secondary { background:#fff; color:#111; border:1.5px solid #ddd; }
+    .auth-btn.secondary:hover { border-color:#111; }
+    .auth-btn.light { background:transparent; color:#999; border:none; padding:8px; font-size:13px; }
+    .auth-btn.danger { background:#fff; color:#c44; border:1.5px solid #fcc; }
+    .auth-btn.danger:hover { background:#fff5f5; }
+    .auth-msg { margin-top:16px; font-weight:600; line-height:1.6; font-size:14px; min-height:20px; }
+    .auth-back { display:inline-block; margin-top:20px; color:#555; text-decoration:none; font-size:13px; }
+    .auth-divider {
+      display:flex; align-items:center; gap:12px;
+      margin:20px 0; color:#ccc; font-size:12px;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content:''; flex:1; height:1px; background:#eee;
     }
 
-    .auth-btn.primary {
-      background: #111;
-      color: #fff;
+    /* 會員中心面板 */
+    .member-panel { display:none; }
+    .member-welcome {
+      display:flex; align-items:center; gap:14px; margin-bottom:24px;
     }
-
-    .auth-btn.secondary {
-      background: #fff;
-      color: #111;
-      border: 1px solid #ddd;
+    .member-avatar-lg {
+      width:52px; height:52px; border-radius:50%;
+      background:#111; color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:20px; font-weight:700; flex-shrink:0;
     }
+    .member-welcome-info h2 { font-size:18px; margin:0 0 2px; }
+    .member-welcome-info p { font-size:13px; color:#888; margin:0; }
 
-    .auth-btn.light {
-      background: transparent;
-      color: #555;
-      border: none;
-      padding: 8px;
+    .member-section {
+      background:#f9f9f9; border-radius:16px;
+      padding:20px; margin-bottom:16px;
     }
-
-    .auth-msg {
-      margin-top: 18px;
-      color: #456b55;
-      font-weight: 700;
-      line-height: 1.6;
+    .member-section h3 {
+      font-size:12px; font-weight:700;
+      letter-spacing:0.12em; text-transform:uppercase;
+      color:#999; margin:0 0 14px;
     }
-
-    .auth-back {
-      display: inline-block;
-      margin-top: 22px;
-      color: #555;
-      text-decoration: none;
+    .member-sub-row {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:4px 0;
     }
+    .member-sub-row span { font-size:14px; color:#333; }
 
-    @media (max-width: 520px) {
-      .auth-card {
-        padding: 28px 22px;
-        border-radius: 22px;
-      }
+    /* Toggle */
+    .m-toggle { position:relative; width:44px; height:24px; flex-shrink:0; }
+    .m-toggle input { opacity:0; width:0; height:0; }
+    .m-toggle-track {
+      position:absolute; inset:0;
+      background:#ddd; border-radius:24px;
+      cursor:pointer; transition:background 0.2s;
+    }
+    .m-toggle input:checked + .m-toggle-track { background:#111; }
+    .m-toggle-track::after {
+      content:''; position:absolute;
+      left:3px; top:3px; width:18px; height:18px;
+      background:#fff; border-radius:50%;
+      transition:transform 0.2s;
+    }
+    .m-toggle input:checked + .m-toggle-track::after { transform:translateX(20px); }
 
-      .auth-title {
-        font-size: 28px;
-      }
+    @media (max-width:520px) {
+      .auth-card { padding:28px 20px; border-radius:22px; }
+      .auth-title { font-size:24px; }
     }
   </style>
 </head>
-
 <body>
+
   <header class="header" id="top">
     <div class="container header-inner">
       <a class="brand" href="index.html" aria-label="回到首頁">
-  <img src="./images/head-logo.png" alt="Arochemy Essential Oil" class="brand-logo" />
-</a>
-
+        <img src="./images/head-logo.png" alt="Arochemy Essential Oil" class="brand-logo" />
+      </a>
       <nav class="nav">
         <a href="brand.html">品牌故事</a>
         <a href="products.html">產品</a>
@@ -149,22 +130,22 @@
         <a href="contact.html">聯絡</a>
         <a href="faq.html">FAQ</a>
       </nav>
-<a id="userArea" class="nav-user" href="login.html" aria-label="會員登入">
-  <svg class="user-icon" viewBox="0 0 24 24" aria-hidden="true">
-    <circle cx="12" cy="8" r="4"></circle>
-    <path d="M4 21c1.6-4.5 4.6-7 8-7s6.4 2.5 8 7"></path>
-  </svg>
-  <span id="userEmail"></span>
-</a>
-            <a href="cart.html" class="nav-cart" aria-label="購物車">
-  <svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M6 6h15l-1.5 9h-12z"></path>
-    <path d="M6 6 5.2 3H3"></path>
-    <circle cx="9" cy="20" r="1.5"></circle>
-    <circle cx="18" cy="20" r="1.5"></circle>
-  </svg>
-  <span id="cartCount" class="cart-count">0</span>
-</a>
+      <a id="userArea" class="nav-user" href="login.html" aria-label="會員登入">
+        <svg class="user-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M4 21c1.6-4.5 4.6-7 8-7s6.4 2.5 8 7"></path>
+        </svg>
+        <span id="userEmail"></span>
+      </a>
+      <a href="cart.html" class="nav-cart" aria-label="購物車">
+        <svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6h15l-1.5 9h-12z"></path>
+          <path d="M6 6 5.2 3H3"></path>
+          <circle cx="9" cy="20" r="1.5"></circle>
+          <circle cx="18" cy="20" r="1.5"></circle>
+        </svg>
+        <span id="cartCount" class="cart-count">0</span>
+      </a>
       <div class="header-cta">
         <button class="burger" id="burgerBtn" type="button" aria-label="開啟選單" aria-expanded="false">
           <span></span><span></span><span></span>
@@ -172,52 +153,138 @@
       </div>
     </div>
   </header>
+
+  <div class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
+    <div class="mobile-dropdown" role="dialog" aria-modal="true" aria-label="手機選單">
+      <nav class="mobile-nav">
+        <a href="brand.html">品牌故事</a>
+        <a href="products.html">產品</a>
+        <a href="service.html">服務</a>
+        <a href="articles.html">文章</a>
+        <a href="contact.html">聯絡</a>
+        <a href="faq.html">FAQ</a>
+      </nav>
+      <div class="mobile-panel-actions">
+        <a class="btn" href="products.html">探索精油</a>
+        <a class="btn primary" href="contact.html">立即聯絡</a>
+      </div>
+    </div>
+  </div>
+
   <main class="auth-page">
     <section class="auth-card">
-      <img class="auth-logo" src="./images/head-logo.png" alt="Arochemy Essential Oil">
+      <img class="auth-logo" src="./images/head-logo.png" alt="Arochemy">
 
-      <h1 class="auth-title">會員登入 / 註冊</h1>
-      <p class="auth-subtitle">
-        登入會員後可查看訂單紀錄，未來也能快速帶入常用地址與購買資訊。
-      </p>
+      <!-- ── 登入 / 註冊 面板 ── -->
+      <div id="authPanel">
+        <h1 class="auth-title">會員登入 / 註冊</h1>
+        <p class="auth-subtitle">登入後可管理個人資料、訂閱設定與訂單紀錄。</p>
 
-      <div class="auth-field">
-        <label for="name">姓名（註冊時填寫）</label>
-        <input id="name" placeholder="請輸入姓名" />
+        <!-- 登入模式（預設） -->
+        <div id="loginMode">
+          <div class="auth-field">
+            <label for="loginEmail">Email</label>
+            <input id="loginEmail" type="email" placeholder="請輸入 Email" autocomplete="username">
+          </div>
+          <div class="auth-field">
+            <label for="loginPassword">密碼</label>
+            <input id="loginPassword" type="password" placeholder="請輸入密碼" autocomplete="current-password">
+          </div>
+          <div class="auth-actions" style="margin-top:20px">
+            <button class="auth-btn primary" id="loginBtn" type="button">會員登入</button>
+          </div>
+          <div class="auth-divider">或</div>
+          <button class="auth-btn secondary" id="showRegisterBtn" type="button">還沒有帳號？立即註冊</button>
+        </div>
+
+        <!-- 註冊模式 -->
+        <div id="registerMode" style="display:none">
+          <div class="auth-field">
+            <label for="regName">姓名</label>
+            <input id="regName" placeholder="請輸入姓名">
+          </div>
+          <div class="auth-field">
+            <label for="regPhone">電話</label>
+            <input id="regPhone" placeholder="請輸入電話">
+          </div>
+          <div class="auth-field">
+            <label for="regEmail">Email</label>
+            <input id="regEmail" type="email" placeholder="請輸入 Email" autocomplete="username">
+          </div>
+          <div class="auth-field">
+            <label for="regPassword">密碼（至少 6 位）</label>
+            <input id="regPassword" type="password" placeholder="請輸入密碼" autocomplete="new-password">
+          </div>
+          <label class="auth-check">
+            <input id="regSubscribed" type="checkbox">
+            訂閱電子報，接收新品與活動資訊
+          </label>
+          <div class="auth-actions">
+            <button class="auth-btn primary" id="registerBtn" type="button">註冊會員</button>
+            <button class="auth-btn light" id="showLoginBtn" type="button">已有帳號？返回登入</button>
+          </div>
+        </div>
+
+        <p id="authMsg" class="auth-msg"></p>
       </div>
 
-      <div class="auth-field">
-        <label for="phone">電話（註冊時填寫）</label>
-        <input id="phone" placeholder="請輸入電話" />
+      <!-- ── 會員中心面板（登入後顯示）── -->
+      <div id="memberPanel" class="member-panel">
+
+        <!-- 歡迎列 -->
+        <div class="member-welcome">
+          <div class="member-avatar-lg" id="memberInitial">A</div>
+          <div class="member-welcome-info">
+            <h2 id="memberName">會員</h2>
+            <p id="memberEmailDisplay"></p>
+          </div>
+        </div>
+
+        <!-- 個人資料 -->
+        <div class="member-section">
+          <h3>個人資料</h3>
+          <div class="auth-field">
+            <label for="editName">姓名</label>
+            <input id="editName" placeholder="請輸入姓名">
+          </div>
+          <div class="auth-field">
+            <label for="editPhone">電話</label>
+            <input id="editPhone" placeholder="請輸入電話">
+          </div>
+          <div class="auth-field">
+            <label>Email</label>
+            <input id="editEmail" type="email" disabled>
+          </div>
+          <button class="auth-btn primary" id="saveProfileBtn" type="button" style="margin-top:4px">儲存資料</button>
+        </div>
+
+        <!-- 電子報訂閱 -->
+        <div class="member-section">
+          <h3>電子報設定</h3>
+          <div class="member-sub-row">
+            <span>訂閱 Arochemy 電子報<br><small style="color:#aaa;font-size:12px">接收新品上市與活動資訊</small></span>
+            <label class="m-toggle">
+              <input type="checkbox" id="subToggle">
+              <span class="m-toggle-track"></span>
+            </label>
+          </div>
+          <button class="auth-btn secondary" id="saveSubBtn" type="button" style="margin-top:14px">更新訂閱設定</button>
+        </div>
+
+        <!-- 登出 -->
+        <div class="auth-actions">
+          <button class="auth-btn danger" id="logoutBtn" type="button">登出</button>
+        </div>
+
+        <p id="memberMsg" class="auth-msg"></p>
       </div>
-
-      <div class="auth-field">
-        <label for="email">Email</label>
-        <input id="email" type="email" placeholder="請輸入 Email" />
-      </div>
-
-      <div class="auth-field">
-        <label for="password">密碼</label>
-        <input id="password" type="password" placeholder="請輸入密碼" />
-      </div>
-
-      <label class="auth-check">
-        <input id="newsletterSubscribed" type="checkbox" />
-        訂閱電子報，接收新品與活動資訊
-      </label>
-
-      <div class="auth-actions">
-        <button class="auth-btn primary" id="loginBtn" type="button">會員登入</button>
-        <button class="auth-btn secondary" id="registerBtn" type="button">註冊會員</button>
-        <button class="auth-btn light" id="logoutBtn" type="button" style="display:none;">登出</button>
-      </div>
-
-      <p id="msg" class="auth-msg"></p>
 
       <a class="auth-back" href="index.html">← 回到首頁</a>
     </section>
   </main>
-<script src="js/cart-badge.js"></script>
+
+  <script src="js/cart-badge.js"></script>
+  <script src="./main.js"></script>
   <script type="module" src="js/auth.js"></script>
   <script type="module" src="js/user.js"></script>
 </body>

@@ -21,13 +21,6 @@ const auth     = adminApp.auth();
 const db       = adminApp.firestore();
 const storage  = adminApp.storage();
 
-// ── EmailJS 設定 ─────────────────────────────────────────────
-const EMAILJS_CONFIG = {
-  publicKey:  '6ErXVriFfrV0WgH1C',
-  serviceId:  'service_cq6g91d',
-  templateId: 'template_p34lyxz',
-};
-
 // ── 全域狀態 ──────────────────────────────────────────────────
 let currentUser        = null;
 let editingProductId   = null;
@@ -1407,9 +1400,7 @@ function skeletonRow(cols) {
 ════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
   // EmailJS 初始化
-  if (typeof emailjs !== 'undefined') {
-    emailjs.init(EMAILJS_CONFIG.publicKey);
-  }
+
 
   initAuth();
   initNav();

@@ -676,11 +676,11 @@
           <svg width="32" height="32" fill="currentColor" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
           <span style="font-size:12px">點擊上傳封面圖片</span>
         </div>
-        <input type="file" id="article-cover-input" accept="image/*" style="display:none">
-        <button class="btn btn-secondary btn-sm" id="article-cover-upload" style="margin-top:8px">
+        <label for="article-cover-input" class="btn btn-secondary btn-sm" style="margin-top:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px" id="article-cover-upload">
           <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          上傳封面
-        </button>
+          <span id="article-cover-label">上傳封面</span>
+        </label>
+        <input type="file" id="article-cover-input" accept="image/*" style="display:none">
         <div class="hint" style="margin-top:6px">或直接貼上圖片網址：</div>
         <input type="url" id="article-cover-url" placeholder="https://... 圖片直連網址（可選）" style="margin-top:6px">
       </div>

@@ -754,26 +754,20 @@ function initArticlesPage() {
   $('#article-search')?.addEventListener('input', e => loadArticles(e.target.value));
   $('#save-article-btn')?.addEventListener('click', saveArticle);
 
-  // 封面圖片上傳按鈕
-  $('#article-cover-upload')?.addEventListener('click', () => $('#article-cover-input')?.click());
-  $('#article-cover-input')?.addEventListener('change', e => {
+  // 封面圖片上傳（用 label for 觸發，不需要 click()）
+  document.getElementById('article-cover-input')?.addEventListener('change', e => {
     const file = e.target.files[0]; if (!file) return;
     coverImageFile = file;
 
-    // 顯示檔名
-    const uploadBtn = $('#article-cover-upload');
-    if (uploadBtn) uploadBtn.innerHTML = `
-      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-        <polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/>
-      </svg>
-      ${escHtml(file.name)}`;
+    // 更新 label 顯示檔名
+    const labelSpan = document.getElementById('article-cover-label');
+    if (labelSpan) labelSpan.textContent = file.name;
 
     // 顯示預覽
     const reader = new FileReader();
     reader.onload = ev => {
       const preview = document.getElementById('cover-preview');
-      if (preview) preview.innerHTML = `<img src="${ev.target.result}" alt="封面預覽" style="width:100%;height:100%;object-fit:cover">`;
+      if (preview) preview.innerHTML = `<img src="${ev.target.result}" alt="封面預覽" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`;
     };
     reader.readAsDataURL(file);
   });
@@ -850,8 +844,13 @@ async function openArticleModal(id = null) {
   setValue('#article-title', ''); setValue('#article-category', '');
   setValue('#article-status', 'draft'); setValue('#article-excerpt', '');
   setValue('#article-cover-url', '');
+  coverImageFile = null;
+  const labelSpan = document.getElementById('article-cover-label');
+  if (labelSpan) labelSpan.textContent = '上傳封面';
   const coverPreview = document.getElementById('cover-preview');
-  if (coverPreview) coverPreview.style.display = 'none';
+  if (coverPreview) coverPreview.innerHTML = `
+    <svg width="32" height="32" fill="currentColor" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+    <span style="font-size:12px">點擊上傳封面圖片</span>`;
   setTags([]);
   const editor = $('#article-editor-content');
   if (editor) editor.innerHTML = '';

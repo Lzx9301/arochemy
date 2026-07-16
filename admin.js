@@ -1243,10 +1243,43 @@ async function loadMembers(filter = '') {
       </td>
       <td style="color:var(--text-secondary);font-size:12px">${escHtml(m.email || '—')}</td>
       <td style="font-size:12px;color:var(--text-secondary)">${escHtml(m.phone || '—')}</td>
-      <td><span class="badge badge-${m.subscribed ? 'success' : 'hidden'}">${m.subscribed ? '✓ 已訂閱' : '未訂閱'}</span></td>
+      <td>
+        <label class="toggle" style="margin:0" title="點擊切換訂閱狀態">
+          <input type="checkbox" class="member-sub-toggle" data-id="${m.id}" ${m.subscribed ? 'checked' : ''}>
+          <span class="toggle-track"></span>
+        </label>
+        <span class="member-sub-label" style="font-size:12px;margin-left:8px;color:${m.subscribed ? 'var(--accent)' : 'var(--text-muted)'}">
+          ${m.subscribed ? '已訂閱' : '未訂閱'}
+        </span>
+      </td>
       <td style="font-size:12px;color:var(--text-muted)">${formatDate(m.createdAt)}</td>
     `;
     tbody.appendChild(tr);
+  });
+
+  // 綁定訂閱切換事件
+  $$('.member-sub-toggle').forEach(toggle => {
+    toggle.addEventListener('change', async () => {
+      const uid       = toggle.dataset.id;
+      const subscribed = toggle.checked;
+      const label     = toggle.closest('td').querySelector('.member-sub-label');
+
+      try {
+        await db.collection('members').doc(uid).update({ subscribed });
+        if (label) {
+          label.textContent = subscribed ? '已訂閱' : '未訂閱';
+          label.style.color = subscribed ? 'var(--accent)' : 'var(--text-muted)';
+        }
+        // 更新頂部訂閱人數
+        const subCount = $$('.member-sub-toggle:checked').length;
+        setText('#members-sub-count', subCount);
+        setText('#stat-members', $$('.member-sub-toggle').length);
+        toast(subscribed ? '已設為訂閱' : '已取消訂閱', 'success');
+      } catch (e) {
+        toggle.checked = !subscribed; // 還原
+        toast('更新失敗：' + e.message, 'error');
+      }
+    });
   });
 }
 

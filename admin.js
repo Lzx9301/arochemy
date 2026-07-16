@@ -515,6 +515,19 @@ async function openProductModal(id = null) {
   setValue('#product-status', 'active');
   $('#product-modal-title').textContent = id ? '編輯產品' : '新增產品';
 
+  // 新增模式才套用預設值
+  if (!id) {
+    setValue('#product-storage',
+      '放置於陰涼處，避免陽光直射。\n保存於孩童、寵物不可及之處。'
+    );
+    setValue('#product-usage',
+      '純精油可搭配擴香工具使用，如擴香石、恆溫擴香器、水氧機等。\n可與酒精調和，製作空間或衣物芳香噴霧。\n若為個人護理用途，以植物油稀釋，建議調配低濃度使用。'
+    );
+    setValue('#product-caution',
+      '不建議嬰幼兒、孕婦使用。\n體質敏感者，使用前務必先進行測試。\n切勿直接塗抹於皮膚、黏膜、鼻子、眼睛、耳道等部位。\n若皮膚受刺激，先以大量植物油塗抹稀釋，再以肥皂水清洗患部，必要時請諮詢醫療專業人員。'
+    );
+  }
+
   if (id) {
     try {
       const data = await safeGetDoc(db.collection('products').doc(id));
@@ -586,9 +599,13 @@ async function saveProduct() {
     const uploadedUrls = [];
     for (const img of productImages) {
       if (img.file) {
-        const ref = storage.ref(`products/${Date.now()}_${img.file.name}`);
-        await ref.put(img.file);
-        uploadedUrls.push(await ref.getDownloadURL());
+        const fd  = new FormData();
+        fd.append('file', img.file);
+        fd.append('folder', 'products');
+        const res  = await fetch('https://arochemy-backend-production.up.railway.app/api/upload/image', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.url) uploadedUrls.push(data.url);
+        else toast('圖片上傳失敗：' + (data.error || '未知錯誤'), 'error');
       } else {
         uploadedUrls.push(img.dataUrl);
       }
@@ -728,17 +745,26 @@ function initArticlesPage() {
   $('#article-search')?.addEventListener('input', e => loadArticles(e.target.value));
   $('#save-article-btn')?.addEventListener('click', saveArticle);
 
+  // 封面圖片上傳按鈕
+  $('#article-cover-upload')?.addEventListener('click', () => $('#article-cover-input')?.click());
+  $('#article-cover-input')?.addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    coverImageFile = file;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const preview = document.getElementById('cover-preview');
+      if (preview) preview.innerHTML = `<img src="${ev.target.result}" alt="封面預覽" style="width:100%;height:100%;object-fit:cover">`;
+    };
+    reader.readAsDataURL(file);
+  });
+
   // 封面網址即時預覽
   const coverUrlInput = document.getElementById('article-cover-url');
   coverUrlInput?.addEventListener('input', () => {
-    const url = coverUrlInput.value.trim();
+    const url     = coverUrlInput.value.trim();
     const preview = document.getElementById('cover-preview');
-    const img     = document.getElementById('cover-preview-img');
-    if (url && preview && img) {
-      img.src = url;
-      preview.style.display = '';
-    } else if (preview) {
-      preview.style.display = 'none';
+    if (url && preview) {
+      preview.innerHTML = `<img src="${url}" alt="封面預覽" style="width:100%;height:100%;object-fit:cover">`;
     }
   });
 
@@ -836,8 +862,25 @@ async function saveArticle() {
   btn.disabled = true; btn.textContent = '儲存中…';
 
   try {
-    // ── 步驟1：直接讀封面網址欄位（不需上傳，無 CORS 問題）─
-    const coverUrl = (document.getElementById('article-cover-url')?.value || '').trim();
+    // ── 步驟1：封面圖片處理（優先上傳檔案，其次讀網址欄位）─
+    let coverUrl = (document.getElementById('article-cover-url')?.value || '').trim();
+
+    if (coverImageFile) {
+      btn.textContent = '上傳封面中…';
+      try {
+        const fd  = new FormData();
+        fd.append('file', coverImageFile);
+        fd.append('folder', 'articles');
+        const res  = await fetch('https://arochemy-backend-production.up.railway.app/api/upload/image', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.url) coverUrl = data.url;
+      } catch (e) {
+        console.warn('封面上傳失敗，使用網址欄位：', e.message);
+      }
+    } else if (editingArticleId && !coverUrl) {
+      const ex = await safeGetDoc(db.collection('articles').doc(editingArticleId));
+      coverUrl = ex.coverImage || '';
+    }
 
     // ── 步驟2：組合文章資料 ───────────────────────────
     btn.textContent = '寫入資料庫…';
@@ -930,37 +973,25 @@ async function openNewsletterModal(articleId, articleTitle) {
     if (!subscribers.length) { toast('目前沒有訂閱會員', 'info'); return; }
 
     const btn = $('#send-newsletter-btn');
-    btn.disabled = true; btn.textContent = `發送中 (0/${subscribers.length})…`;
+    btn.disabled = true; btn.textContent = '發送中…';
 
-    // 初始化 EmailJS
-    if (typeof emailjs !== 'undefined') {
-      emailjs.init(EMAILJS_CONFIG.publicKey);
+    try {
+      const res  = await fetch('https://arochemy-backend-production.up.railway.app/api/email/newsletter', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          articleId,
+          subject: getValue('#newsletter-subject'),
+        }),
+      });
+      const data = await res.json();
+      toast(`電子報發送完成：${data.sent} 成功 / ${data.failed} 失敗`, data.sent > 0 ? 'success' : 'error');
+    } catch (e) {
+      toast('發送失敗：' + e.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = '確認發送';
+      closeModal('newsletter-modal');
     }
-
-    let sent = 0, failed = 0;
-    for (const member of subscribers) {
-      try {
-        await emailjs.send(
-          EMAILJS_CONFIG.serviceId,
-          EMAILJS_CONFIG.templateId,
-          {
-            to_email:       member.email,
-            to_name:        member.name || member.email,
-            subject:        getValue('#newsletter-subject'),
-            article_title:  article.title,
-            article_excerpt:article.excerpt || '',
-            article_link:   `https://lzx9301.github.io/arochemy/article.html?id=${articleId}`,
-            cover_image:    article.coverImage || '',
-          }
-        );
-        sent++;
-      } catch (e) { failed++; console.warn('Email failed:', member.email, e); }
-      btn.textContent = `發送中 (${sent + failed}/${subscribers.length})…`;
-    }
-
-    toast(`電子報發送完成：${sent} 成功 / ${failed} 失敗`, sent > 0 ? 'success' : 'error');
-    btn.disabled = false; btn.textContent = '確認發送';
-    closeModal('newsletter-modal');
   };
 }
 

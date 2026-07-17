@@ -191,16 +191,12 @@ function initFeaturedSlider() {
     current = Math.max(0, Math.min(idx, maxSlide));
     track.style.transform = `translateX(-${current * CARD_W}px)`;
 
-    // 左側文字：滑動後淡出，回到原位時淡入
+    // 左側文字：右滑後完全收合，回到第一張時展開
     if (left) {
       if (current > 0) {
-        left.style.opacity = '0';
-        left.style.pointerEvents = 'none';
-        left.style.transform = 'translateX(-24px)';
+        left.classList.add('collapsed');
       } else {
-        left.style.opacity = '1';
-        left.style.pointerEvents = '';
-        left.style.transform = 'translateX(0)';
+        left.classList.remove('collapsed');
       }
     }
   }

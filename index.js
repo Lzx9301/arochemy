@@ -168,7 +168,7 @@ async function loadFeaturedProducts() {
   }
 }
 
-/* ══ 精選產品輪播（滑動時左側文字淡出）══════════════════ */
+/* ══ 精選產品輪播 ══════════════════════════════════════════ */
 function initFeaturedSlider() {
   const track   = document.getElementById('featuredGrid');
   const left    = document.getElementById('featuredLeft');
@@ -176,22 +176,29 @@ function initFeaturedSlider() {
   const nextBtn = document.getElementById('featuredNext');
   if (!track) return;
 
-  const CARD_W = 220; // card width + gap
-  let current  = 0;
-  let maxSlide = 0;
+  let current = 0;
 
-  function updateMax() {
+  function getCardW() {
+    const card = track.querySelector('.hp-prod-card');
+    if (!card) return 220;
+    return card.offsetWidth + 20; // card width + gap
+  }
+
+  function getMax() {
     const cards = track.querySelectorAll('.hp-prod-card');
-    const visible = Math.floor(track.parentElement.offsetWidth / CARD_W);
-    maxSlide = Math.max(0, cards.length - visible);
+    const viewW = track.parentElement.offsetWidth;
+    const cardW = getCardW();
+    const visible = Math.floor(viewW / cardW);
+    return Math.max(0, cards.length - visible);
   }
 
   function slideTo(idx) {
-    updateMax();
-    current = Math.max(0, Math.min(idx, maxSlide));
-    track.style.transform = `translateX(-${current * CARD_W}px)`;
+    const max   = getMax();
+    const cardW = getCardW();
+    current = Math.max(0, Math.min(idx, max));
+    track.style.transform = `translateX(-${current * cardW}px)`;
 
-    // 左側文字：右滑後完全收合，回到第一張時展開
+    // 左側收合
     if (left) {
       if (current > 0) {
         left.classList.add('collapsed');
@@ -199,12 +206,24 @@ function initFeaturedSlider() {
         left.classList.remove('collapsed');
       }
     }
+
+    // 左箭頭：有滑動才顯示
+    if (prevBtn) {
+      if (current > 0) prevBtn.classList.add('visible');
+      else prevBtn.classList.remove('visible');
+    }
+
+    // 右箭頭：到底了就隱藏
+    if (nextBtn) {
+      nextBtn.style.opacity = current >= max ? '0.3' : '1';
+      nextBtn.style.pointerEvents = current >= max ? 'none' : '';
+    }
   }
 
   prevBtn?.addEventListener('click', () => slideTo(current - 1));
   nextBtn?.addEventListener('click', () => slideTo(current + 1));
 
-  // 觸控支援
+  // 觸控
   let startX = 0;
   track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
   track.addEventListener('touchend', e => {
@@ -212,9 +231,12 @@ function initFeaturedSlider() {
     if (Math.abs(diff) > 50) slideTo(current + (diff > 0 ? 1 : -1));
   }, { passive: true });
 
-  // 拖曳支援
+  // 拖曳
   let isDragging = false, dragStartX = 0;
-  track.addEventListener('mousedown', e => { isDragging = true; dragStartX = e.clientX; track.style.transition = 'none'; });
+  track.addEventListener('mousedown', e => {
+    isDragging = true; dragStartX = e.clientX;
+    track.style.transition = 'none';
+  });
   window.addEventListener('mouseup', e => {
     if (!isDragging) return;
     isDragging = false;

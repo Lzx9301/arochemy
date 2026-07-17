@@ -285,7 +285,181 @@
 
   <script src="js/cart-badge.js"></script>
   <script src="./main.js"></script>
-  <script type="module" src="js/auth.js?v=1784253662"></script>
-  <script type="module" src="js/user.js?v=1784253662"></script>
+  <script type="module">
+/* ── 會員中心邏輯（inline，避免多個 Firebase 實例衝突）── */
+import { initializeApp, getApps, getApp }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+         signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const cfg = {
+  apiKey: 'AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI',
+  authDomain: 'trying-89dc6.firebaseapp.com',
+  projectId: 'trying-89dc6',
+  storageBucket: 'trying-89dc6.firebasestorage.app',
+  messagingSenderId: '115559148124',
+  appId: '1:115559148124:web:ac37b9c249183a919b5499',
+};
+
+const app  = getApps().length ? getApp() : initializeApp(cfg);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+const $    = id => document.getElementById(id);
+
+function msg(id, text, err = false) {
+  const el = $(id); if (!el) return;
+  el.textContent = text;
+  el.style.color = err ? '#b94a48' : '#456b55';
+}
+
+function errText(code) {
+  return ({
+    'auth/user-not-found':     '找不到此帳號，請先註冊。',
+    'auth/wrong-password':     '密碼錯誤，請再試一次。',
+    'auth/invalid-credential': '帳號或密碼錯誤，請再試一次。',
+    'auth/email-already-in-use':'此 Email 已被註冊，請直接登入。',
+    'auth/weak-password':      '密碼至少需要 6 個字元。',
+    'auth/invalid-email':      'Email 格式不正確。',
+    'auth/too-many-requests':  '嘗試次數過多，請稍後再試。',
+  })[code] || '發生錯誤，請稍後再試。';
+}
+
+/* ── 登入/註冊切換 ── */
+$('showRegisterBtn')?.addEventListener('click', () => {
+  $('loginMode').style.display = 'none';
+  $('registerMode').style.display = '';
+  msg('authMsg', '');
+});
+$('showLoginBtn')?.addEventListener('click', () => {
+  $('registerMode').style.display = 'none';
+  $('loginMode').style.display = '';
+  msg('authMsg', '');
+});
+
+/* ── 登入 ── */
+$('loginBtn')?.addEventListener('click', async () => {
+  const email = $('loginEmail')?.value.trim();
+  const pw    = $('loginPassword')?.value;
+  if (!email || !pw) { msg('authMsg', '請填寫 Email 與密碼。', true); return; }
+  const btn = $('loginBtn');
+  btn.disabled = true; btn.textContent = '登入中…';
+  try {
+    await signInWithEmailAndPassword(auth, email, pw);
+  } catch(e) {
+    msg('authMsg', errText(e.code), true);
+  } finally {
+    btn.disabled = false; btn.textContent = '會員登入';
+  }
+});
+
+/* ── 註冊 ── */
+$('registerBtn')?.addEventListener('click', async () => {
+  const name = $('regName')?.value.trim();
+  const phone = $('regPhone')?.value.trim();
+  const email = $('regEmail')?.value.trim();
+  const pw    = $('regPassword')?.value;
+  const sub   = $('regSubscribed')?.checked || false;
+  if (!email || !pw) { msg('authMsg', '請填寫 Email 與密碼。', true); return; }
+  if (pw.length < 6) { msg('authMsg', '密碼至少需要 6 個字元。', true); return; }
+  const btn = $('registerBtn');
+  btn.disabled = true; btn.textContent = '註冊中…';
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pw);
+    await setDoc(doc(db, 'members', cred.user.uid), {
+      uid: cred.user.uid, name: name||'', phone: phone||'',
+      email, subscribed: sub, createdAt: serverTimestamp(), lastLoginAt: serverTimestamp(),
+    });
+    msg('authMsg', '註冊成功！歡迎加入 Arochemy 🌿');
+  } catch(e) {
+    msg('authMsg', errText(e.code), true);
+  } finally {
+    btn.disabled = false; btn.textContent = '註冊會員';
+  }
+});
+
+/* ── 登出 ── */
+$('logoutBtn')?.addEventListener('click', () => signOut(auth));
+
+/* ── 儲存個人資料 ── */
+$('saveProfileBtn')?.addEventListener('click', async () => {
+  const user = auth.currentUser; if (!user) return;
+  const name  = $('editName')?.value.trim();
+  const phone = $('editPhone')?.value.trim();
+  const btn = $('saveProfileBtn');
+  btn.disabled = true; btn.textContent = '儲存中…';
+  try {
+    await updateDoc(doc(db, 'members', user.uid), { name: name||'', phone: phone||'', updatedAt: serverTimestamp() });
+    if ($('memberName')) $('memberName').textContent = name || '會員';
+    if ($('memberInitial')) $('memberInitial').textContent = (name || user.email)[0].toUpperCase();
+    msg('memberMsg', '✓ 個人資料已更新');
+  } catch(e) {
+    msg('memberMsg', '儲存失敗：' + e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = '儲存資料';
+  }
+});
+
+/* ── 更新訂閱 ── */
+$('saveSubBtn')?.addEventListener('click', async () => {
+  const user = auth.currentUser; if (!user) return;
+  const sub = $('subToggle')?.checked || false;
+  const btn = $('saveSubBtn');
+  btn.disabled = true; btn.textContent = '更新中…';
+  try {
+    await updateDoc(doc(db, 'members', user.uid), { subscribed: sub, updatedAt: serverTimestamp() });
+    msg('memberMsg', sub ? '✓ 已訂閱電子報' : '✓ 已取消訂閱');
+  } catch(e) {
+    msg('memberMsg', '更新失敗：' + e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = '更新訂閱設定';
+  }
+});
+
+/* ── 監聽登入狀態 ── */
+onAuthStateChanged(auth, async user => {
+  const authPanel   = $('authPanel');
+  const memberPanel = $('memberPanel');
+
+  if (user) {
+    /* 顯示會員中心 */
+    if (authPanel)   authPanel.style.display  = 'none';
+    if (memberPanel) memberPanel.style.display = 'block';
+
+    /* 填入 email */
+    if ($('editEmail'))         $('editEmail').value          = user.email;
+    if ($('memberEmailDisplay'))$('memberEmailDisplay').textContent = user.email;
+
+    /* 更新 header */
+    const headerEmail = document.getElementById('userEmail');
+    if (headerEmail) headerEmail.textContent = user.email;
+    const headerArea  = document.getElementById('userArea');
+    if (headerArea)  { headerArea.href = 'login.html'; headerArea.onclick = null; }
+
+    /* 更新 lastLoginAt */
+    try { await updateDoc(doc(db, 'members', user.uid), { lastLoginAt: serverTimestamp() }); } catch(_) {}
+
+    /* 讀取會員資料 */
+    try {
+      const snap = await getDoc(doc(db, 'members', user.uid));
+      if (snap.exists()) {
+        const d = snap.data();
+        if ($('editName'))    $('editName').value    = d.name  || '';
+        if ($('editPhone'))   $('editPhone').value   = d.phone || '';
+        if ($('subToggle'))   $('subToggle').checked = d.subscribed || false;
+        if ($('memberName'))  $('memberName').textContent   = d.name || '會員';
+        if ($('memberInitial'))$('memberInitial').textContent = (d.name || user.email)[0].toUpperCase();
+      }
+    } catch(e) { console.warn('讀取會員資料失敗：', e.message); }
+
+  } else {
+    /* 顯示登入面板 */
+    if (authPanel)   authPanel.style.display  = '';
+    if (memberPanel) memberPanel.style.display = 'none';
+  }
+});
+  </script>
 </body>
 </html>

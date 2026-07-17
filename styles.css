@@ -2083,6 +2083,7 @@ details p {
 /* ── 精選系列 ── */
 .hp-featured {
   display: flex;
+  height: 520px;
   min-height: 520px;
   background: var(--hp-cream);
   overflow: hidden;
@@ -2091,6 +2092,8 @@ details p {
 .hp-featured-left {
   flex: 0 0 320px;
   max-width: 320px;
+  height: 100%;
+  box-sizing: border-box;
   padding: 72px 48px 72px 60px;
   display: flex;
   flex-direction: column;

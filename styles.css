@@ -341,11 +341,13 @@ h1 {
 }
 
 .hero-full-content .btn {
-  border-color: rgba(255,255,255,0.6);
+  border: 2px solid rgba(255,255,255,0.85);
   color: #fff;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(4px);
 }
 .hero-full-content .btn:hover {
-  background: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.22);
   border-color: #fff;
 }
 .hero-full-content .btn.primary {

@@ -261,10 +261,42 @@ async function loadHomepageSettings() {
   // 用 safeGetDoc，settings doc 不存在時回傳 {}
   const data = await safeGetDoc(db.collection('settings').doc('homepage'));
 
+  setValue('#hero-kicker',   data.heroKicker   || '');
   setValue('#hero-title',    data.heroTitle    || '');
   setValue('#hero-subtitle', data.heroSubtitle || '');
   setValue('#hero-btn-text', data.heroBtnText  || '');
   setValue('#hero-btn-link', data.heroBtnLink  || '');
+
+  // 讀取 Hero 媒體預覽
+  if (data.heroMedia?.url) {
+    setValue('#hero-media-url', data.heroMedia.url);
+    setValue('#hero-media-type', data.heroMedia.type || 'image');
+    const preview = document.getElementById('hero-media-preview');
+    if (preview) {
+      preview.style.display = '';
+      preview.innerHTML = data.heroMedia.type === 'video'
+        ? `<video src="${data.heroMedia.url}" style="width:100%;max-height:160px;object-fit:cover" muted loop autoplay></video>`
+        : `<img src="${data.heroMedia.url}" style="width:100%;max-height:160px;object-fit:cover">`;
+    }
+  }
+
+  // 綁定媒體本機上傳預覽
+  document.getElementById('hero-media-input')?.addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    const label = document.getElementById('hero-media-label');
+    if (label) label.textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const preview = document.getElementById('hero-media-preview');
+      if (!preview) return;
+      preview.style.display = '';
+      const isVideo = file.type.startsWith('video/');
+      preview.innerHTML = isVideo
+        ? `<video src="${ev.target.result}" style="width:100%;max-height:160px;object-fit:cover" muted loop autoplay></video>`
+        : `<img src="${ev.target.result}" style="width:100%;max-height:160px;object-fit:cover">`;
+    };
+    reader.readAsDataURL(file);
+  });
   setValue('#brand-title',   data.brandTitle   || '');
   setValue('#brand-body',    data.brandBody    || '');
   renderFaqEditor(data.faqs || []);
@@ -280,12 +312,36 @@ function initHomepageSettings() {
     });
   });
 
-  $('#save-hero-btn')?.addEventListener('click', () => saveHomepageSection({
-    heroTitle:    getValue('#hero-title'),
-    heroSubtitle: getValue('#hero-subtitle'),
-    heroBtnText:  getValue('#hero-btn-text'),
-    heroBtnLink:  getValue('#hero-btn-link'),
-  }));
+  $('#save-hero-btn')?.addEventListener('click', async () => {
+    const btn = $('#save-hero-btn');
+    btn.disabled = true; btn.textContent = '儲存中…';
+
+    let mediaUrl = getValue('#hero-media-url').trim();
+    const mediaFile = document.getElementById('hero-media-input')?.files[0];
+    const mediaType = getValue('#hero-media-type') || 'image';
+
+    // 若有選擇本機檔案，先上傳
+    if (mediaFile) {
+      btn.textContent = '上傳媒體中…';
+      const fd = new FormData();
+      fd.append('file', mediaFile);
+      fd.append('folder', 'hero');
+      const res  = await fetch('https://arochemy-backend-production.up.railway.app/api/upload/image', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.url) mediaUrl = data.url;
+    }
+
+    await saveHomepageSection({
+      heroKicker:   getValue('#hero-kicker'),
+      heroTitle:    getValue('#hero-title'),
+      heroSubtitle: getValue('#hero-subtitle'),
+      heroBtnText:  getValue('#hero-btn-text'),
+      heroBtnLink:  getValue('#hero-btn-link'),
+      heroMedia:    mediaUrl ? { type: mediaType, url: mediaUrl } : null,
+    });
+
+    btn.disabled = false; btn.textContent = '儲存 Hero 設定';
+  });
 
   $('#save-brand-btn')?.addEventListener('click', () => saveHomepageSection({
     brandTitle: getValue('#brand-title'),

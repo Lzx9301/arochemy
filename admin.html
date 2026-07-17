@@ -181,13 +181,40 @@
           <div class="card-header"><span class="card-title">Hero 橫幅文字</span></div>
           <div class="card-body">
             <div class="form-grid">
-              <div class="form-group"><label>主標題</label><input type="text" id="hero-title" placeholder="植物精萃．自然香氛"></div>
-              <div class="form-group"><label>副標題</label><textarea id="hero-subtitle" rows="3" placeholder="簡短的品牌介紹文字…"></textarea></div>
+              <div class="form-group"><label>小標（Kicker）</label><input type="text" id="hero-kicker" placeholder="自然・純淨・安心"></div>
+              <div class="form-group"><label>主標題</label><input type="text" id="hero-title" placeholder="讓香氛回到日常，找回生活的平衡"></div>
+              <div class="form-group"><label>副標題</label><textarea id="hero-subtitle" rows="3" placeholder="精選天然精油…"></textarea></div>
               <div class="form-grid form-grid-2">
-                <div class="form-group"><label>按鈕文字</label><input type="text" id="hero-btn-text" placeholder="探索系列"></div>
-                <div class="form-group"><label>按鈕連結</label><input type="text" id="hero-btn-link" placeholder="products.html"></div>
+                <div class="form-group"><label>按鈕文字</label><input type="text" id="hero-btn-text" placeholder="探索精選產品"></div>
+                <div class="form-group"><label>按鈕連結</label><input type="text" id="hero-btn-link" placeholder="#featured"></div>
               </div>
             </div>
+
+            <!-- 背景媒體 -->
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+              <div class="form-group">
+                <label>背景類型</label>
+                <select id="hero-media-type">
+                  <option value="image">圖片</option>
+                  <option value="video">影片（MP4）</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>背景圖片 / 影片</label>
+                <label for="hero-media-input" class="btn btn-secondary btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-bottom:8px">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  <span id="hero-media-label">上傳圖片 / 影片</span>
+                </label>
+                <input type="file" id="hero-media-input" accept="image/*,video/mp4,video/webm" style="display:none">
+                <div class="hint">或貼上直連網址：</div>
+                <input type="url" id="hero-media-url" placeholder="https://... 圖片或影片網址" style="margin-top:6px">
+                <div id="hero-media-preview" style="margin-top:10px;max-height:160px;border-radius:8px;overflow:hidden;display:none"></div>
+              </div>
+            </div>
+
             <div style="margin-top:20px"><button class="btn btn-accent" id="save-hero-btn">儲存 Hero 設定</button></div>
           </div>
         </div>

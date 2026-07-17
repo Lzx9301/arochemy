@@ -57,18 +57,32 @@ async function loadHomepageSettings() {
     const home = homeSnap.exists() ? homeSnap.data() : {};
     const site = siteSnap.exists() ? siteSnap.data() : {};
 
-    /* ── Hero ── */
-    if (home.heroTitle) {
-      const el = document.querySelector('.hero h1');
-      if (el) el.textContent = home.heroTitle;
-    }
-    if (home.heroSubtitle) {
-      const el = document.querySelector('.hero .lead');
-      if (el) el.textContent = home.heroSubtitle;
-    }
-    if (home.heroBtnText && home.heroBtnLink) {
-      const btn = document.querySelector('.hero-actions .btn.primary');
-      if (btn) { btn.textContent = home.heroBtnText; btn.href = home.heroBtnLink; }
+    /* ── Hero 文字 ── */
+    if (home.heroTitle)    { const el = document.getElementById('heroTitle');    if (el) el.textContent = home.heroTitle; }
+    if (home.heroSubtitle) { const el = document.getElementById('heroSubtitle'); if (el) el.textContent = home.heroSubtitle; }
+    if (home.heroKicker)   { const el = document.getElementById('heroKicker');   if (el) el.textContent = home.heroKicker; }
+    if (home.heroBtnText)  { const el = document.getElementById('heroBtnPrimary'); if (el) { el.textContent = home.heroBtnText; if (home.heroBtnLink) el.href = home.heroBtnLink; } }
+
+    /* ── Hero 媒體（圖片或影片）── */
+    const mediaEl = document.getElementById('heroMedia');
+    if (mediaEl && home.heroMedia) {
+      const m = home.heroMedia;
+      if (m.type === 'video' && m.url) {
+        mediaEl.innerHTML = `
+          <video autoplay muted loop playsinline preload="auto"
+                 style="width:100%;height:100%;object-fit:cover">
+            <source src="${esc(m.url)}" type="video/mp4">
+          </video>`;
+      } else if (m.url) {
+        mediaEl.innerHTML = `
+          <img src="${esc(m.url)}" alt="Arochemy" loading="eager"
+               style="width:100%;height:100%;object-fit:cover">`;
+      }
+    } else if (mediaEl) {
+      // 預設：嘗試載入 hero-oil.jpg
+      mediaEl.innerHTML = `<img src="images/hero-oil.jpg" alt="Arochemy" loading="eager"
+        style="width:100%;height:100%;object-fit:cover"
+        onerror="this.parentElement.style.background='linear-gradient(135deg,#2d2417,#1a1208)'">`;
     }
 
     /* ── 品牌故事 ── */

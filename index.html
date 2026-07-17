@@ -76,38 +76,27 @@
 
 
     <main>
-        <!-- Hero -->
-        <section class="hero">
-            <div class="container hero-grid">
-                <div>
-                    <div class="kicker">
-                        自然・純淨・安心
-                    </div>
-                    <h1>讓香氛回到日常，找回生活的平衡</h1>
-                    <p class="lead">
-                        精選天然精油與香氛產品，搭配清楚的使用建議與注意事項，
-                        讓你在家也能安心享受香氣帶來的放鬆與療癒。
-                    </p>
-                    <div class="hero-actions">
-                        <a class="btn primary" href="#featured">探索精選產品</a>
-                        <a class="btn" href="#service">了解客製服務</a>
-                    </div>
-                    <ul class="hero-bullets">
-                        <li>清楚標示用途與注意事項</li>
-                        <li>提供 COA / SDS 下載（產品頁）</li>
-                        <li>支援手機、平板友善瀏覽</li>
-                    </ul>
-                </div>
+        <!-- Hero：滿版媒體 -->
+        <section class="hero-full" id="hero-full">
+          <!-- 背景媒體（由 JS 動態填入圖片或影片） -->
+          <div class="hero-full-media" id="heroMedia"></div>
 
-                <div class="hero-card" aria-label="主視覺圖">
-                    <div class="hero-image" role="img" aria-label="主視覺圖片預留位置">
-                        <img src="images/hero-oil.jpg" alt="Arochemy essential oil" loading="eager">
-                    </div>
-                    <!-- <div class="hero-card-note">
-                        這裡之後放品牌情緒圖（植物 / 精油氛圍）即可
-                    </div> -->
-                </div>
+          <!-- 遮罩 -->
+          <div class="hero-full-overlay"></div>
+
+          <!-- 文字內容 -->
+          <div class="hero-full-content container">
+            <div class="kicker" id="heroKicker">自然・純淨・安心</div>
+            <h1 id="heroTitle">讓香氛回到日常，找回生活的平衡</h1>
+            <p class="lead" id="heroSubtitle">
+              精選天然精油與香氛產品，搭配清楚的使用建議與注意事項，
+              讓你在家也能安心享受香氣帶來的放鬆與療癒。
+            </p>
+            <div class="hero-actions">
+              <a class="btn primary" id="heroBtnPrimary" href="#featured">探索精選產品</a>
+              <a class="btn" href="#service">了解客製服務</a>
             </div>
+          </div>
         </section>
 
         <!-- Brand Story (Short) -->

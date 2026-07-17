@@ -1,374 +1,213 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Arochemy｜精油與香氛</title>
-    <meta name="description" content="天然精油與香氛生活。探索精選精油、客製香氛服務與芳療文章。" />
-    <link rel="icon" type="image/png" href="./images/logo.png" />
-<link rel="apple-touch-icon" href="./images/logo.png" />
-    <link rel="stylesheet" href="./styles.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Arochemy｜把臺灣森林，帶進你的日常</title>
+  <meta name="description" content="Arochemy 精油品牌，精選臺灣天然精油與香氛產品。" />
+  <link rel="icon" type="image/png" href="./images/logo.png" />
+  <link rel="apple-touch-icon" href="./images/logo.png" />
+  <link rel="stylesheet" href="./styles.css" />
 </head>
-
 <body>
-    <!-- Sticky Header -->
-    <header class="header" id="top">
-        <div class="container header-inner">
-            <a class="brand" href="index.html" aria-label="回到首頁">
-  <img src="./images/head-logo.png" alt="Arochemy Essential Oil" class="brand-logo" />
-</a>
 
-            <!-- Desktop Nav -->
-            <nav class="nav">
-                <a href="brand.html">品牌故事</a>
-                <a href="products.html">產品</a>
-                <a href="service.html">服務</a>
-                <a href="articles.html">文章</a>
-                <a href="contact.html">聯絡</a>
-                <a href="faq.html">FAQ</a>
-            </nav>
-<a id="userArea" class="nav-user" href="login.html" aria-label="會員登入">
-  <svg class="user-icon" viewBox="0 0 24 24" aria-hidden="true">
-    <circle cx="12" cy="8" r="4"></circle>
-    <path d="M4 21c1.6-4.5 4.6-7 8-7s6.4 2.5 8 7"></path>
-  </svg>
-  <span id="userEmail"></span>
-</a>
-            <a href="cart.html" class="nav-cart" aria-label="購物車">
-  <svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M6 6h15l-1.5 9h-12z"></path>
-    <path d="M6 6 5.2 3H3"></path>
-    <circle cx="9" cy="20" r="1.5"></circle>
-    <circle cx="18" cy="20" r="1.5"></circle>
-  </svg>
-  <span id="cartCount" class="cart-count">0</span>
-</a>
-            <div class="header-cta">
-
-                <!-- Mobile Burger -->
-                <button class="burger" id="burgerBtn" type="button" aria-label="開啟選單" aria-expanded="false">
-                    <span></span><span></span><span></span>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Mobile Drawer -->
-    <!-- Mobile Dropdown (Top) -->
-    <div class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
-        <div class="mobile-dropdown" role="dialog" aria-modal="true" aria-label="手機選單">
-            <nav class="mobile-nav">
-                <a href="brand.html">品牌故事</a>
-                <a href="products.html">產品</a>
-                <a href="service.html">服務</a>
-                <a href="articles.html">文章</a>
-                <a href="contact.html">聯絡</a>
-                <a href="faq.html">FAQ</a>
-            </nav>
-
-            <div class="mobile-panel-actions">
-                <a class="btn" href="products.html">探索精油</a>
-                <a class="btn primary" href="contact.html">立即聯絡</a>
-            </div>
-        </div>
-    </div>
-
-
-
-    <main>
-        <!-- Hero：滿版影片背景 -->
-        <section class="hero-full" id="hero-full">
-          <div class="hero-full-media" id="heroMedia">
-            <video autoplay muted loop playsinline preload="auto"
-                   style="width:100%;height:100%;object-fit:cover;display:block">
-              <source src="images/hero-bg.mp4" type="video/mp4">
-            </video>
-          </div>
-          <div class="hero-full-overlay"></div>
-          <div class="hero-full-content">
-            <div class="kicker" id="heroKicker">自然・純淨・安心</div>
-            <h1 id="heroTitle">把臺灣森林，帶進你的日常</h1>
-            <p class="lead" id="heroSubtitle">
-              真正動人的香氣，<br>
-              不需要來自遙遠的國度，<br>
-              它一直共存在這座島嶼。
-            </p>
-            <div class="hero-actions">
-              <a class="btn primary" id="heroBtnPrimary" href="#featured">探索精選產品</a>
-            </div>
-          </div>
-        </section>
-
-        <!-- Brand Story (Short) -->
-        <section class="section" id="story">
-            <div class="container">
-                <div class="section-head">
-                    <h2>品牌故事</h2>
-                    <p class="muted">
-                        用最短的文字說清楚：你們為什麼做這個品牌。
-                    </p>
-                </div>
-
-                <div class="story-grid">
-                    <div class="card">
-                        <h3>我們相信香氣能改變日常</h3>
-                        <p>
-                            Arochemy 希望把「天然香氛」變成你日常中容易靠近的一件事。
-                            不需要很專業，也能從選擇、使用到保存都更安心。
-                        </p>
-                    </div>
-                    <div class="card">
-                        <h3>透明資訊與安心使用</h3>
-                        <p>
-                            我們重視資訊透明與使用安全，產品頁會提供清楚的使用建議與注意事項，
-                            並提供 COA / SDS 供下載參考。
-                        </p>
-                    </div>
-                </div>
-
-                <div class="section-actions">
-                    <a class="btn" href="#contact">想了解更多？聯絡我們</a>
-                </div>
-            </div>
-        </section>
-
-        <!-- Featured Products：左文字 + 右橫滑卡片 -->
-        <section class="section soft featured-section" id="featured">
-          <div class="featured-inner">
-
-            <!-- 左側：文字說明 -->
-            <div class="featured-left">
-              <div class="kicker">精選系列</div>
-              <h2 id="featuredTitle">臺灣森林系列</h2>
-              <p id="featuredDesc">
-                小小多山的島嶼，<br>
-                不只住著 2300 萬的人類，<br>
-                更庇護了上萬種的植物。<br><br>
-                我們把植物能量保留於瓶中，<br>
-                陪伴您的每一個呼吸。
-              </p>
-              <a class="btn primary" href="products.html" style="margin-top:24px;display:inline-block">立即購買</a>
-            </div>
-
-            <!-- 右側：橫向滑動產品卡片 -->
-            <div class="featured-right">
-              <div class="featured-track-wrap">
-                <div class="featured-track" id="featuredGrid"></div>
-              </div>
-              <button class="featured-arrow featured-prev" id="featuredPrev" aria-label="上一個">&#8592;</button>
-              <button class="featured-arrow featured-next" id="featuredNext" aria-label="下一個">&#8594;</button>
-            </div>
-
-          </div>
-        </section>
-
-        <!-- Custom Service -->
-        <section class="section" id="service">
-            <div class="container">
-                <div class="service-banner">
-                    <div class="service-banner-img" role="img" aria-label="服務主圖預留"></div>
-                    <div class="service-banner-body">
-                        <h2>客製香氛服務</h2>
-                        <p class="muted">
-                            需要專屬香氣、空間香氛設計或禮盒搭配？這裡先放一張圖＋一句話，
-                            點進去看服務分類與流程即可。
-                        </p>
-                        <div class="service-actions">
-                            <a class="btn primary" href="service.html">了解服務內容</a>
-                            <a class="btn" href="#contact">直接詢問</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Articles Preview -->
-        <section class="section soft" id="articles">
-            <div class="container">
-                <div class="section-head">
-                    <h2>文章</h2>
-                    <p class="muted">
-                        先放 1–2 篇示範文章做版型，之後接 Strapi 再動態帶入。
-                    </p>
-                </div>
-
-                <div class="grid-2">
-                    <a class="article-card" href="#">
-                        <div class="article-title">
-                            新手怎麼選精油？3 個安全原則
-                        </div>
-                        <div class="article-meta muted">
-                            精油入門｜5 min read
-                        </div>
-                        <p class="article-excerpt muted">
-                            從用途、濃度到禁忌，快速建立選購與使用的基本觀念。
-                        </p>
-                    </a>
-
-                    <a class="article-card" href="#">
-                        <div class="article-title">
-                            精油保存怎麼做？避免氧化的關鍵
-                        </div>
-                        <div class="article-meta muted">
-                            使用方法｜4 min read
-                        </div>
-                        <p class="article-excerpt muted">
-                            了解光照、溫度、容器對精油品質的影響，延長香氣與效能。
-                        </p>
-                    </a>
-                </div>
-
-                <div class="section-actions">
-                    <a class="btn" href="articles.html">閱讀更多文章</a>
-                </div>
-            </div>
-        </section>
-
-        <!-- Contact + FAQ -->
-        <section class="section" id="contact">
-            <div class="container">
-                <div class="section-head">
-                    <h2>聯絡資訊 & FAQ</h2>
-                    <p class="muted">
-                        先把聯絡方式放清楚；FAQ 先做「形式」，內容可慢慢補。
-                    </p>
-                </div>
-
-                <div class="grid-2">
-                    <div class="card">
-                        <h3>聯絡我們</h3>
-                        <p class="muted">
-                            （示範）Email：hello@arochemy.com
-                        </p>
-                        <p class="muted">
-                            （示範）營業時間：週一至週五 10:00–18:00
-                        </p>
-                        <div class="section-actions">
-                            <a class="btn primary" href="https://line.me/R/ti/p/@yourlineid" target="_blank" rel="noopener">
-                                LINE 直接聯絡
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <h3>FAQ（示範）</h3>
-                        <details>
-                            <summary>Q：精油可以直接塗抹皮膚嗎？</summary>
-                            <p class="muted">
-                                A：建議稀釋後使用，避免敏感部位；如有疑慮請先諮詢專業人士。
-                            </p>
-                        </details>
-                        <details>
-                            <summary>Q：如何保存精油？</summary>
-                            <p class="muted">
-                                A：避光、密封、常溫保存；開封後建議於 6–12 個月內使用。
-                            </p>
-                        </details>
-                        <details>
-                            <summary>Q：有提供客製香氛或課程嗎？</summary>
-                            <p class="muted">
-                                A：可提供客製服務；課程資訊未來將上線，歡迎先透過 LINE 詢問。
-                            </p>
-                        </details>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Footer -->
-       <footer class="footer">
-  <div class="container footer-inner">
-
-    <!-- 左側：品牌資訊 -->
-    <div>
-      <div class="footer-brand">Arochemy</div>
-
-      <div class="muted">
-        櫟嶼國際有限公司<br>
-        Liyu International Co., Ltd.
-      </div>
-
-      <div class="muted" style="margin-top:8px;">
-        Tel：0911505015
-
-      </div>
-
-      <div class="muted">
-        Email：lyu.aroma@gmail.com
-
-      </div>
-
-      <div class="muted">
-        地址：你的地址
-      </div>
-
-      <div class="muted" style="margin-top:10px;">
-        © <span id="year"></span> Arochemy
+  <header class="header" id="top">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="回到首頁">
+        <img src="./images/head-logo.png" alt="Arochemy Essential Oil" class="brand-logo" />
+      </a>
+      <nav class="nav">
+        <a href="brand.html">品牌故事</a>
+        <a href="products.html">產品</a>
+        <a href="service.html">服務</a>
+        <a href="articles.html">文章</a>
+        <a href="contact.html">聯絡我們</a>
+        <a href="faq.html">FAQ</a>
+      </nav>
+      <a id="userArea" class="nav-user" href="login.html" aria-label="會員登入">
+        <svg class="user-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M4 21c1.6-4.5 4.6-7 8-7s6.4 2.5 8 7"></path>
+        </svg>
+        <span id="userEmail"></span>
+      </a>
+      <a href="cart.html" class="nav-cart" aria-label="購物車">
+        <svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6h15l-1.5 9h-12z"></path>
+          <path d="M6 6 5.2 3H3"></path>
+          <circle cx="9" cy="20" r="1.5"></circle>
+          <circle cx="18" cy="20" r="1.5"></circle>
+        </svg>
+        <span id="cartCount" class="cart-count">0</span>
+      </a>
+      <div class="header-cta">
+        <button class="burger" id="burgerBtn" type="button" aria-label="開啟選單" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
       </div>
     </div>
+  </header>
 
-
-    <!-- 右側：網站導覽 -->
-    <div class="footer-links">
-      <a href="brand.html">品牌故事</a>
-      <a href="products.html">產品</a>
-      <a href="service.html">服務</a>
-      <a href="articles.html">文章</a>
-      <a href="contact.html">聯絡</a>
-      <a href="faq.html">FAQ</a>
+  <div class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
+    <div class="mobile-dropdown" role="dialog" aria-modal="true" aria-label="手機選單">
+      <nav class="mobile-nav">
+        <a href="brand.html">品牌故事</a>
+        <a href="products.html">產品</a>
+        <a href="service.html">服務</a>
+        <a href="articles.html">文章</a>
+        <a href="contact.html">聯絡我們</a>
+        <a href="faq.html">FAQ</a>
+      </nav>
+      <div class="mobile-panel-actions">
+        <a class="btn" href="products.html">探索精油</a>
+        <a class="btn primary" href="contact.html">立即聯絡</a>
+      </div>
     </div>
-
   </div>
-</footer>
-    </main>
 
-        <!-- Floating Social Buttons -->
-    <div class="social-fab">
-        <a class="fab ig" id="social-ig-btn" href="#" aria-label="Instagram" target="_blank" rel="noopener">
-            <span class="fab-text">IG</span>
-        </a>
+  <main>
 
-        <a class="fab line" id="social-line-btn" href="#" aria-label="LINE" target="_blank" rel="noopener">
-            <span class="fab-text">LINE</span>
-        </a>
+    <!-- ══ 1. HERO ══════════════════════════════════════════ -->
+    <section class="hp-hero" id="hero-full">
+      <div class="hp-hero-media" id="heroMedia">
+        <video autoplay muted loop playsinline preload="auto">
+          <source src="images/hero-bg.mp4" type="video/mp4">
+        </video>
+      </div>
+      <div class="hp-hero-overlay"></div>
+      <div class="hp-hero-content">
+        <p class="hp-hero-kicker" id="heroKicker">自然・純淨・安心</p>
+        <h1 id="heroTitle">把臺灣森林，帶進你的日常</h1>
+        <p class="hp-hero-sub" id="heroSubtitle">
+          真正動人的香氣，不需要來自遙遠的國度，<br>
+          它一直共存在這座島嶼。
+        </p>
+        <a class="hp-btn-outline" href="products.html" id="heroBtnPrimary">探索精選產品</a>
+      </div>
+    </section>
+
+    <!-- ══ 2. 精選系列 ══════════════════════════════════════ -->
+    <section class="hp-featured" id="featured">
+      <div class="hp-featured-left" id="featuredLeft">
+        <p class="hp-kicker">精選系列</p>
+        <h2 id="featuredTitle">臺灣森林系列</h2>
+        <p class="hp-featured-desc" id="featuredDesc">
+          小小多山的島嶼，<br>
+          不只住著 2300 萬的人類，<br>
+          更庇護了上萬種的植物。<br><br>
+          我們把植物能量保留於瓶中，<br>
+          陪伴您的每一個呼吸。
+        </p>
+        <a class="hp-btn-dark" href="products.html">立即購買</a>
+      </div>
+
+      <div class="hp-featured-right">
+        <div class="hp-cards-viewport">
+          <div class="hp-cards-track" id="featuredGrid"></div>
+        </div>
+        <button class="hp-arrow hp-arrow-next" id="featuredNext">→</button>
+        <button class="hp-arrow hp-arrow-prev" id="featuredPrev">←</button>
+      </div>
+    </section>
+
+    <!-- ══ 3. 客製化服務 ════════════════════════════════════ -->
+    <section class="hp-service" id="service">
+      <div class="hp-service-inner">
+        <div class="hp-service-text">
+          <p class="hp-kicker hp-kicker-light">客製化服務</p>
+          <h2>為您的品牌<br>打造專屬香氣</h2>
+          <p class="hp-service-desc">
+            從原料選擇、配方設計到包裝建議，
+            我們提供全流程的精油客製化服務，
+            讓您的品牌擁有獨一無二的香氣識別。
+          </p>
+          <div class="hp-service-actions">
+            <a class="hp-btn-dark" href="service.html">了解服務內容</a>
+            <a class="hp-btn-outline-dark" href="contact.html">直接詢問</a>
+          </div>
+        </div>
+        <div class="hp-service-img">
+          <img src="images/atmosphere3.png" alt="客製化服務" loading="lazy">
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 4. 氛圍照片橫排 ═════════════════════════════════ -->
+    <section class="hp-gallery">
+      <div class="hp-gallery-grid">
+        <div class="hp-gallery-item">
+          <img src="images/atmosphere1.jpg" alt="" loading="lazy">
+        </div>
+        <div class="hp-gallery-item">
+          <img src="images/pine_macro.jpg" alt="" loading="lazy">
+        </div>
+        <div class="hp-gallery-item">
+          <img src="images/atmosphere2.jpg" alt="" loading="lazy">
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 5. 品牌故事 ══════════════════════════════════════ -->
+    <section class="hp-brand" id="story">
+      <div class="hp-brand-inner">
+        <div class="hp-brand-text">
+          <p class="hp-kicker">品牌故事</p>
+          <h2 id="brandTitle">採集・植物・微距・蒸餾・水霧・森林・實驗器材・玻璃 ....</h2>
+          <p class="hp-brand-body" id="brandBody">
+            Arochemy 誕生於對臺灣植物的深度好奇，
+            我們相信，每一種植物都有它獨特的氣息與療癒能量。
+          </p>
+          <a class="hp-btn-dark" href="brand.html">了解更多</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 6. 最新文章 ══════════════════════════════════════ -->
+    <section class="hp-articles" id="articles">
+      <div class="container">
+        <div class="hp-section-head">
+          <p class="hp-kicker">最新文章</p>
+          <a href="articles.html" class="hp-link-more">查看全部 →</a>
+        </div>
+        <div class="grid-2" id="latestArticles"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <div class="footer-brand">Arochemy</div>
+        <div class="muted">櫟嶼國際有限公司<br>Liyu International Co., Ltd.</div>
+        <div class="muted" style="margin-top:8px">Tel：0911505015</div>
+        <div class="muted">Email：lyu.aroma@gmail.com</div>
+        <div class="muted" id="footer-address">地址：台灣</div>
+        <div class="muted" style="margin-top:10px">© <span id="year"></span> Arochemy</div>
+      </div>
+      <div class="footer-links">
+        <a href="brand.html">品牌故事</a>
+        <a href="products.html">產品</a>
+        <a href="service.html">服務</a>
+        <a href="articles.html">文章</a>
+        <a href="contact.html">聯絡</a>
+        <a href="faq.html">FAQ</a>
+      </div>
     </div>
+  </footer>
 
+  <div class="social-fab">
+    <a class="fab ig" id="social-ig-btn" href="#" aria-label="Instagram" target="_blank" rel="noopener">
+      <span class="fab-text">IG</span>
+    </a>
+    <a class="fab line" id="social-line-btn" href="#" aria-label="LINE" target="_blank" rel="noopener">
+      <span class="fab-text">LINE</span>
+    </a>
+  </div>
 
-
-    <script src="./main.js"></script>
-    <script src="js/cart-badge.js"></script>
-    <script type="module" src="./index.js"></script>
-    <script type="module" src="js/user.js"></script>
-  <script type="module">
-    import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-    import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-    const cfg = {apiKey:"AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",authDomain:"trying-89dc6.firebaseapp.com",projectId:"trying-89dc6",storageBucket:"trying-89dc6.firebasestorage.app",messagingSenderId:"115559148124",appId:"1:115559148124:web:ac37b9c249183a919b5499"};
-    const app = getApps().find(a=>a.name==='[DEFAULT]') || initializeApp(cfg);
-    const db  = getFirestore(app);
-    getDoc(doc(db,'settings','site')).then(snap=>{
-      if(!snap.exists()) return;
-      const d = snap.data();
-      if(d.socialIG)   { document.getElementById('social-ig-btn').href   = d.socialIG; }
-      if(d.socialLine) { document.getElementById('social-line-btn').href = d.socialLine; }
-      if(d.contactAddress) {
-        const el = document.getElementById('footer-address');
-        if(el) el.textContent = '地址：' + d.contactAddress;
-      }
-    }).catch(()=>{});
-  </script>
+  <script src="js/cart-badge.js"></script>
+  <script src="./main.js"></script>
+  <script type="module" src="js/user.js"></script>
+  <script type="module" src="index.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-

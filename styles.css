@@ -1917,3 +1917,462 @@ details p {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   首頁重設計（暖灰/米白色系，按客戶示意圖）
+══════════════════════════════════════════════════════════════ */
+
+/* ── 全站暖色調整 ── */
+:root {
+  --hp-cream:   #f5f0e8;
+  --hp-warm:    #ede7da;
+  --hp-stone:   #c8b89a;
+  --hp-dark:    #2d2416;
+  --hp-mid:     #6b5c48;
+  --hp-accent:  #b8975a;
+}
+
+/* ── Hero ── */
+.hp-hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 560px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.hp-hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hp-hero-media video,
+.hp-hero-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hp-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.25) 0%,
+    rgba(0,0,0,0.45) 50%,
+    rgba(0,0,0,0.30) 100%
+  );
+}
+
+.hp-hero-content {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  padding: 0 24px;
+  max-width: 780px;
+}
+
+.hp-hero-kicker {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.75);
+  margin-bottom: 20px;
+}
+
+.hp-hero-content h1 {
+  font-size: clamp(32px, 5vw, 60px);
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+.hp-hero-sub {
+  font-size: 16px;
+  line-height: 1.9;
+  color: rgba(255,255,255,0.82);
+  margin-bottom: 36px;
+}
+
+.hp-btn-outline {
+  display: inline-block;
+  padding: 13px 36px;
+  border: 1.5px solid rgba(255,255,255,0.85);
+  color: #fff;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(4px);
+  transition: all 0.2s;
+}
+
+.hp-btn-outline:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+/* ── 共用按鈕 ── */
+.hp-btn-dark {
+  display: inline-block;
+  padding: 12px 28px;
+  background: var(--hp-dark);
+  color: #fff;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.hp-btn-dark:hover { background: #1a1208; }
+
+.hp-btn-outline-dark {
+  display: inline-block;
+  padding: 12px 28px;
+  border: 1.5px solid var(--hp-dark);
+  color: var(--hp-dark);
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.hp-btn-outline-dark:hover {
+  background: var(--hp-dark);
+  color: #fff;
+}
+
+.hp-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--hp-mid);
+  margin-bottom: 14px;
+}
+
+.hp-kicker-light { color: rgba(255,255,255,0.65); }
+
+/* ── 精選系列 ── */
+.hp-featured {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  min-height: 520px;
+  background: var(--hp-cream);
+}
+
+.hp-featured-left {
+  padding: 72px 48px 72px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: opacity 0.4s, transform 0.4s;
+}
+
+.hp-featured-left.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-20px);
+}
+
+.hp-featured-left h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--hp-dark);
+  margin: 0 0 20px;
+  line-height: 1.3;
+}
+
+.hp-featured-desc {
+  font-size: 13px;
+  line-height: 2;
+  color: var(--hp-mid);
+  margin-bottom: 28px;
+}
+
+/* 卡片軌道 */
+.hp-featured-right {
+  position: relative;
+  overflow: hidden;
+  padding: 48px 0;
+  background: var(--hp-cream);
+}
+
+.hp-cards-viewport {
+  overflow: hidden;
+  height: 100%;
+}
+
+.hp-cards-track {
+  display: flex;
+  gap: 20px;
+  padding: 8px 32px 8px 16px;
+  transition: transform 0.45s cubic-bezier(0.25, 0.1, 0.25, 1);
+  cursor: grab;
+  align-items: stretch;
+}
+
+.hp-cards-track:active { cursor: grabbing; }
+
+/* 單張產品卡片 */
+.hp-prod-card {
+  flex: 0 0 200px;
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.hp-prod-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.11);
+}
+
+.hp-prod-card-img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--hp-warm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  color: #ccc;
+  overflow: hidden;
+}
+
+.hp-prod-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hp-prod-card-body {
+  padding: 14px 16px;
+  flex: 1;
+}
+
+.hp-prod-card-cat {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hp-accent);
+  margin-bottom: 5px;
+}
+
+.hp-prod-card-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--hp-dark);
+  margin-bottom: 5px;
+  line-height: 1.3;
+}
+
+.hp-prod-card-price {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--hp-mid);
+}
+
+/* 箭頭 */
+.hp-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid #ddd;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+  transition: all 0.15s;
+  z-index: 3;
+  font-family: inherit;
+  line-height: 1;
+}
+
+.hp-arrow:hover {
+  background: var(--hp-dark);
+  border-color: var(--hp-dark);
+  color: #fff;
+}
+
+.hp-arrow-prev { left: 8px; }
+.hp-arrow-next { right: 8px; }
+
+/* ── 客製化服務 ── */
+.hp-service {
+  background: var(--hp-warm);
+  padding: 80px 0;
+}
+
+.hp-service-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 60px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+
+.hp-service-text h2 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--hp-dark);
+  margin: 0 0 20px;
+  line-height: 1.3;
+}
+
+.hp-service-desc {
+  color: var(--hp-mid);
+  font-size: 14px;
+  line-height: 1.9;
+  margin-bottom: 28px;
+}
+
+.hp-service-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hp-service-img {
+  border-radius: 20px;
+  overflow: hidden;
+  aspect-ratio: 4/3;
+}
+
+.hp-service-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── 氛圍照片橫排 ── */
+.hp-gallery {
+  background: var(--hp-warm);
+  padding-bottom: 0;
+}
+
+.hp-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+}
+
+.hp-gallery-item {
+  aspect-ratio: 4/3;
+  overflow: hidden;
+}
+
+.hp-gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s;
+}
+
+.hp-gallery-item:hover img {
+  transform: scale(1.04);
+}
+
+/* ── 品牌故事 ── */
+.hp-brand {
+  background: var(--hp-cream);
+  padding: 80px 0;
+}
+
+.hp-brand-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 40px;
+  text-align: center;
+}
+
+.hp-brand-inner h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--hp-dark);
+  margin: 0 0 20px;
+  line-height: 1.6;
+}
+
+.hp-brand-body {
+  color: var(--hp-mid);
+  font-size: 15px;
+  line-height: 1.9;
+  margin-bottom: 28px;
+}
+
+/* ── 最新文章 ── */
+.hp-articles {
+  background: #fff;
+  padding: 72px 0;
+}
+
+.hp-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.hp-link-more {
+  font-size: 13px;
+  color: var(--hp-accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.hp-link-more:hover { text-decoration: underline; }
+
+/* ── 手機版 ── */
+@media (max-width: 900px) {
+  .hp-featured {
+    grid-template-columns: 1fr;
+  }
+  .hp-featured-left {
+    padding: 48px 24px 24px;
+    text-align: center;
+  }
+  .hp-featured-left.hidden {
+    display: none;
+  }
+  .hp-service-inner {
+    grid-template-columns: 1fr;
+    padding: 0 24px;
+    gap: 32px;
+  }
+  .hp-service-img { order: -1; }
+  .hp-gallery-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .hp-arrow { display: none; }
+}
+
+@media (max-width: 600px) {
+  .hp-gallery-grid { grid-template-columns: 1fr; }
+  .hp-hero-content h1 { font-size: 28px; }
+}

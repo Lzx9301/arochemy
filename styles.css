@@ -59,16 +59,33 @@ a {
 
 /* ===== Header ===== */
 .header {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 1000;
     height: 78px;
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border);
+    background: transparent;
+    border-bottom: 1px solid transparent;
+    transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
 }
+
+.header.scrolled {
+    background: rgba(255,255,255,0.95);
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+    backdrop-filter: blur(10px);
+}
+
+/* 透明狀態：文字白色 */
+.header:not(.scrolled) .nav a { color: rgba(255,255,255,0.9); }
+.header:not(.scrolled) .nav a:hover { color: #fff; }
+.header:not(.scrolled) .nav-user { color: rgba(255,255,255,0.9); }
+.header:not(.scrolled) .nav-cart { color: rgba(255,255,255,0.9); }
+.header:not(.scrolled) .cart-count { background: rgba(255,255,255,0.2); color: #fff; }
+.header:not(.scrolled) .brand-logo { filter: brightness(0) invert(1); }
 
 .header-inner {
     display: flex;
@@ -2076,13 +2093,7 @@ details p {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  transition: opacity 0.4s, transform 0.4s;
-}
-
-.hp-featured-left.hidden {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-20px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
 .hp-featured-left h2 {
@@ -2258,15 +2269,15 @@ details p {
 }
 
 .hp-service-img {
-  border-radius: 20px;
   overflow: hidden;
-  aspect-ratio: 4/3;
+  aspect-ratio: 3/4;
 }
 
 .hp-service-img img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 /* ── 氛圍照片橫排 ── */
@@ -2375,4 +2386,11 @@ details p {
 @media (max-width: 600px) {
   .hp-gallery-grid { grid-template-columns: 1fr; }
   .hp-hero-content h1 { font-size: 28px; }
+}
+
+
+/* 非首頁：fixed header 補 padding */
+body:not(.hp-page) > main,
+body:not(.hp-page) > .container:first-child {
+  padding-top: 78px;
 }

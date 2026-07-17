@@ -55,3 +55,21 @@
     });
   }
 })();
+
+
+/* ── Header 透明/不透明切換 ────────────────────────────── */
+(function initHeaderScroll() {
+  const header = document.getElementById('top');
+  if (!header) return;
+
+  function updateHeader() {
+    if (window.scrollY > 60) {
+      header.classList.add('scrolled');
+    } else {
+      header.classList.remove('scrolled');
+    }
+  }
+
+  updateHeader();
+  window.addEventListener('scroll', updateHeader, { passive: true });
+})();

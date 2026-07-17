@@ -194,9 +194,13 @@ function initFeaturedSlider() {
     // 左側文字：滑動後淡出，回到原位時淡入
     if (left) {
       if (current > 0) {
-        left.classList.add('hidden');
+        left.style.opacity = '0';
+        left.style.pointerEvents = 'none';
+        left.style.transform = 'translateX(-24px)';
       } else {
-        left.classList.remove('hidden');
+        left.style.opacity = '1';
+        left.style.pointerEvents = '';
+        left.style.transform = 'translateX(0)';
       }
     }
   }

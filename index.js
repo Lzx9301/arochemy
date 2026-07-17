@@ -207,8 +207,12 @@ function initFeaturedSlider() {
     if (left)    left.classList.toggle('collapsed', collapsed);
     if (prevBtn) prevBtn.classList.toggle('visible', collapsed);
 
+    // 收合後如果全部卡片一次就放得下（不需要再滑），改成置中排列
+    const maxOffset = getMaxOffset();
+    track.classList.toggle('fit-all', collapsed && maxOffset === 0);
+
     if (nextBtn) {
-      const atEnd = collapsed && offset >= getMaxOffset();
+      const atEnd = collapsed && offset >= maxOffset;
       nextBtn.style.opacity = atEnd ? '0.3' : '1';
       nextBtn.style.pointerEvents = atEnd ? 'none' : '';
     }

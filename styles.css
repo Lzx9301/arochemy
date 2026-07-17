@@ -2153,6 +2153,12 @@ details p {
   align-items: stretch;
 }
 
+/* 收合後所有卡片都已經完整顯示、不需要再滑動時，改成置中對齊，
+   避免卡片列靠左、右邊留一大塊空白 */
+.hp-cards-track.fit-all {
+  justify-content: center;
+}
+
 .hp-cards-track:active { cursor: grabbing; }
 
 /* 單張產品卡片 */

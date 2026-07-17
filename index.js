@@ -178,16 +178,12 @@ function initFeaturedSlider() {
   if (!track || !section) return;
 
   const TRACK_PAD = 64; // .hp-cards-track { padding: 8px 32px } → 32px * 2
-  let current = 0;
-  let leftW   = 320; // 左側文字欄「展開時」的寬度快取
 
-  // 只在左側「未收合」時量測，才能拿到真正展開時的寬度
-  function measureLeftWidth() {
-    if (left && !left.classList.contains('collapsed') && left.offsetWidth > 0) {
-      leftW = left.offsetWidth;
-    }
-  }
-  measureLeftWidth();
+  // 兩個獨立狀態：collapsed（文字欄收合與否）跟 offset（收合後卡片還要再滑幾格）
+  // 不把兩者綁在同一個數字上，避免「收合後其實卡片都放得下」時，
+  // 誤判成不需要有任何反應。
+  let collapsed = false;
+  let offset    = 0;
 
   function getCardW() {
     const card = track.querySelector('.hp-prod-card');
@@ -195,45 +191,61 @@ function initFeaturedSlider() {
     return card.offsetWidth + 20; // card width + gap
   }
 
-  // 依「目標狀態」（收合 or 展開）預判可視寬度，而不是讀取當下（可能還沒收合）的寬度
-  function getMax(willCollapse) {
-    const cards  = track.querySelectorAll('.hp-prod-card');
-    const cardW  = getCardW();
-    const viewW  = section.offsetWidth - (willCollapse ? 0 : leftW) - TRACK_PAD;
+  // 收合狀態下，扣掉文字欄空間後還能再滑幾格
+  function getMaxOffset() {
+    const cards = track.querySelectorAll('.hp-prod-card');
+    const cardW = getCardW();
+    const viewW = section.offsetWidth - TRACK_PAD; // 收合後左側寬度視為 0
     const visible = Math.max(1, Math.floor(viewW / cardW));
     return Math.max(0, cards.length - visible);
   }
 
-  function slideTo(idx) {
-    // 先假設「要移動到 idx>0」就會收合，算出這個狀態下最多能滑幾格
-    const willCollapse = idx > 0;
-    const max = getMax(willCollapse);
-    current = Math.max(0, Math.min(idx, max));
-
-    // clamp 後可能又回到 0（例如全部卡片其實都放得下），要用最終狀態再確認一次
-    const finalCollapse = current > 0;
+  function render() {
     const cardW = getCardW();
-    track.style.transform = `translateX(-${current * cardW}px)`;
+    track.style.transform = `translateX(-${(collapsed ? offset : 0) * cardW}px)`;
 
-    if (left) left.classList.toggle('collapsed', finalCollapse);
-    if (prevBtn) prevBtn.classList.toggle('visible', current > 0);
+    if (left)    left.classList.toggle('collapsed', collapsed);
+    if (prevBtn) prevBtn.classList.toggle('visible', collapsed);
 
     if (nextBtn) {
-      const finalMax = getMax(finalCollapse);
-      nextBtn.style.opacity = current >= finalMax ? '0.3' : '1';
-      nextBtn.style.pointerEvents = current >= finalMax ? 'none' : '';
+      const atEnd = collapsed && offset >= getMaxOffset();
+      nextBtn.style.opacity = atEnd ? '0.3' : '1';
+      nextBtn.style.pointerEvents = atEnd ? 'none' : '';
     }
   }
 
-  prevBtn?.addEventListener('click', () => slideTo(current - 1));
-  nextBtn?.addEventListener('click', () => slideTo(current + 1));
+  function next() {
+    if (!collapsed) {
+      // 第一步：一定先收合文字欄，讓卡片區有更多空間，不管收合後夠不夠格再滑
+      collapsed = true;
+      offset = 0;
+    } else {
+      const max = getMaxOffset();
+      offset = Math.min(offset + 1, max);
+    }
+    render();
+  }
+
+  function prev() {
+    if (collapsed && offset > 0) {
+      offset -= 1;
+    } else if (collapsed) {
+      // 已經滑到最前面了，再按一次才展開文字欄
+      collapsed = false;
+      offset = 0;
+    }
+    render();
+  }
+
+  prevBtn?.addEventListener('click', prev);
+  nextBtn?.addEventListener('click', next);
 
   // 觸控
   let startX = 0;
   track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
   track.addEventListener('touchend', e => {
     const diff = startX - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 50) slideTo(current + (diff > 0 ? 1 : -1));
+    if (Math.abs(diff) > 50) (diff > 0 ? next() : prev());
   }, { passive: true });
 
   // 拖曳
@@ -247,12 +259,13 @@ function initFeaturedSlider() {
     isDragging = false;
     track.style.transition = '';
     const diff = dragStartX - e.clientX;
-    if (Math.abs(diff) > 60) slideTo(current + (diff > 0 ? 1 : -1));
+    if (Math.abs(diff) > 60) (diff > 0 ? next() : prev());
   });
 
   window.addEventListener('resize', () => {
-    if (current === 0) measureLeftWidth(); // 只有展開狀態下量到的才準
-    slideTo(current);
+    // 螢幕變大變小後，收合狀態下的最大格數可能改變，超過就夾回上限
+    if (collapsed) offset = Math.min(offset, getMaxOffset());
+    render();
   });
 }
 

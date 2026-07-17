@@ -171,7 +171,7 @@ async function loadFeaturedProducts() {
     if (featuredIds.length) {
       // 用 id 直接抓（最精準）
       const snaps = await Promise.all(
-        featuredIds.slice(0,3).map(id => getDoc(doc(db, 'products', id)))
+        featuredIds.slice(0,5).map(id => getDoc(doc(db, 'products', id)))
       );
       products = snaps
         .filter(s => s.exists() && s.data().status === 'active')
@@ -192,7 +192,7 @@ async function loadFeaturedProducts() {
         if (!a.featured && b.featured) return 1;
         return toDate(b.createdAt) - toDate(a.createdAt);
       });
-      products = all.slice(0, 3);
+      products = all.slice(0, 5);
     }
 
     if (!products.length) {
@@ -201,39 +201,65 @@ async function loadFeaturedProducts() {
     }
 
     grid.innerHTML = products.map(p => featuredCard(p)).join('');
+  initFeaturedSlider();
 
   } catch (e) {
     console.warn('[index] loadFeaturedProducts error:', e.message);
-    grid.innerHTML = `<p class="muted" style="grid-column:1/-1;text-align:center;padding:40px 0">產品載入中…</p>`;
+    grid.innerHTML = '<div style="padding:40px 20px;color:#999;text-align:center">產品載入中…</div>';
   }
 }
 
 /* ── 精選產品卡片 ── */
 function featuredCard(p) {
-  const specs   = p.specs || {};
-  const SIZES   = ['5ml','10ml','30ml'];
-  const enabled = SIZES.filter(s => specs[s]?.enabled && specs[s]?.price);
-  const minPrice= enabled.length
-    ? Math.min(...enabled.map(s => Number(specs[s].price)))
-    : 0;
-  const img     = p.images?.[0] || '';
-  const CAT     = { single:'單方精油', compound:'複方精油', spray:'噴霧', massage:'按摩油', 'eye-mask':'眼罩' };
+  const specs    = p.specs || {};
+  const SIZES    = ['5ml','10ml','30ml'];
+  const enabled  = SIZES.filter(s => specs[s]?.enabled && specs[s]?.price);
+  const minPrice = enabled.length ? Math.min(...enabled.map(s => Number(specs[s].price))) : 0;
+  const img      = p.images?.[0] || '';
+  const CAT      = { single:'單方精油', compound:'複方精油', spray:'噴霧', massage:'按摩油', 'eye-mask':'眼罩' };
 
   return `
-    <a class="article-card featured-product-card" href="product.html?id=${p.id}" style="text-decoration:none;display:block">
-      ${img ? `
-        <div class="featured-img-wrap">
-          <img src="${esc(img)}" alt="${esc(p.name)}" loading="lazy">
-        </div>` : `
-        <div class="featured-img-wrap featured-img-placeholder">🌿</div>`}
-      <div style="padding:4px 0">
-        ${p.category ? `<div class="article-meta muted">${esc(CAT[p.category] || p.category)}</div>` : ''}
-        <div class="article-title" style="margin:6px 0 4px">${esc(p.name)}</div>
-        ${p.description ? `<p class="article-excerpt muted">${esc(p.description).slice(0,60)}${p.description.length>60?'…':''}</p>` : ''}
-        ${minPrice ? `<div style="font-weight:700;color:#111;margin-top:8px">NT$ ${minPrice.toLocaleString()} 起</div>` : ''}
+    <a class="featured-card" href="product.html?id=${esc(p.id)}">
+      <div class="featured-card-img">
+        ${img
+          ? `<img src="${esc(img)}" alt="${esc(p.name)}" loading="lazy">`
+          : '🌿'}
       </div>
-    </a>
-  `;
+      <div class="featured-card-body">
+        ${p.category ? `<div class="featured-card-cat">${esc(CAT[p.category] || p.category)}</div>` : ''}
+        <div class="featured-card-name">${esc(p.name)}</div>
+        ${minPrice ? `<div class="featured-card-price">NT$ ${minPrice.toLocaleString()} 起</div>` : ''}
+      </div>
+    </a>`;
+}
+
+/* ── 精選產品輪播 ── */
+function initFeaturedSlider() {
+  const track   = document.getElementById('featuredGrid');
+  const prevBtn = document.getElementById('featuredPrev');
+  const nextBtn = document.getElementById('featuredNext');
+  if (!track) return;
+
+  const cardWidth = 240; // card + gap
+  let current = 0;
+  const cards = track.querySelectorAll('.featured-card');
+  const max   = Math.max(0, cards.length - 3);
+
+  function slideTo(idx) {
+    current = Math.max(0, Math.min(idx, max));
+    track.style.transform = `translateX(-${current * cardWidth}px)`;
+  }
+
+  prevBtn?.addEventListener('click', () => slideTo(current - 1));
+  nextBtn?.addEventListener('click', () => slideTo(current + 1));
+
+  // 觸控滑動支援
+  let startX = 0;
+  track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+  track.addEventListener('touchend',   e => {
+    const diff = startX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) slideTo(current + (diff > 0 ? 1 : -1));
+  }, { passive: true });
 }
 
 /* ══════════════════════════════════════════════════════════════

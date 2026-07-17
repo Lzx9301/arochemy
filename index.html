@@ -76,49 +76,30 @@
 
 
     <main>
-        <!-- Hero：滿版媒體 -->
+        <!-- Hero：滿版影片背景 -->
         <section class="hero-full" id="hero-full">
-          <!-- 背景媒體（由 JS 動態填入圖片或影片） -->
-          <div class="hero-full-media" id="heroMedia"></div>
-
-          <!-- 遮罩 -->
+          <div class="hero-full-media" id="heroMedia">
+            <video autoplay muted loop playsinline preload="auto"
+                   style="width:100%;height:100%;object-fit:cover;display:block">
+              <source src="images/hero-bg.mp4" type="video/mp4">
+            </video>
+          </div>
           <div class="hero-full-overlay"></div>
-
-          <!-- 文字內容 -->
-          <div class="hero-full-content container">
+          <div class="hero-full-content">
             <div class="kicker" id="heroKicker">自然・純淨・安心</div>
-            <h1 id="heroTitle">讓香氛回到日常，找回生活的平衡</h1>
+            <h1 id="heroTitle">把臺灣森林，帶進你的日常</h1>
             <p class="lead" id="heroSubtitle">
-              精選天然精油與香氛產品，搭配清楚的使用建議與注意事項，
-              讓你在家也能安心享受香氣帶來的放鬆與療癒。
+              真正動人的香氣，<br>
+              不需要來自遙遠的國度，<br>
+              它一直共存在這座島嶼。
             </p>
             <div class="hero-actions">
               <a class="btn primary" id="heroBtnPrimary" href="#featured">探索精選產品</a>
-              <a class="btn" href="#service">了解客製服務</a>
             </div>
           </div>
         </section>
 
-        
-
-        <!-- Featured Products -->
-        <section class="section soft" id="featured">
-            <div class="container">
-                <div class="section-head">
-                    <h2>精選產品</h2>
-                    <p class="muted">
-                        精選代表品牌風格的產品，帶你認識 Arochemy 的香氣語言。
-                    </p>
-                </div>
-        
-                <div class="grid-3" id="featuredGrid"></div>
-        
-                <div class="section-actions">
-                    <a class="btn primary" href="products.html">前往產品總覽</a>
-                </div>
-            </div>
-        </section>
-<!-- Brand Story (Short) -->
+        <!-- Brand Story (Short) -->
         <section class="section" id="story">
             <div class="container">
                 <div class="section-head">
@@ -150,6 +131,37 @@
                 </div>
             </div>
         </section>
+
+        <!-- Featured Products：左文字 + 右橫滑卡片 -->
+        <section class="section soft featured-section" id="featured">
+          <div class="featured-inner">
+
+            <!-- 左側：文字說明 -->
+            <div class="featured-left">
+              <div class="kicker">精選系列</div>
+              <h2 id="featuredTitle">臺灣森林系列</h2>
+              <p id="featuredDesc">
+                小小多山的島嶼，<br>
+                不只住著 2300 萬的人類，<br>
+                更庇護了上萬種的植物。<br><br>
+                我們把植物能量保留於瓶中，<br>
+                陪伴您的每一個呼吸。
+              </p>
+              <a class="btn primary" href="products.html" style="margin-top:24px;display:inline-block">立即購買</a>
+            </div>
+
+            <!-- 右側：橫向滑動產品卡片 -->
+            <div class="featured-right">
+              <div class="featured-track-wrap">
+                <div class="featured-track" id="featuredGrid"></div>
+              </div>
+              <button class="featured-arrow featured-prev" id="featuredPrev" aria-label="上一個">&#8592;</button>
+              <button class="featured-arrow featured-next" id="featuredNext" aria-label="下一個">&#8594;</button>
+            </div>
+
+          </div>
+        </section>
+
         <!-- Custom Service -->
         <section class="section" id="service">
             <div class="container">

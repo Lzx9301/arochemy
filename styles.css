@@ -2142,10 +2142,13 @@ details p {
 .hp-cards-viewport {
   overflow: hidden;
   height: 100%;
+  display: flex;
+  align-items: center;
 }
 
 .hp-cards-track {
   display: flex;
+  flex: 1 0 auto;
   gap: 20px;
   padding: 8px 32px;
   transition: transform 0.45s cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -2193,6 +2196,8 @@ details p {
   font-size: 40px;
   color: #ccc;
   overflow: hidden;
+  position: relative;
+  z-index: 0;
 }
 
 .hp-prod-card-img img {
@@ -2202,9 +2207,14 @@ details p {
 }
 
 .hp-prod-card-body {
+  position: relative;
+  z-index: 1;
+  margin-top: -32px;
   padding: 14px 16px;
   flex: 1;
   background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .hp-prod-card-cat {
@@ -2325,7 +2335,7 @@ details p {
 .hp-gallery {
   background: var(--hp-warm);
   padding-bottom: 0;
-  margin-bottom: 24px;
+  margin-bottom: 56px;
 }
 
 .hp-gallery-grid {

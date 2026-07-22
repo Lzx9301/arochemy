@@ -2153,10 +2153,12 @@ details p {
   align-items: stretch;
 }
 
-/* 收合後所有卡片都已經完整顯示、不需要再滑動時，改成置中對齊，
-   避免卡片列靠左、右邊留一大塊空白 */
+/* 收合後所有卡片都已經完整顯示、不需要再滑動時，才改成置中對齊，
+   避免卡片列靠左、右邊留一大塊空白。
+   平時滑動途中維持預設的靠左排列，這樣 JS 算的位移量才會準確對齊。 */
 .hp-cards-track.fit-all {
   justify-content: center;
+  cursor: default;
 }
 
 .hp-cards-track:active { cursor: grabbing; }
@@ -2164,7 +2166,7 @@ details p {
 /* 單張產品卡片 */
 .hp-prod-card {
   flex: 0 0 200px;
-  background: #fff;
+  background: transparent;
   border-radius: 18px;
   overflow: hidden;
   text-decoration: none;
@@ -2182,7 +2184,7 @@ details p {
 
 .hp-prod-card-img {
   width: 100%;
-  aspect-ratio: 1;
+  aspect-ratio: 5 / 4;
   object-fit: cover;
   background: var(--hp-warm);
   display: flex;
@@ -2202,6 +2204,7 @@ details p {
 .hp-prod-card-body {
   padding: 14px 16px;
   flex: 1;
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .hp-prod-card-cat {
@@ -2219,12 +2222,6 @@ details p {
   color: var(--hp-dark);
   margin-bottom: 5px;
   line-height: 1.3;
-}
-
-.hp-prod-card-price {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--hp-mid);
 }
 
 /* 箭頭 */
@@ -2328,6 +2325,7 @@ details p {
 .hp-gallery {
   background: var(--hp-warm);
   padding-bottom: 0;
+  margin-bottom: 24px;
 }
 
 .hp-gallery-grid {

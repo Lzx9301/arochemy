@@ -143,10 +143,6 @@ async function loadFeaturedProducts() {
     }
 
     track.innerHTML = products.map(p => {
-      const specs    = p.specs || {};
-      const SIZES    = ['5ml','10ml','30ml'];
-      const enabled  = SIZES.filter(s => specs[s]?.enabled && specs[s]?.price);
-      const minPrice = enabled.length ? Math.min(...enabled.map(s => Number(specs[s].price))) : 0;
       const img      = p.images?.[0] || '';
 
       return `
@@ -157,7 +153,6 @@ async function loadFeaturedProducts() {
           <div class="hp-prod-card-body">
             ${p.category ? `<div class="hp-prod-card-cat">${esc(CAT[p.category] || p.category)}</div>` : ''}
             <div class="hp-prod-card-name">${esc(p.name)}</div>
-            ${minPrice ? `<div class="hp-prod-card-price">NT$ ${minPrice.toLocaleString()} 起</div>` : ''}
           </div>
         </a>`;
     }).join('');

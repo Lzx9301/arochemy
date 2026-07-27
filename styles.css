@@ -2137,7 +2137,6 @@ details p {
   background: var(--hp-cream);
   flex: 1;
   min-width: 0;
-  max-width: 900px;
 }
 
 .hp-cards-viewport {

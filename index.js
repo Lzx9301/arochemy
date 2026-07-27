@@ -168,19 +168,24 @@ function initFeaturedSlider() {
   const section = document.getElementById('featured');
   const track   = document.getElementById('featuredGrid');
   const left    = document.getElementById('featuredLeft');
-  const right   = document.querySelector('.hp-featured-right');
   const prevBtn = document.getElementById('featuredPrev');
   const nextBtn = document.getElementById('featuredNext');
-  if (!track || !section || !right) return;
+  if (!track || !section) return;
 
   // .hp-cards-track 本身的 padding(32px * 2)+ .hp-cards-viewport 兩側留給箭頭的安全距離(60px * 2)
   const TRACK_PAD = 64 + 120;
 
-  // 兩個獨立狀態：collapsed（文字欄收合與否）跟 offset（收合後卡片還要再滑幾格）
-  // 不把兩者綁在同一個數字上，避免「收合後其實卡片都放得下」時，
-  // 誤判成不需要有任何反應。
   let collapsed = false;
   let offset    = 0;
+  let leftW     = 320; // 左側文字欄「展開時」的寬度快取
+
+  // 只有在「未收合」的當下量到的寬度才準確，收合中或收合後量到的都是過渡值
+  function measureLeftWidth() {
+    if (left && !left.classList.contains('collapsed') && left.offsetWidth > 0) {
+      leftW = left.offsetWidth;
+    }
+  }
+  measureLeftWidth();
 
   function getCardW() {
     const card = track.querySelector('.hp-prod-card');
@@ -188,12 +193,12 @@ function initFeaturedSlider() {
     return card.offsetWidth + 20; // card width + gap
   }
 
-  // .hp-featured-right 現在有 max-width 上限，寬度不太會因為文字欄收合與否而變，
-  // 直接量測它本身的寬度即可，不用再猜「收合後」會變多寬
-  function getMaxOffset() {
-    const cards = track.querySelectorAll('.hp-prod-card');
-    const cardW = getCardW();
-    const viewW = right.offsetWidth - TRACK_PAD;
+  // 不去讀取當下的即時寬度（收合有 CSS transition，點擊當下讀到的還是舊寬度，
+  // 導致要點兩次才會抓到正確結果），改成直接用「目標狀態」數學算出收合後會有多寬
+  function getMaxOffset(willCollapse) {
+    const cards  = track.querySelectorAll('.hp-prod-card');
+    const cardW  = getCardW();
+    const viewW  = section.offsetWidth - (willCollapse ? 0 : leftW) - TRACK_PAD;
     const visible = Math.max(1, Math.floor(viewW / cardW));
     return Math.max(0, cards.length - visible);
   }
@@ -206,7 +211,7 @@ function initFeaturedSlider() {
     if (prevBtn) prevBtn.classList.toggle('visible', collapsed);
 
     // 收合後如果全部卡片一次就放得下（不需要再滑），改成置中排列
-    const maxOffset = getMaxOffset();
+    const maxOffset = getMaxOffset(collapsed);
     track.classList.toggle('fit-all', collapsed && maxOffset === 0);
 
     if (nextBtn) {
@@ -218,7 +223,7 @@ function initFeaturedSlider() {
 
   function next() {
     collapsed = true;
-    const max = getMaxOffset();
+    const max = getMaxOffset(true);
     offset = Math.min(offset + 1, max);
     render();
   }
@@ -260,8 +265,8 @@ function initFeaturedSlider() {
   });
 
   window.addEventListener('resize', () => {
-    // 螢幕變大變小後，收合狀態下的最大格數可能改變，超過就夾回上限
-    if (collapsed) offset = Math.min(offset, getMaxOffset());
+    if (!collapsed) measureLeftWidth(); // 只有展開狀態下量到的才準
+    if (collapsed) offset = Math.min(offset, getMaxOffset(true));
     render();
   });
 }

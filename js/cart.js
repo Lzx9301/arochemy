@@ -311,14 +311,18 @@ async function submitOrder() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '送出失敗');
 
-    // 清空購物車
+    // 清空購物車（訂單已經寫入後端了，不管付款結果如何都不用留著）
     saveCart([]);
     updateCartBadge([]);
 
-    // 關閉 modal，顯示成功畫面
-    document.getElementById('checkout-modal')?.remove();
-    document.body.style.overflow = '';
-    showSuccess(data.orderId);
+    // 導向藍新收銀台付款（真正的 POST 導頁，不是 fetch，
+    // 因為後端回傳的是一整頁會自動送出去藍新的 HTML）
+    redirectToPayment({
+      orderId: data.orderId,
+      total,
+      items: cart,
+      customerEmail: email || (currentUser?.email || ''),
+    });
 
   } catch (e) {
     errorEl.textContent   = '送出失敗：' + e.message;
@@ -326,6 +330,35 @@ async function submitOrder() {
     submitBtn.disabled    = false;
     submitBtn.textContent = '確認送出訂單';
   }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   導向藍新金流付款頁：用真正的表單 POST 導頁（不是 fetch），
+   因為 /api/payment/create 回傳的是一整頁「自動送出去藍新」的 HTML，
+   瀏覽器要整頁導過去才能繼續往下跑那段自動送出的 script
+══════════════════════════════════════════════════════════════ */
+function redirectToPayment({ orderId, total, items, customerEmail }) {
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = 'https://arochemy-backend-production.up.railway.app/api/payment/create';
+
+  const fields = {
+    orderId,
+    total,
+    items: JSON.stringify(items),
+    customerEmail,
+  };
+
+  Object.entries(fields).forEach(([name, value]) => {
+    const input = document.createElement('input');
+    input.type  = 'hidden';
+    input.name  = name;
+    input.value = value ?? '';
+    form.appendChild(input);
+  });
+
+  document.body.appendChild(form);
+  form.submit();
 }
 
 /* ──────────────────────────────────────────────────────────────

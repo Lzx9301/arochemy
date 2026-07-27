@@ -67,7 +67,7 @@ async function safeGetDoc(ref) {
 // 2. 若 admins collection 是空的（尚未設定），放行所有登入者進後台
 // 3. 若 admins collection 已有資料，則嚴格驗證 uid
 // 管理員 Email 白名單
-const ADMIN_EMAILS = ['nicoliu930226@gmail.com'];
+const ADMIN_EMAILS = ['nicoliu930226@gmail.com', 'info@arochemy.com'];
 
 function checkIsAdmin(user) {
   // 直接傳入 user 物件比對 email，最簡單最可靠

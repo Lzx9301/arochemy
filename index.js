@@ -217,14 +217,9 @@ function initFeaturedSlider() {
   }
 
   function next() {
-    if (!collapsed) {
-      // 第一步：一定先收合文字欄，讓卡片區有更多空間，不管收合後夠不夠格再滑
-      collapsed = true;
-      offset = 0;
-    } else {
-      const max = getMaxOffset();
-      offset = Math.min(offset + 1, max);
-    }
+    collapsed = true;
+    const max = getMaxOffset();
+    offset = Math.min(offset + 1, max);
     render();
   }
 

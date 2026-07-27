@@ -2137,6 +2137,7 @@ details p {
   background: var(--hp-cream);
   flex: 1;
   min-width: 0;
+  max-width: 780px;
 }
 
 .hp-cards-viewport {
@@ -2273,7 +2274,7 @@ details p {
 /* ── 客製化服務 ── */
 .hp-service {
   background: var(--hp-warm);
-  margin-bottom: 56px;
+  margin-bottom: 28px;
 }
 
 .hp-service-inner {

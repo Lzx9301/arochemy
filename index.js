@@ -168,9 +168,10 @@ function initFeaturedSlider() {
   const section = document.getElementById('featured');
   const track   = document.getElementById('featuredGrid');
   const left    = document.getElementById('featuredLeft');
+  const right   = document.querySelector('.hp-featured-right');
   const prevBtn = document.getElementById('featuredPrev');
   const nextBtn = document.getElementById('featuredNext');
-  if (!track || !section) return;
+  if (!track || !section || !right) return;
 
   const TRACK_PAD = 64; // .hp-cards-track { padding: 8px 32px } → 32px * 2
 
@@ -186,11 +187,12 @@ function initFeaturedSlider() {
     return card.offsetWidth + 20; // card width + gap
   }
 
-  // 收合狀態下，扣掉文字欄空間後還能再滑幾格
+  // .hp-featured-right 現在有 max-width 上限，寬度不太會因為文字欄收合與否而變，
+  // 直接量測它本身的寬度即可，不用再猜「收合後」會變多寬
   function getMaxOffset() {
     const cards = track.querySelectorAll('.hp-prod-card');
     const cardW = getCardW();
-    const viewW = section.offsetWidth - TRACK_PAD; // 收合後左側寬度視為 0
+    const viewW = right.offsetWidth - TRACK_PAD;
     const visible = Math.max(1, Math.floor(viewW / cardW));
     return Math.max(0, cards.length - visible);
   }

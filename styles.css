@@ -2137,7 +2137,7 @@ details p {
   background: var(--hp-cream);
   flex: 1;
   min-width: 0;
-  max-width: 780px;
+  max-width: 900px;
 }
 
 .hp-cards-viewport {
@@ -2145,6 +2145,7 @@ details p {
   height: 100%;
   display: flex;
   align-items: center;
+  padding: 0 60px;
 }
 
 .hp-cards-track {

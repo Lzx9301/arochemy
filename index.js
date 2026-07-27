@@ -173,7 +173,8 @@ function initFeaturedSlider() {
   const nextBtn = document.getElementById('featuredNext');
   if (!track || !section || !right) return;
 
-  const TRACK_PAD = 64; // .hp-cards-track { padding: 8px 32px } → 32px * 2
+  // .hp-cards-track 本身的 padding(32px * 2)+ .hp-cards-viewport 兩側留給箭頭的安全距離(60px * 2)
+  const TRACK_PAD = 64 + 120;
 
   // 兩個獨立狀態：collapsed（文字欄收合與否）跟 offset（收合後卡片還要再滑幾格）
   // 不把兩者綁在同一個數字上，避免「收合後其實卡片都放得下」時，

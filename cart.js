@@ -6,7 +6,7 @@
 
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, addDoc, doc, getDoc, updateDoc, increment, serverTimestamp }
+import { getFirestore, doc, getDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 /* ── Firebase ──────────────────────────────────────────────── */
@@ -284,52 +284,45 @@ async function submitOrder() {
 
   try {
     // 寫入 orders collection
-    const orderData = {
-      customerName:   name,
-      customerPhone:  phone,
-      customerEmail:  email || (currentUser?.email || ''),
-      uid:            currentUser?.uid || '',
-      shippingMethod: ship,
-      address:        isStore ? '' : address,
-      storeInfo:      isStore ? address : '',
-      note:           note || '',
-      items: cart.map(c => ({
-        productId: c.id    || '',
-        name:      c.name  || '',
-        spec:      c.size  || c.spec || '',
-        price:     Number(c.price)  || 0,
-        qty:       Number(c.qty)    || 1,
-        image:     c.img   || c.image || '',
-      })),
-      total,
-      status:    'pending',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    };
+    // 呼叫後端 API 建立訂單（自動寄確認信 + 扣庫存）
+    const res = await fetch('https://arochemy-backend-production.up.railway.app/api/orders', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customerName:   name,
+        customerPhone:  phone,
+        customerEmail:  email || (currentUser?.email || ''),
+        shippingMethod: ship,
+        address:        isStore ? '' : address,
+        storeInfo:      isStore ? address : '',
+        note:           note || '',
+        items: cart.map(c => ({
+          productId: c.id    || '',
+          name:      c.name  || '',
+          spec:      c.size  || c.spec || '',
+          price:     Number(c.price)  || 0,
+          qty:       Number(c.qty)    || 1,
+          image:     c.img   || c.image || '',
+        })),
+        total,
+      }),
+    });
 
-    const orderRef = await addDoc(collection(db, 'orders'), orderData);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '送出失敗');
 
-    // 扣庫存（每個商品的對應規格）
-    for (const item of cart) {
-      if (!item.id || !item.size) continue;
-      try {
-        const prodRef = doc(db, 'products', item.id);
-        await updateDoc(prodRef, {
-          [`specs.${item.size}.stock`]: increment(-item.qty),
-        });
-      } catch (e) {
-        console.warn('庫存扣除失敗：', item.name, e.message);
-      }
-    }
-
-    // 清空購物車
+    // 清空購物車（訂單已經寫入後端了，不管付款結果如何都不用留著）
     saveCart([]);
     updateCartBadge([]);
 
-    // 關閉 modal，顯示成功畫面
-    document.getElementById('checkout-modal')?.remove();
-    document.body.style.overflow = '';
-    showSuccess(orderRef.id);
+    // 導向藍新收銀台付款（真正的 POST 導頁，不是 fetch，
+    // 因為後端回傳的是一整頁會自動送出去藍新的 HTML）
+    redirectToPayment({
+      orderId: data.orderId,
+      total,
+      items: cart,
+      customerEmail: email || (currentUser?.email || ''),
+    });
 
   } catch (e) {
     errorEl.textContent   = '送出失敗：' + e.message;
@@ -337,6 +330,35 @@ async function submitOrder() {
     submitBtn.disabled    = false;
     submitBtn.textContent = '確認送出訂單';
   }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   導向藍新金流付款頁：用真正的表單 POST 導頁（不是 fetch），
+   因為 /api/payment/create 回傳的是一整頁「自動送出去藍新」的 HTML，
+   瀏覽器要整頁導過去才能繼續往下跑那段自動送出的 script
+══════════════════════════════════════════════════════════════ */
+function redirectToPayment({ orderId, total, items, customerEmail }) {
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = 'https://arochemy-backend-production.up.railway.app/api/payment/create';
+
+  const fields = {
+    orderId,
+    total,
+    items: JSON.stringify(items),
+    customerEmail,
+  };
+
+  Object.entries(fields).forEach(([name, value]) => {
+    const input = document.createElement('input');
+    input.type  = 'hidden';
+    input.name  = name;
+    input.value = value ?? '';
+    form.appendChild(input);
+  });
+
+  document.body.appendChild(form);
+  form.submit();
 }
 
 /* ──────────────────────────────────────────────────────────────

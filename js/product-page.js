@@ -322,11 +322,12 @@ function renderOverview(p) {
 
   const rows = [
     ['分類',     CAT[p.category] || p.category || '—'],
+    ['科屬',     p.family       || '—'],
     ['產地來源', p.origin       || '—'],
     ['萃取方式', p.extraction   || '—'],
     ['植物部位', p.plantPart    || '—'],
     ['香調',     p.scentNote    || '—'],
-    ['適合膚質', p.skinType     || '—'],
+    ['建議用途', p.skinType     || '—'],
   ].filter(([, v]) => v && v !== '—');
 
   if (!rows.length) { el.innerHTML = '<div class="muted">暫無資料</div>'; return; }

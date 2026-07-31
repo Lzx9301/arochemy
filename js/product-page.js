@@ -170,7 +170,7 @@ function renderGallery(images) {
 }
 
 /* ──────────────────────────────────────────────────────────────
-   規格藥丸
+   規格
 ────────────────────────────────────────────────────────────── */
 function renderVariantPills(p) {
   const pills  = $('variantPills');

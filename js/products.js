@@ -57,6 +57,26 @@ async function init() {
   await loadProducts();
   initCategoryFilter();
   initDropdownClose();
+  applyCatFromURL();
+}
+
+/* ── 從網址參數(?cat=xxx)套用分類篩選，供導覽列下拉選單連結使用 ── */
+function applyCatFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  const catKey = params.get('cat');
+  if (!catKey || !(catKey in CAT_MAP)) return;
+
+  const item = catMenu?.querySelector(`.cat-item[data-cat="${catKey}"]`);
+  if (!item) return;
+
+  currentCatKey = catKey;
+  if (currentCat) currentCat.textContent = item.textContent;
+
+  const firestoreCat = CAT_MAP[currentCatKey];
+  const filtered = firestoreCat
+    ? allProducts.filter(p => p.category === firestoreCat)
+    : allProducts;
+  renderProducts(filtered);
 }
 
 /* ── 讀取產品 ──────────────────────────────────────────────── */

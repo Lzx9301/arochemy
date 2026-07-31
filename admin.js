@@ -26,6 +26,7 @@ let currentUser        = null;
 let editingProductId   = null;
 let editingArticleId   = null;
 let productImages      = [];
+let productDescImages  = [];
 let coverImageFile     = null;
 let allOrders          = [];
 let currentOrderFilter = 'all';
@@ -550,17 +551,30 @@ function initProductsPage() {
     handleProductImages(e.dataTransfer.files);
   });
   fileInput?.addEventListener('change', e => handleProductImages(e.target.files));
+
+  const descUploadZone = $('#product-desc-image-upload');
+  const descFileInput  = $('#product-desc-image-input');
+  descUploadZone?.addEventListener('click', () => descFileInput?.click());
+  descUploadZone?.addEventListener('dragover', e => { e.preventDefault(); descUploadZone.classList.add('dragover'); });
+  descUploadZone?.addEventListener('dragleave', () => descUploadZone.classList.remove('dragover'));
+  descUploadZone?.addEventListener('drop', e => {
+    e.preventDefault(); descUploadZone.classList.remove('dragover');
+    handleProductDescImages(e.dataTransfer.files);
+  });
+  descFileInput?.addEventListener('change', e => handleProductDescImages(e.target.files));
 }
 
 async function openProductModal(id = null) {
   editingProductId = id;
-  productImages    = [];
+  productImages     = [];
+  productDescImages = [];
 
   $$('#product-modal input, #product-modal textarea, #product-modal select').forEach(el => {
     if (el.type === 'checkbox') el.checked = false;
     else el.value = '';
   });
   $('#product-image-previews').innerHTML = '';
+  $('#product-desc-image-previews').innerHTML = '';
   setValue('#product-status', 'active');
   $('#product-modal-title').textContent = id ? '編輯產品' : '新增產品';
 
@@ -614,6 +628,8 @@ async function openProductModal(id = null) {
 
       productImages = (data.images || []).map(url => ({ dataUrl: url }));
       renderProductImagePreviews();
+      productDescImages = (data.descriptionImages || []).map(url => ({ dataUrl: url }));
+      renderProductDescImagePreviews();
     } catch (e) { toast('載入產品資料失敗：' + e.message, 'error'); return; }
   }
 
@@ -626,6 +642,36 @@ function handleProductImages(files) {
     const reader = new FileReader();
     reader.onload = e => { productImages.push({ dataUrl: e.target.result, file }); renderProductImagePreviews(); };
     reader.readAsDataURL(file);
+  });
+}
+
+function handleProductDescImages(files) {
+  Array.from(files).forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e => { productDescImages.push({ dataUrl: e.target.result, file }); renderProductDescImagePreviews(); };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderProductDescImagePreviews() {
+  const container = $('#product-desc-image-previews');
+  if (!container) return;
+  container.innerHTML = '';
+  productDescImages.forEach((img, i) => {
+    const div = document.createElement('div');
+    div.className = 'image-preview-item';
+    const src = img.dataUrl || img.url || (typeof img === 'string' ? img : '');
+    div.innerHTML = `
+      <img src="${escHtml(src)}" alt="描述圖片 ${i+1}"
+           style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit">
+      <button class="image-preview-remove" title="移除此圖片">×</button>
+    `;
+    div.querySelector('.image-preview-remove').addEventListener('click', () => {
+      productDescImages.splice(i, 1);
+      renderProductDescImagePreviews();
+    });
+    container.appendChild(div);
   });
 }
 
@@ -667,6 +713,21 @@ async function saveProduct() {
         else toast('圖片上傳失敗：' + (data.error || '未知錯誤'), 'error');
       } else {
         uploadedUrls.push(img.dataUrl);
+      }
+    }
+
+    const uploadedDescUrls = [];
+    for (const img of productDescImages) {
+      if (img.file) {
+        const fd  = new FormData();
+        fd.append('file', img.file);
+        fd.append('folder', 'products');
+        const res  = await fetch('https://arochemy-backend-production.up.railway.app/api/upload/image', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.url) uploadedDescUrls.push(data.url);
+        else toast('描述圖片上傳失敗：' + (data.error || '未知錯誤'), 'error');
+      } else {
+        uploadedDescUrls.push(img.dataUrl);
       }
     }
 
@@ -730,6 +791,7 @@ async function saveProduct() {
       caution:     parseList('#product-caution'),
       specs,
       images:      uploadedUrls,
+      descriptionImages: uploadedDescUrls,
       updatedAt:   firebase.firestore.FieldValue.serverTimestamp(),
     };
 

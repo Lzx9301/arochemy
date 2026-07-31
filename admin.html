@@ -582,6 +582,19 @@
         <textarea id="product-description" rows="4" placeholder="詳細說明產品特性、香調、使用方式…"></textarea>
       </div>
 
+      <!-- 產品描述圖片(顯示於文字說明區塊，可放產品情境圖、成分示意圖等) -->
+      <div class="form-group" style="margin-bottom:16px">
+        <label>產品描述圖片</label>
+        <div class="hint" style="margin-bottom:8px">會依上傳順序顯示在產品描述文字下方，適合放情境圖、示意圖等說明用圖片</div>
+        <div class="image-upload-zone" id="product-desc-image-upload">
+          <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+          <p>拖曳或點擊上傳圖片</p>
+          <div class="hint">支援 JPG、PNG、WebP，可多張上傳</div>
+        </div>
+        <input type="file" id="product-desc-image-input" accept="image/*" multiple style="display:none">
+        <div class="image-preview-grid" id="product-desc-image-previews"></div>
+      </div>
+
       <!-- 成分總覽 -->
       <div class="form-group" style="margin-bottom:16px">
         <label>成分總覽</label>

@@ -61,10 +61,55 @@
   <span id="cartCount" class="cart-count">0</span>
 </a>
             <div class="header-cta">
-                <button class="btn burger" aria-label="menu">☰</button>
+                <button class="burger" id="burgerBtn" type="button" aria-label="開啟選單" aria-expanded="false">
+                  <span></span><span></span><span></span>
+                </button>
             </div>
         </div>
     </header>
+
+    <div class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
+      <div class="mobile-dropdown" role="dialog" aria-modal="true" aria-label="手機選單">
+        <nav class="mobile-nav">
+          <a href="brand.html">品牌故事</a>
+          <div class="mnav-item">
+            <div class="mnav-row">
+              <a href="products.html">產品</a>
+              <button class="mnav-toggle" type="button" aria-label="展開產品選單" aria-expanded="false">▾</button>
+            </div>
+            <div class="mnav-sub">
+              <a href="products.html">全部產品</a>
+              <a href="products.html?cat=single-oil">單方精油</a>
+              <a href="products.html?cat=blend-oil">複方精油</a>
+              <a href="products.html?cat=spray">噴霧</a>
+              <a href="products.html?cat=massage">按摩油</a>
+              <a href="products.html?cat=eyemask">眼罩</a>
+              <a href="products.html?cat=diffuser">擴香瓶</a>
+            </div>
+          </div>
+          <div class="mnav-item">
+            <div class="mnav-row">
+              <a href="service.html">服務</a>
+              <button class="mnav-toggle" type="button" aria-label="展開服務選單" aria-expanded="false">▾</button>
+            </div>
+            <div class="mnav-sub">
+              <a href="service.html#svc-suggest">香氛選品建議</a>
+              <a href="service.html#svc-gift">客製送禮提案</a>
+              <a href="service.html#svc-space">空間香氛規劃</a>
+              <a href="service.html#svc-brand">品牌合作</a>
+              <a href="service.html#svc-knowledge">芳療知識分享</a>
+            </div>
+          </div>
+          <a href="articles.html">文章</a>
+          <a href="contact.html">聯絡</a>
+          <a href="faq.html">FAQ</a>
+        </nav>
+        <div class="mobile-panel-actions">
+          <a class="btn" href="products.html">探索精油</a>
+          <a class="btn primary" href="contact.html">立即聯絡</a>
+        </div>
+      </div>
+    </div>
 
     <main class="container p-page">
         <!-- breadcrumb -->

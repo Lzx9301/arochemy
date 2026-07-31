@@ -1149,7 +1149,8 @@ details p {
 }
 
 .p-main-img {
-    height: 420px;
+    aspect-ratio: 1 / 1;
+    height: auto;
     background:
     radial-gradient(circle at 40% 30%, rgba(0, 0, 0, 0.1), transparent 55%),
     linear-gradient(180deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.02));
@@ -1588,10 +1589,6 @@ details p {
 
     .p-top {
         grid-template-columns: 1fr;
-    }
-
-    .p-main-img {
-        height: 360px;
     }
 
     .p-mid {
@@ -2344,7 +2341,7 @@ details p {
 
 .hp-prod-card-img {
   width: 100%;
-  aspect-ratio: 5 / 4;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
   background: var(--hp-warm);
   display: flex;

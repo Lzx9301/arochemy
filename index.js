@@ -78,14 +78,6 @@ async function loadSettings() {
     if (home.brandTitle) setText('brandTitle', home.brandTitle);
     if (home.brandBody)  setText('brandBody',  home.brandBody);
 
-    // 社群連結
-    if (site.socialIG)   { const el = document.getElementById('social-ig-btn');   if (el) el.href = site.socialIG; }
-    if (site.socialLine) { const el = document.getElementById('social-line-btn'); if (el) el.href = site.socialLine; }
-    if (site.contactAddress) {
-      const el = document.getElementById('footer-address');
-      if (el) el.textContent = '地址：' + site.contactAddress;
-    }
-
   } catch (e) {
     console.warn('[index] loadSettings error:', e.message);
   }

@@ -201,17 +201,17 @@
         Liyu International Co., Ltd.
       </div>
 
-      <div class="muted" style="margin-top:8px;">
+      <div class="muted" style="margin-top:8px;" id="footer-tel">
         Tel：0911505015
 
       </div>
 
-      <div class="muted">
+      <div class="muted" id="footer-email">
         Email：lyu.aroma@gmail.com
 
       </div>
 
-      <div class="muted">
+      <div class="muted" id="footer-address">
         地址：你的地址
       </div>
 
@@ -253,15 +253,6 @@
     const app = getApps().find(a=>a.name==='[DEFAULT]') || initializeApp(cfg);
     const db  = getFirestore(app);
 
-    // 動態讀取社群連結
-    getDoc(doc(db,'settings','site')).then(snap=>{
-      if(!snap.exists()) return;
-      const d = snap.data();
-      if(d.socialIG)       { const el=document.getElementById('social-ig-btn');   if(el) el.href=d.socialIG; }
-      if(d.socialLine)     { const el=document.getElementById('social-line-btn'); if(el) el.href=d.socialLine; }
-      if(d.contactAddress) { const el=document.getElementById('footer-address');  if(el) el.textContent='地址：'+d.contactAddress; }
-    }).catch(()=>{});
-
     // 聯絡表單送出
     document.getElementById('contactSubmitBtn')?.addEventListener('click', async () => {
       const btn = document.getElementById('contactSubmitBtn');
@@ -300,5 +291,6 @@
       }
     });
   </script>
+  <script type="module" src="js/site-settings.js"></script>
 </body>
 </html>

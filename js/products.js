@@ -26,6 +26,7 @@ const CAT_MAP = {
   'spray':      'spray',       // 噴霧
   'massage':    'massage',     // 按摩油
   'eyemask':    'eye-mask',    // 眼罩
+  'diffuser':   'diffuser',    // 擴香瓶
 };
 
 const CAT_LABEL = {
@@ -34,9 +35,10 @@ const CAT_LABEL = {
   spray:     '噴霧',
   massage:   '按摩油',
   'eye-mask':'眼罩',
+  diffuser:  '擴香瓶',
 };
 
-const SPEC_SIZES = ['5ml', '10ml', '30ml'];
+const SPEC_SIZES = ['5ml', '10ml', '30ml', '50ml', '100ml'];
 
 /* ── 全域暫存 ──────────────────────────────────────────────── */
 let allProducts     = [];

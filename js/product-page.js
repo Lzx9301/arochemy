@@ -21,7 +21,7 @@ const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
 /* ── 規格尺寸 ──────────────────────────────────────────────── */
-const SPEC_SIZES = ['5ml', '10ml', '30ml'];
+const SPEC_SIZES = ['5ml', '10ml', '30ml', '50ml', '100ml'];
 
 /* ── 狀態 ──────────────────────────────────────────────────── */
 let currentSize  = null;
@@ -318,7 +318,7 @@ function renderOverview(p) {
   const el = $('overviewKV');
   if (!el) return;
 
-  const CAT = { single:'單方精油', compound:'複方精油', spray:'噴霧', massage:'按摩油', 'eye-mask':'眼罩' };
+  const CAT = { single:'單方精油', compound:'複方精油', spray:'噴霧', massage:'按摩油', 'eye-mask':'眼罩', diffuser:'擴香瓶' };
 
   const rows = [
     ['分類',     CAT[p.category] || p.category || '—'],
@@ -332,9 +332,12 @@ function renderOverview(p) {
 
   if (!rows.length) { el.innerHTML = '<div class="muted">暫無資料</div>'; return; }
 
+  // 兩字標籤補全形空格，讓所有標籤視覺寬度對齊四字標籤(例:科屬 → 科　　屬)
+  const padLabel = (label) => label.length === 2 ? `${label[0]}　　${label[1]}` : label;
+
   el.innerHTML = rows.map(([k, v]) => `
     <div class="p-kv-row">
-      <dt class="p-kv-key muted">${esc(k)}</dt>
+      <dt class="p-kv-key">${esc(padLabel(k))}：</dt>
       <dd class="p-kv-val">${esc(v)}</dd>
     </div>
   `).join('');

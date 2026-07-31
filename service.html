@@ -19,8 +19,28 @@
 
       <nav class="nav">
         <a href="brand.html">品牌故事</a>
-        <a href="products.html">產品</a>
-        <a href="service.html">服務</a>
+        <div class="nav-item has-dropdown">
+          <a href="products.html">產品</a>
+          <div class="nav-dropdown">
+            <a href="products.html">全部產品</a>
+            <a href="products.html?cat=single-oil">單方精油</a>
+            <a href="products.html?cat=blend-oil">複方精油</a>
+            <a href="products.html?cat=spray">噴霧</a>
+            <a href="products.html?cat=massage">按摩油</a>
+            <a href="products.html?cat=eyemask">眼罩</a>
+            <a href="products.html?cat=diffuser">擴香瓶</a>
+          </div>
+        </div>
+        <div class="nav-item has-dropdown">
+          <a href="service.html">服務</a>
+          <div class="nav-dropdown">
+            <a href="service.html#svc-suggest">香氛選品建議</a>
+            <a href="service.html#svc-gift">客製送禮提案</a>
+            <a href="service.html#svc-space">空間香氛規劃</a>
+            <a href="service.html#svc-brand">品牌合作</a>
+            <a href="service.html#svc-knowledge">芳療知識分享</a>
+          </div>
+        </div>
         <a href="articles.html">文章</a>
         <a href="contact.html">聯絡</a>
         <a href="faq.html">FAQ</a>
@@ -53,8 +73,34 @@
     <div class="mobile-dropdown" role="dialog" aria-modal="true" aria-label="手機選單">
       <nav class="mobile-nav">
         <a href="brand.html">品牌故事</a>
-        <a href="products.html">產品</a>
-        <a href="service.html">服務</a>
+        <div class="mnav-item">
+          <div class="mnav-row">
+            <a href="products.html">產品</a>
+            <button class="mnav-toggle" type="button" aria-label="展開產品選單" aria-expanded="false">▾</button>
+          </div>
+          <div class="mnav-sub">
+            <a href="products.html">全部產品</a>
+            <a href="products.html?cat=single-oil">單方精油</a>
+            <a href="products.html?cat=blend-oil">複方精油</a>
+            <a href="products.html?cat=spray">噴霧</a>
+            <a href="products.html?cat=massage">按摩油</a>
+            <a href="products.html?cat=eyemask">眼罩</a>
+            <a href="products.html?cat=diffuser">擴香瓶</a>
+          </div>
+        </div>
+        <div class="mnav-item">
+          <div class="mnav-row">
+            <a href="service.html">服務</a>
+            <button class="mnav-toggle" type="button" aria-label="展開服務選單" aria-expanded="false">▾</button>
+          </div>
+          <div class="mnav-sub">
+            <a href="service.html#svc-suggest">香氛選品建議</a>
+            <a href="service.html#svc-gift">客製送禮提案</a>
+            <a href="service.html#svc-space">空間香氛規劃</a>
+            <a href="service.html#svc-brand">品牌合作</a>
+            <a href="service.html#svc-knowledge">芳療知識分享</a>
+          </div>
+        </div>
         <a href="articles.html">文章</a>
         <a href="contact.html">聯絡</a>
         <a href="faq.html">FAQ</a>
@@ -94,27 +140,27 @@
         </div>
 
         <div class="grid-3">
-          <div class="card">
+          <div class="card" id="svc-suggest">
             <h3>香氛選品建議</h3>
             <p>依照睡眠、專注、放鬆、居家氛圍等需求，協助挑選適合的精油與香氛產品。</p>
           </div>
 
-          <div class="card">
+          <div class="card" id="svc-gift">
             <h3>客製送禮提案</h3>
             <p>提供節日禮盒、企業贈禮或個人客製搭配建議，兼顧氣味、預算與包裝風格。</p>
           </div>
 
-          <div class="card">
+          <div class="card" id="svc-space">
             <h3>空間香氛規劃</h3>
             <p>針對工作室、店面、接待空間等環境，規劃更適合品牌調性的香氣方向。</p>
           </div>
 
-          <div class="card">
+          <div class="card" id="svc-brand">
             <h3>品牌合作</h3>
             <p>歡迎與選物店、生活風格品牌、課程活動或快閃企劃合作，創造更完整的體驗。</p>
           </div>
 
-          <div class="card">
+          <div class="card" id="svc-knowledge">
             <h3>芳療知識分享</h3>
             <p>以簡單易懂的方式整理精油基礎知識、使用注意事項與搭配方向。</p>
           </div>

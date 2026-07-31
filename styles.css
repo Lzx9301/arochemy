@@ -142,6 +142,72 @@ a {
     background: rgba(0, 0, 0, 0.04);
 }
 
+/* ===== 導覽列下拉選單(產品/服務) ===== */
+.nav-item {
+    position: relative;
+}
+
+.nav-item.has-dropdown > a {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.nav-item.has-dropdown > a::after {
+    content: '▾';
+    font-size: 10px;
+    opacity: 0.6;
+}
+
+.nav-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 168px;
+    padding: 8px;
+    margin-top: 6px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition: opacity 0.16s ease, transform 0.16s ease;
+    z-index: 500;
+}
+
+.nav-dropdown a {
+    padding: 9px 12px;
+    border-radius: 9px;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.78);
+    white-space: nowrap;
+}
+
+.nav-dropdown a:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* 滑鼠裝置：hover 展開 */
+@media (hover: hover) and (pointer: fine) {
+    .nav-item.has-dropdown:hover .nav-dropdown {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+}
+
+/* 觸控裝置(手機/平板)：由 JS 控制 open class 展開 */
+.nav-item.has-dropdown.open .nav-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
 .header-cta {
     display: flex;
     align-items: center;
@@ -199,6 +265,67 @@ a {
 }
 
 .mobile-nav a:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+/* ===== 手機版摺疊子選單(產品/服務) ===== */
+.mnav-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.mnav-row {
+    display: flex;
+    align-items: center;
+}
+
+.mnav-row a {
+    flex: 1;
+    padding: 12px 10px;
+    border-radius: 12px;
+    font-weight: 800;
+}
+
+.mnav-row a:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.mnav-toggle {
+    background: none;
+    border: none;
+    padding: 12px 10px;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.55);
+    cursor: pointer;
+    transition: transform 0.18s ease;
+}
+
+.mnav-item.open .mnav-toggle {
+    transform: rotate(180deg);
+}
+
+.mnav-sub {
+    display: flex;
+    flex-direction: column;
+    max-height: 0;
+    overflow: hidden;
+    padding-left: 14px;
+    transition: max-height 0.22s ease;
+}
+
+.mnav-item.open .mnav-sub {
+    max-height: 320px;
+}
+
+.mnav-sub a {
+    padding: 10px 10px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.mnav-sub a:hover {
     background: rgba(0, 0, 0, 0.04);
 }
 

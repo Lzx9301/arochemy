@@ -1334,6 +1334,7 @@ details p {
 .p-prose {
     color: rgba(0, 0, 0, 0.76);
     font-weight: 700;
+    white-space: pre-line;
 }
 
 .p-prose p {
@@ -2012,6 +2013,13 @@ details p {
   line-height: 1.2;
   color: #fff;
   margin-bottom: 20px;
+  text-wrap: balance;
+}
+
+@media (min-width: 601px) {
+  .hp-hero-content h1 {
+    white-space: nowrap;
+  }
 }
 
 .hp-hero-sub {

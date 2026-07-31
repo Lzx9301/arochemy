@@ -1266,38 +1266,41 @@ details p {
     gap: 12px;
 }
 
-.comp-row {
+.p-bars {
     display: grid;
-    grid-template-columns: 96px 1fr 52px;
+    gap: 20px;
+}
+
+.comp-row {
+    display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
 }
 
 .comp-name {
-    font-weight: 900;
-    color: rgba(0, 0, 0, 0.72);
-    font-size: 13px;
+    flex: 0 0 110px;
+    text-align: right;
+    color: rgba(0, 0, 0, 0.75);
+    font-weight: 500;
+    font-size: 15px;
 }
 
 .comp-bar-wrap {
-    height: 12px;
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.15);
-    overflow: hidden;
+    flex: 0 1 260px;
+    min-width: 40px;
 }
 
 .comp-bar {
-    height: 100%;
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.55);
-    transition: width 0.45s ease;
+    height: 18px;
+    border-radius: 2px;
+    background: #9a958f;
 }
 
 .comp-pct {
-    text-align: right;
     color: rgba(0, 0, 0, 0.65);
-    font-weight: 900;
-    font-size: 13px;
+    font-weight: 400;
+    font-size: 14px;
+    white-space: nowrap;
 }
 
 /* docs */

@@ -372,7 +372,7 @@ function renderComposition(comp) {
       <div class="comp-bar-wrap">
         <div class="comp-bar" style="width:${Math.round((c.pct / max) * 100)}%"></div>
       </div>
-      <div class="comp-pct">${c.pct > 0 ? c.pct + '%' : '—'}</div>
+      <div class="comp-pct">${c.pct > 0 ? c.pct.toFixed(2) + '%' : '—'}</div>
     </div>
   `).join('');
 }

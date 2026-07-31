@@ -36,6 +36,46 @@
   const yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = String(new Date().getFullYear());
 
+  // ===== 導覽列下拉選單(產品/服務)：滑鼠裝置用CSS hover，觸控裝置用點擊切換 =====
+  (function initNavDropdown() {
+    const isFineHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const dropdownItems = document.querySelectorAll(".nav-item.has-dropdown");
+    if (!dropdownItems.length) return;
+
+    if (!isFineHover) {
+      dropdownItems.forEach((item) => {
+        const trigger = item.querySelector(":scope > a");
+        trigger?.addEventListener("click", (e) => {
+          const alreadyOpen = item.classList.contains("open");
+          if (!alreadyOpen) {
+            e.preventDefault();
+            dropdownItems.forEach((other) => other.classList.remove("open"));
+            item.classList.add("open");
+          }
+          // 已展開時，允許點擊正常導航到該頁面
+        });
+      });
+
+      document.addEventListener("click", (e) => {
+        dropdownItems.forEach((item) => {
+          if (!item.contains(e.target)) item.classList.remove("open");
+        });
+      });
+    }
+  })();
+
+  // ===== 手機選單內：產品/服務 摺疊子選單 =====
+  (function initMobileNavAccordion() {
+    document.querySelectorAll(".mnav-item").forEach((item) => {
+      const toggle = item.querySelector(".mnav-toggle");
+      toggle?.addEventListener("click", () => {
+        const isOpenNow = item.classList.contains("open");
+        document.querySelectorAll(".mnav-item").forEach((other) => other.classList.remove("open"));
+        if (!isOpenNow) item.classList.add("open");
+      });
+    });
+  })();
+
   // ===== Mobile auto image switch (no hover devices) =====
   if (window.matchMedia("(hover: none)").matches) {
     const cards = document.querySelectorAll(".product-image");

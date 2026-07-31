@@ -454,7 +454,7 @@ async function updateFeaturedProducts() {
 /* ═══════════════════════════════════════════════════════════════
    產品管理
 ════════════════════════════════════════════════════════════ */
-const SPEC_SIZES = ['5ml', '10ml', '30ml'];
+const SPEC_SIZES = ['5ml', '10ml', '30ml', '50ml', '100ml'];
 
 async function loadProducts(filter = '', catFilter = '') {
   const tbody = $('#products-table-body');
@@ -1433,7 +1433,7 @@ const getValue   = sel => document.querySelector(sel)?.value || '';
 const setValue   = (sel, val)  => { const el = document.querySelector(sel); if (el) el.value = val; };
 const setText    = (sel, val)  => { const el = document.querySelector(sel); if (el) el.textContent = val; };
 const escHtml    = str => String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const catLabel   = v => ({ single:'單方精油', compound:'複方精油', spray:'噴霧', massage:'按摩油', 'eye-mask':'眼罩' }[v] || v || '—');
+const catLabel   = v => ({ single:'單方精油', compound:'複方精油', spray:'噴霧', massage:'按摩油', 'eye-mask':'眼罩', diffuser:'擴香瓶' }[v] || v || '—');
 const statusLabel= s => ({ pending:'待處理', paid:'已付款', shipped:'已出貨', done:'已完成', cancel:'已取消' }[s] || '待處理');
 
 // Firestore Timestamp / Date / 字串 都能轉成 Date

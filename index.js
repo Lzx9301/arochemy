@@ -28,7 +28,7 @@ function toDate(ts) {
   return new Date(ts);
 }
 
-const CAT = { single:'單方精油', compound:'複方精油', spray:'噴霧', massage:'按摩油', 'eye-mask':'眼罩' };
+const CAT = { single:'單方精油', compound:'複方精油', spray:'噴霧', massage:'按摩油', 'eye-mask':'眼罩', diffuser:'擴香瓶' };
 
 /* ══ 初始化 ════════════════════════════════════════════════ */
 async function init() {

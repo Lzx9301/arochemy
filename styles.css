@@ -1236,21 +1236,31 @@ details p {
 }
 
 .p-kv {
-    display: grid;
-    grid-template-columns: 110px 1fr;
-    gap: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
     margin: 0;
+    padding: 2px 0 2px 18px;
+    border-left: 4px solid rgba(0, 0, 0, 0.2);
 }
 
-.p-kv dt {
-    color: rgba(0, 0, 0, 0.62);
+.p-kv-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.p-kv-key {
+    flex: 0 0 auto;
+    color: rgba(0, 0, 0, 0.85);
     font-weight: 800;
+    white-space: pre;
 }
 
-.p-kv dd {
+.p-kv-val {
     margin: 0;
     color: rgba(0, 0, 0, 0.8);
-    font-weight: 700;
+    font-weight: 500;
 }
 
 /* composition */

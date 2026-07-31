@@ -293,6 +293,7 @@
         <button class="filter-chip" data-cat="spray">噴霧</button>
         <button class="filter-chip" data-cat="massage">按摩油</button>
         <button class="filter-chip" data-cat="eye-mask">眼罩</button>
+        <button class="filter-chip" data-cat="diffuser">擴香瓶</button>
       </div>
 
       <div class="card">
@@ -512,6 +513,7 @@
             <option value="spray">噴霧</option>
             <option value="massage">按摩油</option>
             <option value="eye-mask">眼罩</option>
+            <option value="diffuser">擴香瓶</option>
           </select>
         </div>
         <div class="form-group">
@@ -557,6 +559,18 @@
               <td style="font-size:13px;color:var(--text-primary);font-weight:500">30 ml</td>
               <td><input type="number" class="spec-price" placeholder="1580" min="0"></td>
               <td><input type="number" class="spec-stock stock-input" placeholder="30" min="0"></td>
+            </tr>
+            <tr class="spec-row" data-size="50ml">
+              <td><label class="toggle" style="margin:0"><input type="checkbox" class="spec-enabled"><span class="toggle-track"></span></label></td>
+              <td style="font-size:13px;color:var(--text-primary);font-weight:500">50 ml（按摩油）</td>
+              <td><input type="number" class="spec-price" placeholder="1980" min="0"></td>
+              <td><input type="number" class="spec-stock stock-input" placeholder="30" min="0"></td>
+            </tr>
+            <tr class="spec-row" data-size="100ml">
+              <td><label class="toggle" style="margin:0"><input type="checkbox" class="spec-enabled"><span class="toggle-track"></span></label></td>
+              <td style="font-size:13px;color:var(--text-primary);font-weight:500">100 ml（噴霧/擴香瓶）</td>
+              <td><input type="number" class="spec-price" placeholder="2680" min="0"></td>
+              <td><input type="number" class="spec-stock stock-input" placeholder="20" min="0"></td>
             </tr>
           </tbody>
         </table>

@@ -121,6 +121,17 @@ function render(p) {
 
   /* ── 長文說明 ── */
   setHTML('descText',   p.description || '<p class="muted">暫無說明</p>');
+
+  // 產品描述圖片(電商情境圖，依上傳順序顯示在文字說明下方)
+  document.querySelector('.p-desc-images')?.remove();
+  const descImgs = (p.descriptionImages || []).filter(Boolean);
+  if (descImgs.length) {
+    const descImgHtml = descImgs.map(src => `
+      <img src="${esc(src)}" alt="產品說明圖片" loading="lazy" style="width:100%;display:block;border-radius:14px;margin-top:16px;">
+    `).join('');
+    const descEl = $('descText');
+    if (descEl) descEl.insertAdjacentHTML('afterend', `<div class="p-desc-images">${descImgHtml}</div>`);
+  }
   renderList('storageList', p.storage || []);
   renderList('usageList',   p.usage   || []);
   renderList('cautionList', p.caution || []);
@@ -170,7 +181,7 @@ function renderGallery(images) {
 }
 
 /* ──────────────────────────────────────────────────────────────
-   規格
+   規格藥丸
 ────────────────────────────────────────────────────────────── */
 function renderVariantPills(p) {
   const pills  = $('variantPills');

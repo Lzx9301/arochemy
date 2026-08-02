@@ -82,6 +82,8 @@ a {
 /* 透明狀態：文字白色 */
 .header:not(.scrolled) .nav a { color: rgba(255,255,255,0.9); }
 .header:not(.scrolled) .nav a:hover { color: #fff; }
+.header:not(.scrolled) .nav-dropdown a { color: rgba(0, 0, 0, 0.78); }
+.header:not(.scrolled) .nav-dropdown a:hover { color: rgba(0, 0, 0, 0.78); background: rgba(0, 0, 0, 0.05); }
 .header:not(.scrolled) .nav-user { color: rgba(255,255,255,0.9); }
 .header:not(.scrolled) .nav-cart { color: rgba(255,255,255,0.9); }
 .header:not(.scrolled) .cart-count { background: rgba(255,255,255,0.2); color: #fff; }

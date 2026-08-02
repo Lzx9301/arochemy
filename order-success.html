@@ -166,6 +166,10 @@
     const orderId = params.get('orderId');
     const el      = document.getElementById('orderIdText');
     if (orderId && el) el.textContent = '訂單編號：#' + orderId.slice(-6).toUpperCase();
+
+    // 抵達這頁代表付款真的成功了，這時候才清空購物車
+    localStorage.removeItem('arochemy_cart');
+    window.updateCartBadge?.();
   </script>
   <script type="module" src="js/site-settings.js"></script>
 </body>

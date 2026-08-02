@@ -29,6 +29,16 @@ const cartTotalEl  = document.getElementById('cartTotal');
 const checkoutBtn  = document.getElementById('checkoutBtn');
 const cartMsgEl    = document.getElementById('cartMsg');
 
+/* ── 從藍新付款失敗/取消導回時，顯示提示訊息 ──────────────── */
+if (new URLSearchParams(window.location.search).get('paymentFailed') === '1') {
+  if (cartMsgEl) {
+    cartMsgEl.textContent = '付款未完成或失敗，訂單尚未成立，請重新結帳';
+    cartMsgEl.style.color = '#b94a48';
+  }
+  // 清掉網址上的參數，避免重新整理時又看到同一則訊息
+  window.history.replaceState({}, '', window.location.pathname);
+}
+
 /* ── 當前登入使用者 ────────────────────────────────────────── */
 let currentUser = null;
 onAuthStateChanged(auth, user => {

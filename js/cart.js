@@ -321,9 +321,8 @@ async function submitOrder() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '送出失敗');
 
-    // 清空購物車（訂單已經寫入後端了，不管付款結果如何都不用留著）
-    saveCart([]);
-    updateCartBadge([]);
+    // 注意：這裡先不清空購物車！要等真的付款成功、抵達「訂單完成」頁
+    // (order-success.html) 才清空，避免付款失敗被導回購物車時商品也不見了
 
     // 導向藍新收銀台付款（真正的 POST 導頁，不是 fetch，
     // 因為後端回傳的是一整頁會自動送出去藍新的 HTML）

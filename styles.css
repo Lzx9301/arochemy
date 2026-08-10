@@ -138,14 +138,16 @@ a {
     margin-left: auto;
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 18px;
     font-weight: 700;
     color: rgba(0, 0, 0, 0.78);
+    flex-wrap: nowrap;
 }
 
 .nav a {
     padding: 8px 10px;
     border-radius: 10px;
+    white-space: nowrap;
 }
 
 .nav a:hover {
@@ -1589,7 +1591,7 @@ details p {
 }
 
 /* ===== Responsive ===== */
-@media (min-width: 641px) {
+@media (min-width: 1101px) {
     .header-cta {
         display: none;
     }
@@ -1621,7 +1623,8 @@ details p {
     }
 }
 
-@media (max-width: 640px) {
+/* 導覽列/搜尋欄空間不夠時，提早切成漢堡選單(比其餘手機版排版斷點更早觸發) */
+@media (max-width: 1100px) {
     .nav {
         display: none;
     }
@@ -1633,7 +1636,9 @@ details p {
     .burger {
         display: inline-block;
     }
+}
 
+@media (max-width: 640px) {
     .grid-3,
     .grid-2,
     .story-grid {
@@ -1817,40 +1822,17 @@ details p {
   background: rgba(0,0,0,.05);
 }
 
-/* ===== 搜尋按鈕 & 搜尋面板 ===== */
+/* ===== 搜尋欄(常駐於 header) ===== */
 .nav-search-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #111;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: background .2s ease;
-}
-
-.nav-search-btn:hover {
-  background: rgba(0,0,0,.05);
-}
-
-.header:not(.scrolled) .nav-search-btn {
-  color: rgba(255,255,255,0.9);
-}
-
-.nav-search-btn,
-.header:not(.scrolled) .nav-search-btn {
-  display: none; /* 已改成常駐搜尋欄，不再需要點擊展開的按鈕 */
+  display: none; /* 舊版點擊展開按鈕，已改成常駐搜尋欄不再使用 */
 }
 
 .header-search {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 190px;
-  padding: 7px 14px;
+  width: 150px;
+  padding: 7px 12px;
   border-radius: 999px;
   border: 1px solid rgba(0, 0, 0, 0.14);
   background: rgba(255, 255, 255, 0.9);
@@ -1858,7 +1840,7 @@ details p {
 }
 
 .header-search:focus-within {
-  width: 230px;
+  width: 200px;
   border-color: rgba(0, 0, 0, 0.35);
 }
 
@@ -2735,4 +2717,23 @@ body:not(.hp-page) .header .brand-logo {
 body:not(.hp-page) .header .cart-count {
   background: var(--accent) !important;
   color: #fff !important;
+}
+
+/* 非首頁：搜尋欄強制用一般樣式，不套用首頁專屬的「未捲動時半透明白字」樣式，
+   否則頁面剛載入、header 還沒加上 scrolled class 時，搜尋欄會變成白底白字看不到 */
+body:not(.hp-page) .header .header-search {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(0, 0, 0, 0.14) !important;
+}
+
+body:not(.hp-page) .header .header-search svg {
+  color: rgba(0, 0, 0, 0.45) !important;
+}
+
+body:not(.hp-page) .header .header-search input {
+  color: #111 !important;
+}
+
+body:not(.hp-page) .header .header-search input::placeholder {
+  color: rgba(0, 0, 0, 0.4) !important;
 }

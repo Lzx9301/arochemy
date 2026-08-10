@@ -76,6 +76,44 @@
     });
   })();
 
+  // ===== 搜尋面板 =====
+  (function initSearchPanel() {
+    const btn   = document.getElementById("navSearchBtn");
+    const panel = document.getElementById("searchPanel");
+    const input = document.getElementById("searchInput");
+    const form  = document.getElementById("searchForm");
+    if (!btn || !panel) return;
+
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const willOpen = !panel.classList.contains("open");
+      panel.classList.toggle("open", willOpen);
+      panel.setAttribute("aria-hidden", String(!willOpen));
+      if (willOpen) setTimeout(() => input?.focus(), 60);
+    });
+
+    form?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const q = (input?.value || "").trim();
+      if (!q) return;
+      window.location.href = "search.html?q=" + encodeURIComponent(q);
+    });
+
+    document.addEventListener("click", (e) => {
+      if (panel.classList.contains("open") && !panel.contains(e.target) && !btn.contains(e.target)) {
+        panel.classList.remove("open");
+        panel.setAttribute("aria-hidden", "true");
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && panel.classList.contains("open")) {
+        panel.classList.remove("open");
+        panel.setAttribute("aria-hidden", "true");
+      }
+    });
+  })();
+
   // ===== Mobile auto image switch (no hover devices) =====
   if (window.matchMedia("(hover: none)").matches) {
     const cards = document.querySelectorAll(".product-image");

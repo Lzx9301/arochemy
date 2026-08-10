@@ -45,7 +45,13 @@
         <a href="contact.html">聯絡</a>
         <a href="faq.html">FAQ</a>
       </nav>
-<a id="userArea" class="nav-user" href="login.html" aria-label="會員登入">
+<button type="button" class="nav-search-btn" id="navSearchBtn" aria-label="搜尋">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+      <a id="userArea" class="nav-user" href="login.html" aria-label="會員登入">
   <svg class="user-icon" viewBox="0 0 24 24" aria-hidden="true">
     <circle cx="12" cy="8" r="4"></circle>
     <path d="M4 21c1.6-4.5 4.6-7 8-7s6.4 2.5 8 7"></path>
@@ -68,6 +74,20 @@
       </div>
     </div>
   </header>
+
+<div class="search-panel" id="searchPanel" aria-hidden="true">
+  <div class="container search-panel-inner">
+    <form id="searchForm" role="search">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="search" id="searchInput" placeholder="搜尋商品、常見問題…" autocomplete="off">
+      <button type="submit">搜尋</button>
+    </form>
+  </div>
+</div>
+
 
   <!-- Mobile Drawer -->
   <div class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
@@ -118,10 +138,10 @@
       <div class="container cat-hero-grid">
         <div class="cat-hero-text">
           <div class="kicker">Products</div>
-          <h1 class="cat-title">單方精油</h1>
+          <h1 class="cat-title">源自植物的天然香氣</h1>
           <p class="cat-desc muted">
-            這裡放分類簡介（2–4 行即可），例如：以單方精油為主，提供清楚的用途、使用建議與注意事項，
-            並於產品頁提供 COA / SDS 下載參考。
+            AROCHEMY提供臺灣原生植物精油以及精選世界各地天然精油，從原料來源、蒸餾萃取到成分分析，
+            重視每一批精油的品質與安全，提供透明、專業且適合日常使用的植物香氣產品。
           </p>
 
           <div class="cat-points">
@@ -170,6 +190,21 @@
 
   <div class="toolbar-sub muted">
     <span id="totalCount">0</span> items
+  </div>
+</div>
+
+<div class="cat-dropdown" id="sortDropdown">
+  <button class="toolbar-title-btn" id="sortToggle" type="button" aria-expanded="false" style="font-size:15px;font-weight:700">
+    <span class="muted" style="font-weight:600">排序：</span><span id="currentSort">預設</span>
+    <span class="chevron">▾</span>
+  </button>
+
+  <div class="cat-menu" id="sortMenu" role="menu" style="left:auto;right:0">
+    <button class="cat-item" type="button" data-sort="default">預設</button>
+    <button class="cat-item" type="button" data-sort="name-asc">名稱 A→Z</button>
+    <button class="cat-item" type="button" data-sort="price-asc">價格由低到高</button>
+    <button class="cat-item" type="button" data-sort="price-desc">價格由高到低</button>
+    <button class="cat-item" type="button" data-sort="popular">熱門程度</button>
   </div>
 </div>
         </div>

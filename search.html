@@ -3,14 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Arochemy｜服務</title>
-  <meta name="description" content="Arochemy 提供香氛選品、客製化建議、空間香氛與合作服務。" />
+  <title>Arochemy｜搜尋結果</title>
+  <meta name="description" content="搜尋 Arochemy 商品與常見問題。" />
   <link rel="icon" type="image/png" href="./images/logo.png" />
-<link rel="apple-touch-icon" href="./images/logo.png" />
+  <link rel="apple-touch-icon" href="./images/logo.png" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
+
 <body>
 
+  <!-- Sticky Header -->
   <header class="header" id="top">
     <div class="container header-inner">
       <a class="brand" href="index.html" aria-label="回到首頁">
@@ -86,7 +88,7 @@
   </div>
 </div>
 
-
+  <!-- Mobile Drawer -->
   <div class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
     <div class="mobile-dropdown" role="dialog" aria-modal="true" aria-label="手機選單">
       <nav class="mobile-nav">
@@ -130,80 +132,34 @@
   </div>
 
   <main>
-    <section class="hero">
-      <div class="container hero-grid">
-        <div>
-          <div class="kicker">Services</div>
-          <h1>把香氣帶進你的空間、品牌與日常生活。</h1>
-          <p class="lead">
-            Arochemy 提供從個人選香、送禮建議到空間香氛與合作提案等服務，
-            協助你找到適合自己或品牌的氣味表達方式。
-          </p>
-        </div>
-
-        <div class="hero-card">
-          <div class="hero-image">服務頁主視覺預留</div>
-          <div class="hero-card-note">可放品牌顧問、空間香氛、禮盒、擴香情境圖。</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
+    <section class="section" style="padding-top:130px">
       <div class="container">
-        <div class="section-head">
-          <h2>服務項目</h2>
-          <p class="muted">可依品牌實際內容再擴充或細分。</p>
+        <div class="kicker">Search</div>
+        <h1 class="cat-title" id="searchQueryTitle" style="margin-bottom:8px">搜尋結果</h1>
+        <p class="muted" id="searchResultCount" style="margin-bottom:32px"></p>
+
+        <!-- 找不到任何結果 -->
+        <div id="searchEmpty" style="display:none;text-align:center;padding:60px 0;color:#999">
+          <div style="font-size:36px;margin-bottom:12px">🔍</div>
+          <p style="font-size:16px;font-weight:700;color:#555">查無此資料/產品</p>
+          <p class="muted" style="margin-top:8px">換個關鍵字再試試看，或直接瀏覽<a href="products.html" style="color:#111;text-decoration:underline">全部產品</a></p>
         </div>
 
-        <div class="grid-3">
-          <div class="card" id="svc-custom">
-            <h3>客製化</h3>
-            <p>依照品牌調性、使用情境或個人偏好，量身調配專屬香氣與產品組合。</p>
-          </div>
-
-          <div class="card" id="svc-corporate">
-            <h3>企業禮盒</h3>
-            <p>提供企業贈禮、節慶禮盒等客製化方案，兼顧氣味、預算與包裝風格。</p>
-          </div>
-
-          <div class="card" id="svc-course">
-            <h3>課程</h3>
-            <p>提供芳香療法與精油相關課程，適合有興趣深入了解香氣知識的您。</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section soft">
-      <div class="container">
-        <div class="section-head">
-          <h2>合作流程</h2>
-          <p class="muted">先了解需求，再提供更合適的內容與方向。</p>
+        <!-- 商品搜尋結果 -->
+        <div id="searchProductsSection" style="display:none;margin-bottom:48px">
+          <h2 style="font-size:18px;font-weight:900;margin-bottom:16px">商品</h2>
+          <div class="product-grid" id="searchProductGrid"></div>
         </div>
 
-        <div class="grid-3">
-          <div class="card">
-            <h3>01｜需求溝通</h3>
-            <p>透過表單或訊息了解用途、預算、對象與預期風格。</p>
-          </div>
-
-          <div class="card">
-            <h3>02｜方案建議</h3>
-            <p>依照需求提供產品搭配、氣味方向或合作提案內容。</p>
-          </div>
-
-          <div class="card">
-            <h3>03｜確認執行</h3>
-            <p>確認細節後安排製作、包裝、交付或後續合作流程。</p>
-          </div>
-        </div>
-
-        <div class="section-actions">
-          <a class="btn primary" href="contact.html">立即詢問</a>
+        <!-- FAQ 搜尋結果 -->
+        <div id="searchFaqSection" style="display:none">
+          <h2 style="font-size:18px;font-weight:900;margin-bottom:16px">常見問題</h2>
+          <div class="card" id="searchFaqList"></div>
         </div>
       </div>
     </section>
   </main>
+
 <footer class="footer">
   <div class="container footer-inner">
 
@@ -218,21 +174,20 @@
 
       <div class="muted" style="margin-top:8px;" id="footer-tel">
         Tel：0911505015
-
       </div>
 
       <div class="muted" id="footer-email">
         Email：lyu.aroma@gmail.com
-
       </div>
 
-      <div class="muted" id="footer-address">地址：台灣</div>
+      <div class="muted" id="footer-address">
+        地址：台灣
+      </div>
 
       <div class="muted" style="margin-top:10px;">
         © <span id="year"></span> Arochemy
       </div>
     </div>
-
 
     <!-- 右側：網站導覽 -->
     <div class="footer-links">
@@ -246,17 +201,19 @@
 
   </div>
 </footer>
+  <!-- Floating Social Buttons -->
   <div class="social-fab">
     <a class="fab ig" id="social-ig-btn" href="#" aria-label="Instagram" target="_blank" rel="noopener">
       <span class="fab-text">IG</span>
     </a>
+
     <a class="fab line" id="social-line-btn" href="#" aria-label="LINE" target="_blank" rel="noopener">
       <span class="fab-text">LINE</span>
     </a>
   </div>
-  <script src="js/cart-badge.js"></script>
+<script src="js/cart-badge.js"></script>
   <script src="./main.js"></script>
-  <script type="module" src="js/user.js"></script>
+  <script type="module" src="js/search.js"></script>
   <script type="module" src="js/user.js"></script>
   <script type="module" src="js/site-settings.js"></script>
 </body>

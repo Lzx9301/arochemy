@@ -600,6 +600,7 @@ async function openProductModal(id = null) {
       setValue('#product-status',      data.status      || 'active');
       setValue('#product-origin',      data.origin      || '');
       setValue('#product-family',      data.family      || '');
+      setValue('#product-latin-name',  data.latinName   || '');
       setValue('#product-extraction',  data.extraction  || '');
       setValue('#product-plant-part',  data.plantPart   || '');
       setValue('#product-scent-note',  data.scentNote   || '');
@@ -778,6 +779,7 @@ async function saveProduct() {
       status,
       origin:      getValue('#product-origin'),
       family:      getValue('#product-family'),
+      latinName:   getValue('#product-latin-name'),
       extraction:  getValue('#product-extraction'),
       plantPart:   getValue('#product-plant-part'),
       scentNote:   getValue('#product-scent-note'),

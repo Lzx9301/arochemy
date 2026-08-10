@@ -1630,7 +1630,7 @@ details p {
     }
 
     .header-search {
-        display: none;
+        display: none !important;
     }
 
     .burger {

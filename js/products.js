@@ -43,19 +43,25 @@ const SPEC_SIZES = ['5ml', '10ml', '30ml', '50ml', '100ml'];
 /* ── 全域暫存 ──────────────────────────────────────────────── */
 let allProducts     = [];
 let currentCatKey   = 'all';
+let currentSortKey  = 'default';
 
 /* ── DOM ───────────────────────────────────────────────────── */
-const grid        = document.getElementById('productGrid');
-const totalCount  = document.getElementById('totalCount');
-const currentCat  = document.getElementById('currentCat');
-const catToggle   = document.getElementById('catToggle');
-const catMenu     = document.getElementById('catMenu');
-const catDropdown = document.getElementById('catDropdown');
+const grid         = document.getElementById('productGrid');
+const totalCount   = document.getElementById('totalCount');
+const currentCat   = document.getElementById('currentCat');
+const catToggle    = document.getElementById('catToggle');
+const catMenu      = document.getElementById('catMenu');
+const catDropdown  = document.getElementById('catDropdown');
+const currentSort  = document.getElementById('currentSort');
+const sortToggle   = document.getElementById('sortToggle');
+const sortMenu     = document.getElementById('sortMenu');
+const sortDropdown = document.getElementById('sortDropdown');
 
 /* ── 初始化 ────────────────────────────────────────────────── */
 async function init() {
   await loadProducts();
   initCategoryFilter();
+  initSortFilter();
   initDropdownClose();
   applyCatFromURL();
 }
@@ -72,11 +78,65 @@ function applyCatFromURL() {
   currentCatKey = catKey;
   if (currentCat) currentCat.textContent = item.textContent;
 
+  renderProducts(getFilteredSortedList());
+}
+
+/* ── 商品代表價格(用第一個有庫存的規格，跟卡片上顯示的價格一致) ──── */
+function getRepresentativePrice(p) {
+  const specs   = p.specs || {};
+  const enabled = SPEC_SIZES.filter(s => specs[s]?.enabled && specs[s]?.stock > 0);
+  const first   = enabled[0];
+  return first ? Number(specs[first].price) || 0 : 0;
+}
+
+/* ── 排序 ──────────────────────────────────────────────────── */
+function applySort(list, sortKey) {
+  const sorted = list.slice();
+  switch (sortKey) {
+    case 'name-asc':
+      sorted.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'zh-Hant'));
+      break;
+    case 'price-asc':
+      sorted.sort((a, b) => getRepresentativePrice(a) - getRepresentativePrice(b));
+      break;
+    case 'price-desc':
+      sorted.sort((a, b) => getRepresentativePrice(b) - getRepresentativePrice(a));
+      break;
+    case 'popular':
+      sorted.sort((a, b) => (Number(b.salesCount) || 0) - (Number(a.salesCount) || 0));
+      break;
+    default:
+      break; // 預設：維持 loadProducts() 已經排好的「新到舊」順序
+  }
+  return sorted;
+}
+
+/* ── 依目前分類 + 排序條件，算出要顯示的清單 ─────────────────── */
+function getFilteredSortedList() {
   const firestoreCat = CAT_MAP[currentCatKey];
   const filtered = firestoreCat
     ? allProducts.filter(p => p.category === firestoreCat)
     : allProducts;
-  renderProducts(filtered);
+  return applySort(filtered, currentSortKey);
+}
+
+/* ── 排序下拉選單 ──────────────────────────────────────────── */
+function initSortFilter() {
+  sortToggle?.addEventListener('click', () => {
+    const open = sortToggle.getAttribute('aria-expanded') === 'true';
+    sortToggle.setAttribute('aria-expanded', !open);
+    sortMenu?.classList.toggle('open', !open);
+  });
+
+  sortMenu?.querySelectorAll('.cat-item').forEach(item => {
+    item.addEventListener('click', () => {
+      currentSortKey = item.dataset.sort;
+      if (currentSort) currentSort.textContent = item.textContent;
+      sortToggle?.setAttribute('aria-expanded', 'false');
+      sortMenu?.classList.remove('open');
+      renderProducts(getFilteredSortedList());
+    });
+  });
 }
 
 /* ── 讀取產品 ──────────────────────────────────────────────── */
@@ -335,12 +395,8 @@ function initCategoryFilter() {
       catToggle?.setAttribute('aria-expanded', 'false');
       catMenu?.classList.remove('open');
 
-      // 篩選
-      const firestoreCat = CAT_MAP[currentCatKey];
-      const filtered = firestoreCat
-        ? allProducts.filter(p => p.category === firestoreCat)
-        : allProducts;
-      renderProducts(filtered);
+      // 篩選（維持目前的排序條件）
+      renderProducts(getFilteredSortedList());
     });
   });
 }
@@ -351,6 +407,10 @@ function initDropdownClose() {
     if (catDropdown && !catDropdown.contains(e.target)) {
       catToggle?.setAttribute('aria-expanded', 'false');
       catMenu?.classList.remove('open');
+    }
+    if (sortDropdown && !sortDropdown.contains(e.target)) {
+      sortToggle?.setAttribute('aria-expanded', 'false');
+      sortMenu?.classList.remove('open');
     }
   });
 }

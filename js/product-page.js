@@ -334,6 +334,7 @@ function renderOverview(p) {
   const rows = [
     ['分類',     CAT[p.category] || p.category || '—'],
     ['科屬',     p.family       || '—'],
+    ['學名',     p.latinName    || '—'],
     ['產地來源', p.origin       || '—'],
     ['萃取方式', p.extraction   || '—'],
     ['植物部位', p.plantPart    || '—'],

@@ -2662,6 +2662,14 @@ details p {
     padding: 48px 24px 24px;
     text-align: center;
   }
+  /* 手機版是上下堆疊排列，卡片本來就已經是滿版寬度，
+     不需要「收合文字欄讓出橫向空間」這個機制(那是給桌面橫向排列用的)。
+     覆寫掉 collapsed 樣式，避免收合時文字欄高度沒消失、留下一塊空白區域。 */
+  .hp-featured-left.collapsed {
+    max-width: 100%;
+    padding: 48px 24px 24px;
+    opacity: 1;
+  }
   .hp-featured-left.hidden {
     display: none;
   }

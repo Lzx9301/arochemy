@@ -76,42 +76,21 @@
     });
   })();
 
-  // ===== 搜尋面板 =====
-  (function initSearchPanel() {
-    const btn   = document.getElementById("navSearchBtn");
-    const panel = document.getElementById("searchPanel");
-    const input = document.getElementById("searchInput");
-    const form  = document.getElementById("searchForm");
-    if (!btn || !panel) return;
-
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const willOpen = !panel.classList.contains("open");
-      panel.classList.toggle("open", willOpen);
-      panel.setAttribute("aria-hidden", String(!willOpen));
-      if (willOpen) setTimeout(() => input?.focus(), 60);
-    });
-
-    form?.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const q = (input?.value || "").trim();
-      if (!q) return;
-      window.location.href = "search.html?q=" + encodeURIComponent(q);
-    });
-
-    document.addEventListener("click", (e) => {
-      if (panel.classList.contains("open") && !panel.contains(e.target) && !btn.contains(e.target)) {
-        panel.classList.remove("open");
-        panel.setAttribute("aria-hidden", "true");
-      }
-    });
-
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && panel.classList.contains("open")) {
-        panel.classList.remove("open");
-        panel.setAttribute("aria-hidden", "true");
-      }
-    });
+  // ===== 搜尋（常駐在 header / 手機選單抽屜的搜尋欄）=====
+  (function initSearch() {
+    function bindSearchForm(formId, inputId) {
+      const form  = document.getElementById(formId);
+      const input = document.getElementById(inputId);
+      if (!form) return;
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const q = (input?.value || "").trim();
+        if (!q) return;
+        window.location.href = "search.html?q=" + encodeURIComponent(q);
+      });
+    }
+    bindSearchForm("searchForm", "searchInput");
+    bindSearchForm("mobileSearchForm", "mobileSearchInput");
   })();
 
   // ===== Mobile auto image switch (no hover devices) =====

@@ -1626,6 +1626,10 @@ details p {
         display: none;
     }
 
+    .header-search {
+        display: none;
+    }
+
     .burger {
         display: inline-block;
     }
@@ -1811,6 +1815,90 @@ details p {
 
 .nav-cart:hover {
   background: rgba(0,0,0,.05);
+}
+
+/* ===== 搜尋按鈕 & 搜尋面板 ===== */
+.nav-search-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #111;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+.nav-search-btn:hover {
+  background: rgba(0,0,0,.05);
+}
+
+.header:not(.scrolled) .nav-search-btn {
+  color: rgba(255,255,255,0.9);
+}
+
+.nav-search-btn,
+.header:not(.scrolled) .nav-search-btn {
+  display: none; /* 已改成常駐搜尋欄，不再需要點擊展開的按鈕 */
+}
+
+.header-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 190px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(255, 255, 255, 0.9);
+  transition: width 0.2s ease, border-color 0.2s ease;
+}
+
+.header-search:focus-within {
+  width: 230px;
+  border-color: rgba(0, 0, 0, 0.35);
+}
+
+.header-search svg {
+  flex: 0 0 auto;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.header-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13px;
+  color: #111;
+}
+
+.header:not(.scrolled) .header-search {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.header:not(.scrolled) .header-search svg {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.header:not(.scrolled) .header-search input {
+  color: #fff;
+}
+
+.header:not(.scrolled) .header-search input::placeholder {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* 手機選單抽屜內的搜尋欄：一律用一般樣式(白底黑字)，不用透明header配色 */
+.mobile-header-search {
+  width: 100%;
+  margin-bottom: 16px;
+  box-sizing: border-box;
 }
 
 .cart-icon {
@@ -2582,14 +2670,25 @@ details p {
 /* ── 手機版 ── */
 @media (max-width: 900px) {
   .hp-featured {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    height: auto;
+    min-height: auto;
   }
   .hp-featured-left {
+    flex: 0 0 auto;
+    max-width: 100%;
     padding: 48px 24px 24px;
     text-align: center;
   }
   .hp-featured-left.hidden {
     display: none;
+  }
+  .hp-featured-right {
+    flex: 0 0 auto;
+    padding: 8px 0 40px;
+  }
+  .hp-cards-viewport {
+    padding: 0 20px;
   }
   .hp-service-inner {
     grid-template-columns: 1fr;

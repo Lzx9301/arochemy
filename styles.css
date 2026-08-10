@@ -84,6 +84,14 @@ a {
 .header:not(.scrolled) .nav a:hover { color: #fff; }
 .header:not(.scrolled) .nav-dropdown a { color: rgba(0, 0, 0, 0.78); }
 .header:not(.scrolled) .nav-dropdown a:hover { color: rgba(0, 0, 0, 0.78); background: rgba(0, 0, 0, 0.05); }
+
+/* 首頁頂部(透明header)時，下拉面板改用半透明毛玻璃，跟背景融合更自然；
+   捲動後(一般白色header)維持實色白，確保文字對比清楚 */
+.header:not(.scrolled) .nav-dropdown {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
 .header:not(.scrolled) .nav-user { color: rgba(255,255,255,0.9); }
 .header:not(.scrolled) .nav-cart { color: rgba(255,255,255,0.9); }
 .header:not(.scrolled) .cart-count { background: rgba(255,255,255,0.2); color: #fff; }
@@ -161,13 +169,24 @@ a {
     opacity: 0.6;
 }
 
+.nav-item.has-dropdown::after {
+    /* 看不見的橋接區，填補觸發文字與下拉面板之間的間隙，
+       讓滑鼠移動過去時 hover 狀態不會中斷，同時面板本身可以保留浮起的視覺間距 */
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: 10px;
+}
+
 .nav-dropdown {
     position: absolute;
     top: 100%;
     left: 0;
     min-width: 168px;
-    padding: 14px 8px 8px;
-    margin-top: 0;
+    padding: 8px;
+    margin-top: 8px;
     background: #fff;
     border: 1px solid var(--border);
     border-radius: 14px;

@@ -80,6 +80,10 @@
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
           會員管理
         </div>
+        <div class="nav-item" data-page="page-coupons">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20.59 13.41L13.42 20.6a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.5"/></svg>
+          折價券管理
+        </div>
       </div>
 
       <div class="nav-section">
@@ -448,6 +452,39 @@
       </div>
     </main>
 
+    <!-- ══ 折價券管理 ══ -->
+    <main id="page-coupons" class="page">
+      <div class="page-hero"><h1>折價券管理</h1><p>建立與管理優惠碼，設定折扣條件與使用限制</p></div>
+
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="search-wrapper">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="search-input" id="coupon-search" placeholder="搜尋優惠碼…">
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <button class="btn btn-accent" id="add-coupon-btn">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新增折價券
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr><th>優惠碼</th><th>說明</th><th>折扣</th><th>條件</th><th>使用次數</th><th>期限</th><th>狀態</th><th></th></tr>
+            </thead>
+            <tbody id="coupons-table-body">
+              <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted)">載入中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
     <!-- ══ 網站設定 ══ -->
     <main id="page-settings" class="page">
       <div class="page-hero"><h1>網站設定</h1><p>聯絡資訊、社群連結與基本網站資料</p></div>
@@ -490,6 +527,102 @@
   </div><!-- /main-content -->
 </div><!-- /app-layout -->
 
+
+<!-- ════════ Modal：新增/編輯折價券 ════════ -->
+<div id="coupon-modal" class="modal-overlay">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h2 class="modal-title" id="coupon-modal-title">新增折價券</h2>
+      <button class="btn btn-icon modal-close" id="coupon-modal-close"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:16px">
+        <label>優惠碼 <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="coupon-code" placeholder="例如 WELCOME50" style="text-transform:uppercase">
+        <div class="hint" style="margin-top:6px">客人結帳時輸入的代碼，會自動轉大寫，同一組代碼不能重複</div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label>說明文字</label>
+        <input type="text" id="coupon-description" placeholder="例如：新戶專屬折 50 元">
+        <div class="hint" style="margin-top:6px">會顯示在結帳頁的可用優惠券清單給客人看</div>
+      </div>
+
+      <div class="form-grid form-grid-2" style="margin-bottom:16px">
+        <div class="form-group">
+          <label>折扣類型</label>
+          <select id="coupon-type">
+            <option value="fixed">固定金額折抵</option>
+            <option value="percent">百分比折扣</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>折扣數值 <span style="color:var(--danger)">*</span></label>
+          <input type="number" id="coupon-value" placeholder="例如 50 或 10" min="0">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label>滿額門檻</label>
+        <input type="number" id="coupon-min-spend" placeholder="0" min="0">
+        <div class="hint" style="margin-top:6px">購物車金額達到這個數字才能使用，留空或填 0 = 無門檻</div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label class="toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+          <label class="toggle" style="margin:0"><input type="checkbox" id="coupon-new-user-only"><span class="toggle-track"></span></label>
+          <span>限新戶使用（必須登入，且從未成功付款過任何訂單）</span>
+        </label>
+      </div>
+
+      <div class="form-group" id="coupon-new-user-window-field" style="margin-bottom:16px;display:none">
+        <label>額外限制：僅限註冊後幾天內</label>
+        <input type="number" id="coupon-new-user-window" placeholder="留空 = 不限註冊天數" min="1">
+        <div class="hint" style="margin-top:6px">例如填 30，代表只有註冊 30 天內的新戶能用；留空則不檢查註冊時間，只看有沒有下過單</div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label>使用次數上限</label>
+        <input type="number" id="coupon-usage-limit" placeholder="留空 = 不限次數" min="1">
+        <div class="hint" style="margin-top:6px">全站總共可以被使用幾次（不分帳號）；另外系統會自動限制每個帳號只能用同一張券一次</div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label>使用期限</label>
+        <select id="coupon-expiry-mode">
+          <option value="none">無期限</option>
+          <option value="days">建立後幾天內有效</option>
+          <option value="date">指定結束日期</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="coupon-expiry-days-field" style="margin-bottom:16px;display:none">
+        <label>有效天數</label>
+        <input type="number" id="coupon-expiry-days" placeholder="例如 30" min="1">
+      </div>
+
+      <div class="form-group" id="coupon-expiry-date-field" style="margin-bottom:16px;display:none">
+        <label>結束日期</label>
+        <input type="date" id="coupon-expiry-date">
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label class="toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+          <label class="toggle" style="margin:0"><input type="checkbox" id="coupon-enabled" checked><span class="toggle-track"></span></label>
+          <span>啟用此折價券</span>
+        </label>
+      </div>
+
+      <div id="coupon-error" class="form-error" style="display:none;color:var(--danger);font-size:13px;margin-bottom:8px"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="coupon-cancel-btn">取消</button>
+      <button class="btn btn-accent" id="coupon-save-btn">儲存</button>
+    </div>
+  </div>
+</div>
 
 <!-- ════════ Modal：新增/編輯產品 ════════ -->
 <div id="product-modal" class="modal-overlay">

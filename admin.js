@@ -160,6 +160,7 @@ function initNav() {
     'page-articles':  '文章管理',
     'page-orders':    '訂單管理',
     'page-members':   '會員管理',
+    'page-coupons':   '折價券管理',
     'page-settings':  '網站設定',
   };
 
@@ -170,6 +171,7 @@ function initNav() {
     'page-settings': loadSiteSettings,
     'page-orders':   () => loadOrders(),
     'page-members':  () => loadMembers(),
+    'page-coupons':  () => loadCoupons(),
   };
 
   navItems.forEach(item => {
@@ -1393,6 +1395,211 @@ function initMembersPage() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   折價券管理
+════════════════════════════════════════════════════════════ */
+let editingCouponId = null;
+
+async function loadCoupons(filter = '') {
+  const tbody = $('#coupons-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = skeletonRow(8);
+
+  const coupons = await safeGet(db.collection('coupons'));
+  coupons.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
+
+  const filtered = filter
+    ? coupons.filter(c => c.code?.toLowerCase().includes(filter.toLowerCase()))
+    : coupons;
+
+  tbody.innerHTML = '';
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted)">目前沒有折價券，點右上角「新增折價券」建立一張</td></tr>`;
+    return;
+  }
+
+  filtered.forEach(c => {
+    const discountText = c.type === 'percent' ? `${c.value}% 折扣` : `NT$ ${Number(c.value).toLocaleString()}`;
+
+    const conditions = [];
+    if (c.minSpend) conditions.push(`滿 NT$${Number(c.minSpend).toLocaleString()}`);
+    if (c.newUserOnly) conditions.push(c.newUserWindowDays ? `新戶(註冊${c.newUserWindowDays}天內)` : '新戶限定');
+    const conditionText = conditions.length ? conditions.join('、') : '無限制';
+
+    const usedCount  = Number(c.usedCount || 0);
+    const usageText  = c.usageLimit ? `${usedCount} / ${c.usageLimit}` : `${usedCount} / 不限`;
+
+    let expiryText = '無期限';
+    if (c.endDate) {
+      const endDate = toDate(c.endDate);
+      const expired = endDate < new Date();
+      expiryText = `${expired ? '⚠️ 已過期 ' : ''}${endDate.toLocaleDateString('zh-TW')}`;
+    }
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><code style="font-weight:800">${escHtml(c.code)}</code></td>
+      <td style="font-size:12px;color:var(--text-secondary)">${escHtml(c.description || '—')}</td>
+      <td style="font-weight:700">${discountText}</td>
+      <td style="font-size:12px;color:var(--text-secondary)">${escHtml(conditionText)}</td>
+      <td style="font-size:12px;color:var(--text-secondary)">${usageText}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${expiryText}</td>
+      <td><span class="badge badge-${c.enabled !== false ? 'success' : 'hidden'}">${c.enabled !== false ? '啟用中' : '已停用'}</span></td>
+      <td>
+        <div class="flex-row gap-2">
+          <button class="btn btn-sm btn-secondary coupon-edit-btn" data-id="${c.id}">編輯</button>
+          <button class="btn btn-sm btn-danger coupon-delete-btn" data-id="${c.id}" data-code="${escHtml(c.code)}">刪除</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  $$('.coupon-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => openCouponModal(btn.dataset.id));
+  });
+  $$('.coupon-delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => confirmDelete('coupon', btn.dataset.id, btn.dataset.code));
+  });
+}
+
+async function openCouponModal(id = null) {
+  editingCouponId = id;
+  $('#coupon-modal-title').textContent = id ? '編輯折價券' : '新增折價券';
+  $('#coupon-error').style.display = 'none';
+
+  // 重置表單
+  setValue('#coupon-code', '');
+  setValue('#coupon-description', '');
+  setValue('#coupon-type', 'fixed');
+  setValue('#coupon-value', '');
+  setValue('#coupon-min-spend', '');
+  $('#coupon-new-user-only').checked = false;
+  setValue('#coupon-new-user-window', '');
+  $('#coupon-new-user-window-field').style.display = 'none';
+  setValue('#coupon-usage-limit', '');
+  setValue('#coupon-expiry-mode', 'none');
+  setValue('#coupon-expiry-days', '');
+  setValue('#coupon-expiry-date', '');
+  $('#coupon-expiry-days-field').style.display = 'none';
+  $('#coupon-expiry-date-field').style.display = 'none';
+  $('#coupon-enabled').checked = true;
+
+  if (id) {
+    const d = await safeGetDoc(db.collection('coupons').doc(id));
+    setValue('#coupon-code', d.code || '');
+    setValue('#coupon-description', d.description || '');
+    setValue('#coupon-type', d.type || 'fixed');
+    setValue('#coupon-value', d.value ?? '');
+    setValue('#coupon-min-spend', d.minSpend ?? '');
+    $('#coupon-new-user-only').checked = !!d.newUserOnly;
+    $('#coupon-new-user-window-field').style.display = d.newUserOnly ? '' : 'none';
+    setValue('#coupon-new-user-window', d.newUserWindowDays ?? '');
+    setValue('#coupon-usage-limit', d.usageLimit ?? '');
+    $('#coupon-enabled').checked = d.enabled !== false;
+
+    if (d.endDate) {
+      // 編輯時一律用「指定結束日期」呈現既有的到期日，方便直接調整
+      setValue('#coupon-expiry-mode', 'date');
+      const endDate = toDate(d.endDate);
+      setValue('#coupon-expiry-date', endDate.toISOString().slice(0, 10));
+      $('#coupon-expiry-date-field').style.display = '';
+    } else {
+      setValue('#coupon-expiry-mode', 'none');
+    }
+  }
+
+  openModal('coupon-modal');
+}
+
+async function saveCoupon() {
+  const errorEl = $('#coupon-error');
+  errorEl.style.display = 'none';
+
+  const code  = getValue('#coupon-code').trim().toUpperCase();
+  const value = Number(getValue('#coupon-value'));
+
+  if (!code) { errorEl.textContent = '請輸入優惠碼'; errorEl.style.display = ''; return; }
+  if (!value || value <= 0) { errorEl.textContent = '請輸入有效的折扣數值'; errorEl.style.display = ''; return; }
+
+  const type              = getValue('#coupon-type');
+  const minSpend          = Number(getValue('#coupon-min-spend')) || 0;
+  const newUserOnly       = $('#coupon-new-user-only').checked;
+  const newUserWindowDays = getValue('#coupon-new-user-window') ? Number(getValue('#coupon-new-user-window')) : null;
+  const usageLimit        = getValue('#coupon-usage-limit') ? Number(getValue('#coupon-usage-limit')) : null;
+  const enabled            = $('#coupon-enabled').checked;
+  const expiryMode         = getValue('#coupon-expiry-mode');
+
+  let endDate = null;
+  if (expiryMode === 'days') {
+    const days = Number(getValue('#coupon-expiry-days'));
+    if (!days || days <= 0) { errorEl.textContent = '請輸入有效的天數'; errorEl.style.display = ''; return; }
+    endDate = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + days * 86400000));
+  } else if (expiryMode === 'date') {
+    const dateStr = getValue('#coupon-expiry-date');
+    if (!dateStr) { errorEl.textContent = '請選擇結束日期'; errorEl.style.display = ''; return; }
+    endDate = firebase.firestore.Timestamp.fromDate(new Date(dateStr + 'T23:59:59'));
+  }
+
+  const saveBtn = $('#coupon-save-btn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = '儲存中…';
+
+  try {
+    // 檢查優惠碼是否重複(排除自己)
+    const dup = await db.collection('coupons').where('code', '==', code).get();
+    const isDuplicate = dup.docs.some(d => d.id !== editingCouponId);
+    if (isDuplicate) {
+      errorEl.textContent = '這個優惠碼已經存在了，請換一個';
+      errorEl.style.display = '';
+      return;
+    }
+
+    const data = {
+      code, type, value, minSpend,
+      newUserOnly, newUserWindowDays,
+      usageLimit, enabled, endDate,
+      description: getValue('#coupon-description'),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+
+    if (editingCouponId) {
+      await db.collection('coupons').doc(editingCouponId).update(data);
+    } else {
+      data.usedCount  = 0;
+      data.createdAt  = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('coupons').add(data);
+    }
+
+    toast(editingCouponId ? '折價券已更新' : '折價券已建立', 'success');
+    closeModal('coupon-modal');
+    loadCoupons();
+
+  } catch (e) {
+    errorEl.textContent = '儲存失敗：' + e.message;
+    errorEl.style.display = '';
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = '儲存';
+  }
+}
+
+function initCouponsPage() {
+  $('#coupon-search')?.addEventListener('input', e => loadCoupons(e.target.value));
+  $('#add-coupon-btn')?.addEventListener('click', () => openCouponModal());
+  $('#coupon-cancel-btn')?.addEventListener('click', () => closeModal('coupon-modal'));
+  $('#coupon-save-btn')?.addEventListener('click', saveCoupon);
+
+  $('#coupon-new-user-only')?.addEventListener('change', e => {
+    $('#coupon-new-user-window-field').style.display = e.target.checked ? '' : 'none';
+  });
+
+  $('#coupon-expiry-mode')?.addEventListener('change', e => {
+    $('#coupon-expiry-days-field').style.display = e.target.value === 'days' ? '' : 'none';
+    $('#coupon-expiry-date-field').style.display = e.target.value === 'date' ? '' : 'none';
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
    網站設定
 ════════════════════════════════════════════════════════════ */
 async function loadSiteSettings() {
@@ -1452,19 +1659,21 @@ function initModals() {
    刪除確認
 ════════════════════════════════════════════════════════════ */
 function confirmDelete(type, id, name) {
-  $('#confirm-message').textContent =
-    type === 'product'
-      ? `確定要刪除產品「${name}」嗎？此操作無法復原。`
-      : `確定要刪除文章「${name}」嗎？此操作無法復原。`;
+  const labels = { product: '產品', article: '文章', coupon: '折價券' };
+  const collections = { product: 'products', article: 'articles', coupon: 'coupons' };
+
+  $('#confirm-message').textContent = `確定要刪除${labels[type] || '此項目'}「${name}」嗎？此操作無法復原。`;
 
   const doBtn = $('#confirm-do-btn');
   doBtn.onclick = async () => {
     doBtn.disabled = true;
     try {
-      await db.collection(type === 'product' ? 'products' : 'articles').doc(id).delete();
-      toast(type === 'product' ? '產品已刪除' : '文章已刪除', 'success');
+      await db.collection(collections[type]).doc(id).delete();
+      toast(`${labels[type] || '項目'}已刪除`, 'success');
       closeModal('confirm-modal');
-      type === 'product' ? loadProducts() : loadArticles();
+      if (type === 'product') loadProducts();
+      else if (type === 'article') loadArticles();
+      else if (type === 'coupon') loadCoupons();
     } catch (e) {
       toast('刪除失敗：' + e.message, 'error');
     } finally {
@@ -1532,6 +1741,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initArticlesPage();
   initOrdersPage();
   initMembersPage();
+  initCouponsPage();
   initSettingsPage();
 
   // 插入連結

@@ -39,6 +39,10 @@ if (new URLSearchParams(window.location.search).get('paymentFailed') === '1') {
   window.history.replaceState({}, '', window.location.pathname);
 }
 
+/* ── 優惠券狀態(結帳彈窗內設定，套用時會更新這兩個值) ────────── */
+let appliedCoupon   = null;
+let couponDiscount  = 0;
+
 /* ── 當前登入使用者 ────────────────────────────────────────── */
 let currentUser = null;
 onAuthStateChanged(auth, user => {
@@ -202,6 +206,35 @@ function openCheckoutModal() {
           <input id="co-store" type="text" placeholder="e.g. 台中文心門市 123456">
         </div>
 
+        <!-- 優惠券 -->
+        <div class="co-section-label">優惠券</div>
+        <div class="co-coupon-row">
+          <input id="co-coupon-code" type="text" placeholder="輸入優惠碼" style="text-transform:uppercase">
+          <button class="btn" id="co-coupon-apply" type="button">套用</button>
+        </div>
+        <div id="co-coupon-msg" class="co-coupon-msg" style="display:none"></div>
+        <div id="co-coupon-applied" class="co-coupon-applied" style="display:none"></div>
+        <button type="button" id="co-coupon-toggle" class="co-coupon-toggle">查看可用優惠券 ▾</button>
+        <div id="co-coupon-list" class="co-coupon-list" style="display:none">
+          <div class="co-coupon-list-loading">載入中…</div>
+        </div>
+
+        <!-- 訂單金額摘要 -->
+        <div class="co-summary">
+          <div class="co-summary-row">
+            <span>商品小計</span>
+            <span id="co-summary-subtotal">NT$ 0</span>
+          </div>
+          <div class="co-summary-row" id="co-summary-discount-row" style="display:none">
+            <span>優惠折抵</span>
+            <span id="co-summary-discount" class="co-summary-discount-val">-NT$ 0</span>
+          </div>
+          <div class="co-summary-row co-summary-total">
+            <span>應付總額</span>
+            <span id="co-summary-total">NT$ 0</span>
+          </div>
+        </div>
+
         <!-- 訂單備註 -->
         <div class="co-field">
           <label>訂單備註</label>
@@ -246,6 +279,12 @@ function openCheckoutModal() {
     });
   });
 
+  // 每次開啟結帳彈窗都重置優惠券狀態，避免帶到上次殘留的折扣
+  appliedCoupon  = null;
+  couponDiscount = 0;
+  renderCouponSummary();
+  initCouponUI();
+
   // 關閉
   const closeModal = () => { modal.remove(); document.body.style.overflow = ''; };
   modal.querySelector('.checkout-close')?.addEventListener('click', closeModal);
@@ -254,6 +293,162 @@ function openCheckoutModal() {
 
   // 送出
   document.getElementById('co-submit')?.addEventListener('click', submitOrder);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   優惠券：套用、清單、金額摘要
+══════════════════════════════════════════════════════════════ */
+const COUPON_API = 'https://arochemy-backend-production.up.railway.app/api/coupons';
+
+function getCartTotal() {
+  return getCart().reduce((s, c) => s + c.price * c.qty, 0);
+}
+
+function renderCouponSummary() {
+  const subtotal = getCartTotal();
+  const subtotalEl = document.getElementById('co-summary-subtotal');
+  const discountRow = document.getElementById('co-summary-discount-row');
+  const discountEl = document.getElementById('co-summary-discount');
+  const totalEl = document.getElementById('co-summary-total');
+  if (!subtotalEl) return;
+
+  subtotalEl.textContent = `NT$ ${subtotal.toLocaleString()}`;
+
+  if (appliedCoupon && couponDiscount > 0) {
+    discountRow.style.display = '';
+    discountEl.textContent = `-NT$ ${couponDiscount.toLocaleString()}`;
+  } else {
+    discountRow.style.display = 'none';
+  }
+
+  const finalTotal = Math.max(0, subtotal - couponDiscount);
+  totalEl.textContent = `NT$ ${finalTotal.toLocaleString()}`;
+
+  // 已套用的優惠券顯示區
+  const appliedEl = document.getElementById('co-coupon-applied');
+  if (appliedCoupon) {
+    const discountText = appliedCoupon.type === 'percent'
+      ? `${appliedCoupon.value}% 折扣`
+      : `折抵 NT$${Number(appliedCoupon.value).toLocaleString()}`;
+    appliedEl.style.display = 'flex';
+    appliedEl.innerHTML = `
+      <span>✓ 已套用「${escHtmlCart(appliedCoupon.code)}」（${discountText}）</span>
+      <button type="button" id="co-coupon-remove">移除</button>
+    `;
+    document.getElementById('co-coupon-remove')?.addEventListener('click', () => {
+      appliedCoupon = null;
+      couponDiscount = 0;
+      renderCouponSummary();
+    });
+  } else {
+    appliedEl.style.display = 'none';
+    appliedEl.innerHTML = '';
+  }
+}
+
+function escHtmlCart(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function applyCouponCode(code) {
+  const msgEl = document.getElementById('co-coupon-msg');
+  if (!code) return;
+
+  msgEl.style.display = 'none';
+
+  try {
+    const res = await fetch(`${COUPON_API}/validate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code,
+        cartTotal: getCartTotal(),
+        customerId: currentUser?.uid || '',
+      }),
+    });
+    const data = await res.json();
+
+    if (!data.valid) {
+      msgEl.textContent = data.reason || '此優惠碼無法使用';
+      msgEl.style.color = '#b94a48';
+      msgEl.style.display = '';
+      return;
+    }
+
+    appliedCoupon  = data.coupon;
+    couponDiscount = data.discount;
+    document.getElementById('co-coupon-code').value = '';
+    renderCouponSummary();
+
+  } catch (e) {
+    msgEl.textContent = '優惠券驗證失敗，請稍後再試';
+    msgEl.style.color = '#b94a48';
+    msgEl.style.display = '';
+  }
+}
+
+async function loadEligibleCoupons() {
+  const listEl = document.getElementById('co-coupon-list');
+  if (!listEl) return;
+
+  try {
+    const params = new URLSearchParams({
+      cartTotal: getCartTotal(),
+      customerId: currentUser?.uid || '',
+    });
+    const res  = await fetch(`${COUPON_API}/eligible?${params}`);
+    const data = await res.json();
+    const coupons = data.coupons || [];
+
+    if (!coupons.length) {
+      listEl.innerHTML = `<div class="co-coupon-list-empty">目前沒有可以使用的優惠券</div>`;
+      return;
+    }
+
+    listEl.innerHTML = coupons.map(c => {
+      const discountText = c.type === 'percent' ? `${c.value}% 折扣` : `折抵 NT$${Number(c.value).toLocaleString()}`;
+      return `
+        <button type="button" class="co-coupon-chip" data-code="${escHtmlCart(c.code)}">
+          <span class="co-coupon-chip-code">${escHtmlCart(c.code)}</span>
+          <span class="co-coupon-chip-desc">${escHtmlCart(c.description || discountText)}</span>
+        </button>
+      `;
+    }).join('');
+
+    listEl.querySelectorAll('.co-coupon-chip').forEach(btn => {
+      btn.addEventListener('click', () => applyCouponCode(btn.dataset.code));
+    });
+
+  } catch (e) {
+    listEl.innerHTML = `<div class="co-coupon-list-empty">優惠券載入失敗</div>`;
+  }
+}
+
+function initCouponUI() {
+  document.getElementById('co-coupon-apply')?.addEventListener('click', () => {
+    const code = document.getElementById('co-coupon-code')?.value.trim().toUpperCase();
+    applyCouponCode(code);
+  });
+
+  document.getElementById('co-coupon-code')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const code = e.target.value.trim().toUpperCase();
+      applyCouponCode(code);
+    }
+  });
+
+  let listLoaded = false;
+  document.getElementById('co-coupon-toggle')?.addEventListener('click', (e) => {
+    const listEl = document.getElementById('co-coupon-list');
+    const willShow = listEl.style.display === 'none';
+    listEl.style.display = willShow ? '' : 'none';
+    e.target.textContent = willShow ? '收合可用優惠券 ▴' : '查看可用優惠券 ▾';
+    if (willShow && !listLoaded) {
+      listLoaded = true;
+      loadEligibleCoupons();
+    }
+  });
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -291,6 +486,7 @@ async function submitOrder() {
 
   const cart  = getCart();
   const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  const finalTotal = Math.max(0, total - couponDiscount);
 
   try {
     // 寫入 orders collection
@@ -299,6 +495,7 @@ async function submitOrder() {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        customerId:     currentUser?.uid || '',
         customerName:   name,
         customerPhone:  phone,
         customerEmail:  email || (currentUser?.email || ''),
@@ -306,6 +503,12 @@ async function submitOrder() {
         address:        isStore ? '' : address,
         storeInfo:      isStore ? address : '',
         note:           note || '',
+        coupon:         appliedCoupon ? {
+          code:     appliedCoupon.code,
+          type:     appliedCoupon.type,
+          value:    appliedCoupon.value,
+          discount: couponDiscount,
+        } : null,
         items: cart.map(c => ({
           productId: c.id    || '',
           name:      c.name  || '',
@@ -314,7 +517,7 @@ async function submitOrder() {
           qty:       Number(c.qty)    || 1,
           image:     c.img   || c.image || '',
         })),
-        total,
+        total: finalTotal,
       }),
     });
 
@@ -467,6 +670,67 @@ style.textContent = `
   .co-radio { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
   .co-radio input { accent-color: #111; }
   .req { color: #e55; }
+
+  /* 優惠券 */
+  .co-coupon-row { display: flex; gap: 8px; }
+  .co-coupon-row input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+  }
+  .co-coupon-row input:focus { border-color: #111; }
+  .co-coupon-row .btn { flex: 0 0 auto; padding: 10px 16px; font-size: 13px; }
+  .co-coupon-msg { font-size: 12px; }
+  .co-coupon-applied {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #f4f8f4; border: 1px solid #cde3cd;
+    border-radius: 10px; padding: 10px 14px;
+    font-size: 13px; color: #2f6b2f; font-weight: 600;
+  }
+  .co-coupon-applied button {
+    background: none; border: none; color: #888;
+    font-size: 12px; text-decoration: underline; cursor: pointer;
+  }
+  .co-coupon-toggle {
+    background: none; border: none; text-align: left;
+    font-size: 12px; color: #666; text-decoration: underline;
+    cursor: pointer; padding: 0; width: fit-content;
+  }
+  .co-coupon-list {
+    display: flex; flex-direction: column; gap: 8px;
+    max-height: 200px; overflow-y: auto;
+    padding: 4px 0;
+  }
+  .co-coupon-list-loading, .co-coupon-list-empty {
+    font-size: 12px; color: #999; padding: 8px 0;
+  }
+  .co-coupon-chip {
+    display: flex; flex-direction: column; gap: 2px;
+    text-align: left;
+    border: 1px dashed #ccc; border-radius: 10px;
+    padding: 8px 12px; background: #fafafa;
+    cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  }
+  .co-coupon-chip:hover { border-color: #111; background: #f2f2f2; }
+  .co-coupon-chip-code { font-size: 13px; font-weight: 800; letter-spacing: 0.04em; }
+  .co-coupon-chip-desc { font-size: 12px; color: #777; }
+
+  /* 訂單金額摘要 */
+  .co-summary {
+    display: flex; flex-direction: column; gap: 6px;
+    background: #fafafa; border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .co-summary-row { display: flex; justify-content: space-between; font-size: 13px; color: #555; }
+  .co-summary-discount-val { color: #c44; font-weight: 700; }
+  .co-summary-total {
+    border-top: 1px solid #e5e5e5; margin-top: 4px; padding-top: 8px;
+    font-size: 15px; font-weight: 800; color: #111;
+  }
+
   .co-error {
     background: #fff0f0; border: 1px solid #fcc;
     border-radius: 8px; padding: 10px 14px;

@@ -248,6 +248,9 @@
             <label for="loginPassword">密碼</label>
             <input id="loginPassword" type="password" placeholder="請輸入密碼" autocomplete="current-password">
           </div>
+          <div style="text-align:right;margin:-6px 0 4px">
+            <button class="auth-btn light" id="showForgotBtn" type="button" style="padding:4px 0;font-size:13px">忘記密碼？</button>
+          </div>
           <div class="auth-actions" style="margin-top:20px">
             <button class="auth-btn primary" id="loginBtn" type="button">會員登入</button>
           </div>
@@ -281,6 +284,31 @@
             <button class="auth-btn primary" id="registerBtn" type="button">註冊會員</button>
             <button class="auth-btn light" id="showLoginBtn" type="button">已有帳號？返回登入</button>
           </div>
+        </div>
+
+        <!-- 忘記密碼模式 -->
+        <div id="forgotMode" style="display:none">
+          <div class="auth-field">
+            <label for="forgotEmail">註冊 Email</label>
+            <input id="forgotEmail" type="email" placeholder="請輸入註冊時使用的 Email" autocomplete="username">
+          </div>
+          <div class="auth-actions">
+            <button class="auth-btn primary" id="sendResetBtn" type="button">寄送密碼重設信</button>
+            <button class="auth-btn light" id="backToLoginFromForgot" type="button">返回登入</button>
+          </div>
+          <p id="forgotMsg" class="auth-msg"></p>
+        </div>
+
+        <!-- Email 待驗證提示 -->
+        <div id="verifyPendingMode" style="display:none">
+          <p class="auth-subtitle" style="margin-bottom:8px">
+            驗證信已寄至 <strong id="verifyPendingEmail"></strong>，請先至信箱完成 Email 驗證後再登入。
+          </p>
+          <div class="auth-actions">
+            <button class="auth-btn primary" id="resendVerifyBtn" type="button">重新寄送驗證信</button>
+            <button class="auth-btn light" id="backToLoginFromVerify" type="button">返回登入／登出</button>
+          </div>
+          <p id="verifyPendingMsg" class="auth-msg"></p>
         </div>
 
         <p id="authMsg" class="auth-msg"></p>
@@ -348,7 +376,7 @@
 import { initializeApp, getApps, getApp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-         signOut, onAuthStateChanged }
+         signOut, onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -385,16 +413,30 @@ function errText(code) {
   })[code] || '發生錯誤，請稍後再試。';
 }
 
-/* ── 登入/註冊切換 ── */
-$('showRegisterBtn')?.addEventListener('click', () => {
-  $('loginMode').style.display = 'none';
-  $('registerMode').style.display = '';
+/* ── 4 種畫面狀態切換：login / register / forgot / verify ── */
+const AUTH_MODES = { login: 'loginMode', register: 'registerMode', forgot: 'forgotMode', verify: 'verifyPendingMode' };
+function showAuthMode(mode) {
+  Object.values(AUTH_MODES).forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
+  if (mode && AUTH_MODES[mode] && $(AUTH_MODES[mode])) $(AUTH_MODES[mode]).style.display = '';
   msg('authMsg', '');
-});
-$('showLoginBtn')?.addEventListener('click', () => {
-  $('registerMode').style.display = 'none';
-  $('loginMode').style.display = '';
-  msg('authMsg', '');
+}
+function showVerifyPending(email) {
+  showAuthMode('verify');
+  if ($('verifyPendingEmail')) $('verifyPendingEmail').textContent = email || '';
+  msg('verifyPendingMsg', '');
+}
+
+/* ── 登入/註冊/忘記密碼 切換 ── */
+$('showRegisterBtn')?.addEventListener('click', () => showAuthMode('register'));
+$('showLoginBtn')?.addEventListener('click', () => showAuthMode('login'));
+$('showForgotBtn')?.addEventListener('click', () => showAuthMode('forgot'));
+$('backToLoginFromForgot')?.addEventListener('click', () => showAuthMode('login'));
+
+/* 「返回登入／登出」：因為這個畫面出現時使用者其實還是登入狀態(只是Email未驗證)，
+   要按這顆才真的登出，回到一般登入畫面 */
+$('backToLoginFromVerify')?.addEventListener('click', async () => {
+  try { await signOut(auth); } catch (_) {}
+  showAuthMode('login');
 });
 
 /* ── 登入 ── */
@@ -406,6 +448,7 @@ $('loginBtn')?.addEventListener('click', async () => {
   btn.disabled = true; btn.textContent = '登入中…';
   try {
     await signInWithEmailAndPassword(auth, email, pw);
+    // 後續(檢查是否已驗證、導向會員中心或待驗證畫面)交給 onAuthStateChanged 統一處理
   } catch(e) {
     msg('authMsg', errText(e.code), true);
   } finally {
@@ -426,15 +469,100 @@ $('registerBtn')?.addEventListener('click', async () => {
   btn.disabled = true; btn.textContent = '註冊中…';
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pw);
+
+    // 會員資料一定要先寫入成功，就算後面寄驗證信失敗，帳號跟會員資料也都已經建立好了
     await setDoc(doc(db, 'members', cred.user.uid), {
       uid: cred.user.uid, name: name||'', phone: phone||'',
       email, subscribed: sub, createdAt: serverTimestamp(), lastLoginAt: serverTimestamp(),
     });
-    msg('authMsg', '註冊成功！歡迎加入 Arochemy 🌿');
+
+    // 寄送驗證信；就算寄送失敗也不能刪掉剛建立的帳號/會員資料，只是提示可以之後重寄
+    let verifyEmailSent = true;
+    try {
+      await sendEmailVerification(cred.user);
+    } catch (e) {
+      verifyEmailSent = false;
+      console.warn('[Auth] 驗證信寄送失敗：', e.message);
+    }
+
+    // 注意：這裡刻意不立刻 signOut。因為 sendEmailVerification() 一定要有登入中的
+    // user 物件才能呼叫，如果馬上登出，待驗證畫面上的「重新寄送驗證信」會沒辦法用。
+    // 讓 onAuthStateChanged 偵測到「已登入但 emailVerified=false」，
+    // 自動顯示待驗證畫面(不會進會員中心)；真正要登出要按畫面上的「返回登入／登出」。
+    showVerifyPending(email);
+    msg('verifyPendingMsg',
+      verifyEmailSent
+        ? `註冊成功！驗證信已寄至 ${email}，請先完成 Email 驗證後再登入。`
+        : '帳號已建立，但驗證信寄送失敗，可以點下方按鈕重新寄送。',
+      !verifyEmailSent
+    );
+
   } catch(e) {
     msg('authMsg', errText(e.code), true);
   } finally {
     btn.disabled = false; btn.textContent = '註冊會員';
+  }
+});
+
+/* ── 重新寄送驗證信 ── */
+let resendInFlight = false;
+$('resendVerifyBtn')?.addEventListener('click', async () => {
+  if (resendInFlight) return;
+  const user = auth.currentUser;
+  if (!user) { msg('verifyPendingMsg', '登入狀態已失效，請重新登入後再試一次。', true); return; }
+
+  resendInFlight = true;
+  const btn = $('resendVerifyBtn');
+  btn.disabled = true; btn.textContent = '寄送中…';
+  try {
+    await sendEmailVerification(user);
+    msg('verifyPendingMsg', '驗證信已重新寄送，請至信箱查看。');
+    // 成功後鎖定按鈕一段時間，避免使用者連續點擊灌爆信箱、觸發 Firebase 的寄送次數限制
+    setTimeout(() => {
+      resendInFlight = false;
+      btn.disabled = false; btn.textContent = '重新寄送驗證信';
+    }, 20000);
+  } catch(e) {
+    resendInFlight = false;
+    btn.disabled = false; btn.textContent = '重新寄送驗證信';
+    if (e.code === 'auth/too-many-requests') {
+      msg('verifyPendingMsg', '寄送次數過多，請稍後再試。', true);
+    } else {
+      msg('verifyPendingMsg', errText(e.code), true);
+    }
+  }
+});
+
+/* ── 忘記密碼：寄送密碼重設信 ── */
+$('sendResetBtn')?.addEventListener('click', async () => {
+  const email = $('forgotEmail')?.value.trim();
+  if (!email) { msg('forgotMsg', '請輸入 Email。', true); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    msg('forgotMsg', 'Email 格式不正確。', true);
+    return;
+  }
+
+  const btn = $('sendResetBtn');
+  btn.disabled = true; btn.textContent = '寄送中…';
+
+  // 不管帳號存不存在，都顯示同一句話，避免被拿來試探哪些 Email 有註冊過
+  const genericMsg = '如果此 Email 已註冊，系統將寄送密碼重設信至該信箱，請至信箱查看。';
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+    msg('forgotMsg', genericMsg);
+  } catch(e) {
+    if (e.code === 'auth/user-not-found') {
+      msg('forgotMsg', genericMsg);
+    } else if (e.code === 'auth/invalid-email') {
+      msg('forgotMsg', 'Email 格式不正確。', true);
+    } else if (e.code === 'auth/too-many-requests') {
+      msg('forgotMsg', '寄送次數過多，請稍後再試。', true);
+    } else {
+      msg('forgotMsg', errText(e.code), true);
+    }
+  } finally {
+    btn.disabled = false; btn.textContent = '寄送密碼重設信';
   }
 });
 
@@ -476,13 +604,19 @@ $('saveSubBtn')?.addEventListener('click', async () => {
   }
 });
 
-/* ── 監聽登入狀態 ── */
+/* ── 監聽登入狀態 ──
+   三種狀態要分開處理：
+   1) user 存在且 emailVerified=true  → 正常登入，進會員中心
+   2) user 存在但 emailVerified=false → 停在待驗證畫面，不能進會員中心
+   3) user 不存在                      → 顯示一般登入/註冊畫面
+   千萬不能因為 user 物件存在，就把 authPanel 隱藏、memberPanel 顯示，
+   一定要先檢查 emailVerified，不然未驗證的帳號會被誤判成正常登入。 */
 onAuthStateChanged(auth, async user => {
   const authPanel   = $('authPanel');
   const memberPanel = $('memberPanel');
 
-  if (user) {
-    /* 顯示會員中心 */
+  if (user && user.emailVerified) {
+    /* ── 已驗證，正常登入 ── */
     if (authPanel)   authPanel.style.display  = 'none';
     if (memberPanel) memberPanel.style.display = 'block';
 
@@ -496,7 +630,8 @@ onAuthStateChanged(auth, async user => {
     const headerArea  = document.getElementById('userArea');
     if (headerArea)  { headerArea.href = 'login.html'; headerArea.onclick = null; }
 
-    /* 更新 lastLoginAt */
+    /* 更新 lastLoginAt：只有真正完成驗證並正常登入才更新，
+       未驗證的情況不會走到這個分支，所以不會誤更新登入紀錄 */
     try { await updateDoc(doc(db, 'members', user.uid), { lastLoginAt: serverTimestamp() }); } catch(_) {}
 
     /* 讀取會員資料 */
@@ -512,10 +647,24 @@ onAuthStateChanged(auth, async user => {
       }
     } catch(e) { console.warn('讀取會員資料失敗：', e.message); }
 
-  } else {
-    /* 顯示登入面板 */
-    if (authPanel)   authPanel.style.display  = '';
+    /* 登入完成後，如果之前有頁面要求先登入才能繼續(例如結帳)，導回去 */
+    const redirect = sessionStorage.getItem('loginRedirect');
+    if (redirect) {
+      sessionStorage.removeItem('loginRedirect');
+      window.location.href = redirect;
+    }
+
+  } else if (user && !user.emailVerified) {
+    /* ── 已登入，但 Email 還沒驗證：不能進會員中心 ── */
     if (memberPanel) memberPanel.style.display = 'none';
+    if (authPanel)   authPanel.style.display  = '';
+    showVerifyPending(user.email);
+
+  } else {
+    /* ── 沒有登入 ── */
+    if (memberPanel) memberPanel.style.display = 'none';
+    if (authPanel)   authPanel.style.display  = '';
+    showAuthMode('login');
   }
 });
   </script>

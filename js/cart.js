@@ -47,10 +47,29 @@ let couponDiscount  = 0;
 let currentUser = null;
 onAuthStateChanged(auth, user => {
   currentUser = user;
-  // 更新 header 登入狀態
+  // 更新 header 登入狀態：只有已驗證的會員才顯示 Email，
+  // 未驗證的帳號不能被當成正常已登入會員顯示(跟 js/user.js 是同一個修正邏輯)
   const userEmailEl = document.getElementById('userEmail');
-  if (userEmailEl && user) userEmailEl.textContent = user.email;
+  if (userEmailEl) userEmailEl.textContent = (user && user.emailVerified) ? user.email : '';
 });
+
+/* ── 取得目前登入者的 Firebase ID Token（僅限已驗證會員）─────
+   只有「已登入 + Email 已驗證」才會帶上 Authorization header，
+   讓後端可以用 Firebase Admin 驗證出真正可信的會員身分。
+   未驗證會員或訪客都不帶 Token，後端會自然把這種請求當成訪客處理，
+   不會誤把未驗證帳號當成已驗證會員使用會員優惠。
+   Token 每次都直接跟 Firebase 現拿現用，不存進 localStorage/Firestore。 */
+async function getAuthHeader() {
+  if (currentUser && currentUser.emailVerified) {
+    try {
+      const token = await currentUser.getIdToken();
+      return { Authorization: `Bearer ${token}` };
+    } catch (e) {
+      console.warn('[Cart] 取得登入憑證失敗：', e.message);
+    }
+  }
+  return {};
+}
 
 /* ══════════════════════════════════════════════════════════════
    購物車資料（localStorage）
@@ -357,15 +376,23 @@ async function applyCouponCode(code) {
   msgEl.style.display = 'none';
 
   try {
+    const authHeader = await getAuthHeader();
     const res = await fetch(`${COUPON_API}/validate`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({
         code,
         cartTotal: getCartTotal(),
-        customerId: currentUser?.uid || '',
       }),
     });
+
+    if (res.status === 401) {
+      msgEl.textContent = '登入狀態可能已失效，請重新登入後再試一次';
+      msgEl.style.color = '#b94a48';
+      msgEl.style.display = '';
+      return;
+    }
+
     const data = await res.json();
 
     if (!data.valid) {
@@ -392,11 +419,11 @@ async function loadEligibleCoupons() {
   if (!listEl) return;
 
   try {
+    const authHeader = await getAuthHeader();
     const params = new URLSearchParams({
       cartTotal: getCartTotal(),
-      customerId: currentUser?.uid || '',
     });
-    const res  = await fetch(`${COUPON_API}/eligible?${params}`);
+    const res  = await fetch(`${COUPON_API}/eligible?${params}`, { headers: authHeader });
     const data = await res.json();
     const coupons = data.coupons || [];
 
@@ -491,11 +518,11 @@ async function submitOrder() {
   try {
     // 寫入 orders collection
     // 呼叫後端 API 建立訂單（自動寄確認信 + 扣庫存）
+    const authHeader = await getAuthHeader();
     const res = await fetch('https://arochemy-backend-production.up.railway.app/api/orders', {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({
-        customerId:     currentUser?.uid || '',
         customerName:   name,
         customerPhone:  phone,
         customerEmail:  email || (currentUser?.email || ''),
@@ -520,6 +547,23 @@ async function submitOrder() {
         total: finalTotal,
       }),
     });
+
+    if (res.status === 401) {
+      errorEl.textContent  = '登入狀態可能已失效，請重新登入後再試一次';
+      errorEl.style.display = '';
+      submitBtn.disabled    = false;
+      submitBtn.textContent = '確認送出訂單';
+      return;
+    }
+
+    if (res.status === 403) {
+      const errData = await res.json().catch(() => ({}));
+      errorEl.textContent  = errData.message || '請先完成 Email 驗證後再使用會員功能';
+      errorEl.style.display = '';
+      submitBtn.disabled    = false;
+      submitBtn.textContent = '確認送出訂單';
+      return;
+    }
 
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '送出失敗');

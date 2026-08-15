@@ -1551,6 +1551,11 @@ async function openCouponModal(id = null) {
   $('#coupon-expiry-days-field').style.display = 'none';
   $('#coupon-expiry-date-field').style.display = 'none';
   $('#coupon-enabled').checked = true;
+  setValue('#coupon-audience', 'all');
+  setValue('#coupon-member-search', '');
+  $('#coupon-assigned-member-field').style.display = 'none';
+  $('#coupon-assigned-member').innerHTML = '';
+  setText('#coupon-assigned-member-hint', '尚未選擇會員');
 
   if (id) {
     const d = await safeGetDoc(db.collection('coupons').doc(id));
@@ -1564,6 +1569,17 @@ async function openCouponModal(id = null) {
     setValue('#coupon-new-user-window', d.newUserWindowDays ?? '');
     setValue('#coupon-usage-limit', d.usageLimit ?? '');
     $('#coupon-enabled').checked = d.enabled !== false;
+
+    // 適用對象：舊券沒有 assignedCustomerId(undefined/null/空字串)一律視為一般優惠券
+    if (d.assignedCustomerId) {
+      setValue('#coupon-audience', 'member');
+      $('#coupon-assigned-member-field').style.display = '';
+      await loadMembersForCouponPicker();
+      $('#coupon-assigned-member').value = d.assignedCustomerId;
+      const matched = cachedMembersForCoupon?.find(m => m.uid === d.assignedCustomerId);
+      setText('#coupon-assigned-member-hint',
+        matched ? `目前指定：${matched.name || '（未填姓名）'}（${matched.email}）` : '目前指定：此會員資料已不存在');
+    }
 
     if (d.endDate) {
       // 編輯時一律用「指定結束日期」呈現既有的到期日，方便直接調整
@@ -1579,6 +1595,29 @@ async function openCouponModal(id = null) {
   openModal('coupon-modal');
 }
 
+/* ── 折價券「指定會員」選擇器：搜尋 + 選擇，沿用既有 members 資料，
+   不另外建立新的會員管理系統 ── */
+let cachedMembersForCoupon = null;
+
+async function loadMembersForCouponPicker() {
+  if (cachedMembersForCoupon) { renderCouponMemberOptions(cachedMembersForCoupon); return; }
+  const members = await safeGet(db.collection('members'));
+  cachedMembersForCoupon = members.map(m => ({
+    uid: m.id, name: m.name || '', email: m.email || '',
+  })).filter(m => m.email); // 沒有 email 的資料異常，不列入選擇清單
+  cachedMembersForCoupon.sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email, 'zh-Hant'));
+  renderCouponMemberOptions(cachedMembersForCoupon);
+}
+
+function renderCouponMemberOptions(list) {
+  const selectEl = $('#coupon-assigned-member');
+  const current = selectEl.value;
+  selectEl.innerHTML = list.map(m =>
+    `<option value="${m.uid}">${escHtml(m.name || '（未填姓名）')}（${escHtml(m.email)}）</option>`
+  ).join('');
+  if (current && list.some(m => m.uid === current)) selectEl.value = current;
+}
+
 async function saveCoupon() {
   const errorEl = $('#coupon-error');
   errorEl.style.display = 'none';
@@ -1588,6 +1627,17 @@ async function saveCoupon() {
 
   if (!code) { errorEl.textContent = '請輸入優惠碼'; errorEl.style.display = ''; return; }
   if (!value || value <= 0) { errorEl.textContent = '請輸入有效的折扣數值'; errorEl.style.display = ''; return; }
+
+  const audience = getValue('#coupon-audience');
+  let assignedCustomerId = null;
+  if (audience === 'member') {
+    assignedCustomerId = getValue('#coupon-assigned-member');
+    if (!assignedCustomerId) {
+      errorEl.textContent = '請選擇要指定的會員';
+      errorEl.style.display = '';
+      return;
+    }
+  }
 
   const type              = getValue('#coupon-type');
   const minSpend          = Number(getValue('#coupon-min-spend')) || 0;
@@ -1626,6 +1676,7 @@ async function saveCoupon() {
       code, type, value, minSpend,
       newUserOnly, newUserWindowDays,
       usageLimit, enabled, endDate,
+      assignedCustomerId, // 'member' 時是選到的 uid；'all' 時明確存 null，確保改回一般券時能正確清除
       description: getValue('#coupon-description'),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     };
@@ -1664,6 +1715,22 @@ function initCouponsPage() {
   $('#coupon-expiry-mode')?.addEventListener('change', e => {
     $('#coupon-expiry-days-field').style.display = e.target.value === 'days' ? '' : 'none';
     $('#coupon-expiry-date-field').style.display = e.target.value === 'date' ? '' : 'none';
+  });
+
+  $('#coupon-audience')?.addEventListener('change', async (e) => {
+    const isMember = e.target.value === 'member';
+    $('#coupon-assigned-member-field').style.display = isMember ? '' : 'none';
+    if (isMember) await loadMembersForCouponPicker();
+  });
+
+  $('#coupon-member-search')?.addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    if (!cachedMembersForCoupon) return;
+    const filtered = q
+      ? cachedMembersForCoupon.filter(m =>
+          m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q))
+      : cachedMembersForCoupon;
+    renderCouponMemberOptions(filtered);
   });
 }
 

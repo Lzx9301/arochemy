@@ -84,6 +84,11 @@
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20.59 13.41L13.42 20.6a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.5"/></svg>
           折價券管理
         </div>
+        <div class="nav-item" data-page="page-messages">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          聯絡訊息
+          <span class="nav-badge" id="messages-unread-badge" style="display:none">0</span>
+        </div>
       </div>
 
       <div class="nav-section">
@@ -442,10 +447,10 @@
         <div style="overflow-x:auto">
           <table class="data-table">
             <thead>
-              <tr><th>會員姓名</th><th>Email</th><th>電話</th><th>電子報</th><th>加入日期</th></tr>
+              <tr><th>會員姓名</th><th>Email</th><th>電話</th><th>性別</th><th>生日</th><th>電子報</th><th>加入日期</th><th></th></tr>
             </thead>
             <tbody id="members-table-body">
-              <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">載入中…</td></tr>
+              <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted)">載入中…</td></tr>
             </tbody>
           </table>
         </div>
@@ -479,6 +484,24 @@
             </thead>
             <tbody id="coupons-table-body">
               <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted)">載入中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- ══ 聯絡訊息 ══ -->
+    <main id="page-messages" class="page">
+      <div class="page-hero"><h1>聯絡訊息</h1><p>查看並處理客戶透過聯絡表單送出的洽詢</p></div>
+
+      <div class="card">
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr><th>狀態</th><th>姓名</th><th>Email</th><th>主旨</th><th>送出時間</th><th></th></tr>
+            </thead>
+            <tbody id="messages-table-body">
+              <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted)">載入中…</td></tr>
             </tbody>
           </table>
         </div>
@@ -527,6 +550,102 @@
   </div><!-- /main-content -->
 </div><!-- /app-layout -->
 
+
+<!-- ════════ Modal：聯絡訊息詳細內容 ════════ -->
+<div id="message-modal" class="modal-overlay">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <h2 class="modal-title">聯絡訊息內容</h2>
+      <button class="btn btn-icon modal-close" id="message-modal-close"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:14px">
+        <label>姓名</label>
+        <div id="msg-detail-name" style="font-size:14px;font-weight:600"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label>Email</label>
+        <div><a id="msg-detail-email" href="#" style="font-size:14px;color:var(--accent)"></a></div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label>主旨</label>
+        <div id="msg-detail-subject" style="font-size:14px"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label>訊息內容</label>
+        <div id="msg-detail-message" style="font-size:14px;white-space:pre-line;line-height:1.7;background:var(--bg-hover);padding:12px 14px;border-radius:10px"></div>
+      </div>
+      <div class="form-grid form-grid-2">
+        <div class="form-group">
+          <label>送出時間</label>
+          <div id="msg-detail-time" style="font-size:12px;color:var(--text-muted)"></div>
+        </div>
+        <div class="form-group">
+          <label>狀態</label>
+          <div id="msg-detail-status" style="font-size:12px"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="msg-delete-btn" style="color:var(--danger)">刪除訊息</button>
+      <button class="btn btn-accent" id="msg-toggle-status-btn">標記為已讀</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ Modal：編輯會員資料 ════════ -->
+<div id="member-modal" class="modal-overlay">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h2 class="modal-title">編輯會員資料</h2>
+      <button class="btn btn-icon modal-close" id="member-modal-close"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Email</label>
+        <input type="email" id="member-email" disabled>
+        <div class="hint" style="margin-top:6px">Email 是登入帳號，無法在此修改</div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label>姓名</label>
+        <input type="text" id="member-name" placeholder="會員姓名">
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label>電話</label>
+        <input type="text" id="member-phone" placeholder="會員電話">
+      </div>
+
+      <div class="form-grid form-grid-2" style="margin-bottom:16px">
+        <div class="form-group">
+          <label>性別</label>
+          <select id="member-gender">
+            <option value="">未設定</option>
+            <option value="female">女性</option>
+            <option value="male">男性</option>
+            <option value="other">其他</option>
+            <option value="prefer_not_to_say">不透露</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>生日</label>
+          <input type="date" id="member-birthday">
+        </div>
+      </div>
+
+      <div id="member-error" class="form-error" style="display:none;color:var(--danger);font-size:13px;margin-bottom:8px"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="member-cancel-btn">取消</button>
+      <button class="btn btn-accent" id="member-save-btn">儲存</button>
+    </div>
+  </div>
+</div>
 
 <!-- ════════ Modal：新增/編輯折價券 ════════ -->
 <div id="coupon-modal" class="modal-overlay">

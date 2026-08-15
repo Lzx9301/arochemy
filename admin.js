@@ -161,6 +161,7 @@ function initNav() {
     'page-orders':    '訂單管理',
     'page-members':   '會員管理',
     'page-coupons':   '折價券管理',
+    'page-messages':  '聯絡訊息',
     'page-settings':  '網站設定',
   };
 
@@ -172,6 +173,7 @@ function initNav() {
     'page-orders':   () => loadOrders(),
     'page-members':  () => loadMembers(),
     'page-coupons':  () => loadCoupons(),
+    'page-messages': () => loadMessages(),
   };
 
   navItems.forEach(item => {
@@ -203,6 +205,9 @@ function initNav() {
    儀表板
 ════════════════════════════════════════════════════════════ */
 async function initDashboard() {
+  // 未讀聯絡訊息數量：一登入後台就要看得到 badge，不用特地點進聯絡訊息頁才更新
+  loadMessages().catch(e => console.warn('[Dashboard] 載入聯絡訊息未讀數量失敗：', e.message));
+
   // 各 collection 可能尚未建立，用 safeGet 避免報錯
   const [products, articles, orders, members] = await Promise.all([
     safeGet(db.collection('products')),
@@ -1335,7 +1340,7 @@ async function renderSalesRank(containerSel, limit = 5, ordersData = null) {
 async function loadMembers(filter = '') {
   const tbody = $('#members-table-body');
   if (!tbody) return;
-  tbody.innerHTML = skeletonRow(5);
+  tbody.innerHTML = skeletonRow(8);
 
   // 直接 get 全部，前端篩選
   const members = await safeGet(db.collection('members'));
@@ -1351,12 +1356,16 @@ async function loadMembers(filter = '') {
 
   tbody.innerHTML = '';
   if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">目前沒有會員資料</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted)">目前沒有會員資料</td></tr>`;
     return;
   }
 
+  const GENDER_LABEL = { female: '女性', male: '男性', other: '其他', prefer_not_to_say: '不透露' };
+
   filtered.forEach(m => {
     const initials = (m.name || m.email || '?')[0].toUpperCase();
+    const genderText   = GENDER_LABEL[m.gender] || '未設定';
+    const birthdayText = m.birthday || '未設定';
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>
@@ -1367,14 +1376,73 @@ async function loadMembers(filter = '') {
       </td>
       <td style="color:var(--text-secondary);font-size:12px">${escHtml(m.email || '—')}</td>
       <td style="font-size:12px;color:var(--text-secondary)">${escHtml(m.phone || '—')}</td>
+      <td style="font-size:12px;color:var(--text-secondary)">${escHtml(genderText)}</td>
+      <td style="font-size:12px;color:var(--text-secondary)">${escHtml(birthdayText)}</td>
       <td><span class="badge badge-${m.subscribed ? 'success' : 'hidden'}">${m.subscribed ? '✓ 已訂閱' : '未訂閱'}</span></td>
       <td style="font-size:12px;color:var(--text-muted)">${formatDate(m.createdAt)}</td>
+      <td><button class="btn btn-sm btn-secondary member-edit-btn" data-id="${m.id}">編輯</button></td>
     `;
     tbody.appendChild(tr);
   });
+
+  $$('.member-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => openMemberModal(btn.dataset.id));
+  });
+}
+
+let editingMemberId = null;
+
+async function openMemberModal(uid) {
+  editingMemberId = uid;
+  $('#member-error').style.display = 'none';
+
+  const d = await safeGetDoc(db.collection('members').doc(uid));
+  setValue('#member-email',    d.email    || '');
+  setValue('#member-name',     d.name     || '');
+  setValue('#member-phone',    d.phone    || '');
+  setValue('#member-gender',   d.gender   || '');
+  setValue('#member-birthday', d.birthday || '');
+
+  openModal('member-modal');
+}
+
+async function saveMember() {
+  if (!editingMemberId) return;
+  const errorEl = $('#member-error');
+  errorEl.style.display = 'none';
+
+  const saveBtn = $('#member-save-btn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = '儲存中…';
+
+  try {
+    // 生日在後台是唯一可以修改它的地方，直接用 <input type="date"> 原生的
+    // YYYY-MM-DD 字串，不轉換成 Date 物件，避免時區造成日期前後偏移
+    await db.collection('members').doc(editingMemberId).update({
+      name:     getValue('#member-name'),
+      phone:    getValue('#member-phone'),
+      gender:   getValue('#member-gender'),
+      birthday: getValue('#member-birthday'),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+
+    toast('會員資料已更新', 'success');
+    closeModal('member-modal');
+    loadMembers($('#member-search')?.value || '');
+
+  } catch (e) {
+    errorEl.textContent = '儲存失敗：' + e.message;
+    errorEl.style.display = '';
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = '儲存';
+  }
 }
 
 function initMembersPage() {
+  $('#member-cancel-btn')?.addEventListener('click', () => closeModal('member-modal'));
+  $('#member-save-btn')?.addEventListener('click', saveMember);
+
   $('#member-search')?.addEventListener('input', e => loadMembers(e.target.value));
 
   $('#export-subscribers-btn')?.addEventListener('click', async () => {
@@ -1600,6 +1668,129 @@ function initCouponsPage() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   聯絡訊息管理
+════════════════════════════════════════════════════════════ */
+let editingMessageId = null;
+let editingMessageStatus = null;
+
+async function loadMessages() {
+  const tbody = $('#messages-table-body');
+
+  const messages = await safeGet(db.collection('b2b_inquiries'));
+  // createdAt 由新到舊；toDate() 對缺少 createdAt 的舊資料已經有防呆，不會報錯
+  messages.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
+
+  // 更新側邊選單未讀數量 badge，就算目前不在這一頁也會更新
+  const unreadCount = messages.filter(m => m.status === 'unread').length;
+  const badge = $('#messages-unread-badge');
+  if (badge) {
+    if (unreadCount > 0) {
+      badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  if (!tbody) return; // 目前不在聯絡訊息頁面時，只更新 badge，不用畫表格
+
+  tbody.innerHTML = '';
+  if (!messages.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted)">目前沒有聯絡訊息</td></tr>`;
+    return;
+  }
+
+  messages.forEach(m => {
+    const isUnread = m.status !== 'read'; // 沒有 status 欄位的舊資料也當作未讀處理
+    const tr = document.createElement('tr');
+    if (isUnread) tr.style.fontWeight = '700'; // 未讀：用粗體做明顯但不誇張的區別
+    tr.style.cursor = 'pointer';
+    tr.innerHTML = `
+      <td><span class="badge badge-${isUnread ? 'success' : 'hidden'}">${isUnread ? '● 未讀' : '已讀'}</span></td>
+      <td>${escHtml(m.name || '—')}</td>
+      <td style="font-size:12px;color:var(--text-secondary)">${escHtml(m.email || '—')}</td>
+      <td style="font-size:12px;color:var(--text-secondary)">${escHtml(m.subject || '—')}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${formatDate(m.createdAt)}</td>
+      <td><button class="btn btn-sm btn-secondary message-view-btn" data-id="${m.id}">查看</button></td>
+    `;
+    tr.querySelector('.message-view-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      openMessageModal(m.id);
+    });
+    tr.addEventListener('click', () => openMessageModal(m.id));
+    tbody.appendChild(tr);
+  });
+}
+
+async function openMessageModal(id) {
+  const d = await safeGetDoc(db.collection('b2b_inquiries').doc(id));
+  editingMessageId     = id;
+  editingMessageStatus = d.status === 'read' ? 'read' : 'unread';
+
+  setText('#msg-detail-name',    d.name    || '—');
+  setText('#msg-detail-subject', d.subject || '—');
+  setText('#msg-detail-message', d.message || '—');
+  setText('#msg-detail-time',    formatDate(d.createdAt));
+  setText('#msg-detail-status',  editingMessageStatus === 'read' ? '已讀' : '未讀');
+
+  const emailLink = $('#msg-detail-email');
+  if (emailLink) {
+    emailLink.textContent = d.email || '—';
+    emailLink.href = d.email ? `mailto:${d.email}` : '#';
+  }
+
+  const toggleBtn = $('#msg-toggle-status-btn');
+  if (toggleBtn) toggleBtn.textContent = editingMessageStatus === 'read' ? '標記為未讀' : '標記為已讀';
+
+  openModal('message-modal');
+}
+
+async function toggleMessageStatus() {
+  if (!editingMessageId) return;
+  const newStatus = editingMessageStatus === 'read' ? 'unread' : 'read';
+  const btn = $('#msg-toggle-status-btn');
+  btn.disabled = true;
+  try {
+    await db.collection('b2b_inquiries').doc(editingMessageId).update({ status: newStatus });
+    editingMessageStatus = newStatus;
+    setText('#msg-detail-status', newStatus === 'read' ? '已讀' : '未讀');
+    btn.textContent = newStatus === 'read' ? '標記為未讀' : '標記為已讀';
+    loadMessages();
+  } catch (e) {
+    toast('更新狀態失敗：' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function confirmDeleteMessage() {
+  if (!editingMessageId) return;
+  $('#confirm-message').textContent = '確定要刪除這則聯絡訊息嗎？刪除後無法復原。';
+
+  const doBtn = $('#confirm-do-btn');
+  doBtn.onclick = async () => {
+    doBtn.disabled = true;
+    try {
+      await db.collection('b2b_inquiries').doc(editingMessageId).delete();
+      toast('聯絡訊息已刪除', 'success');
+      closeModal('confirm-modal');
+      closeModal('message-modal');
+      loadMessages();
+    } catch (e) {
+      toast('刪除失敗：' + e.message, 'error');
+    } finally {
+      doBtn.disabled = false;
+    }
+  };
+  openModal('confirm-modal');
+}
+
+function initMessagesPage() {
+  $('#msg-toggle-status-btn')?.addEventListener('click', toggleMessageStatus);
+  $('#msg-delete-btn')?.addEventListener('click', confirmDeleteMessage);
+}
+
+/* ═══════════════════════════════════════════════════════════════
    網站設定
 ════════════════════════════════════════════════════════════ */
 async function loadSiteSettings() {
@@ -1742,6 +1933,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initOrdersPage();
   initMembersPage();
   initCouponsPage();
+  initMessagesPage();
   initSettingsPage();
 
   // 插入連結

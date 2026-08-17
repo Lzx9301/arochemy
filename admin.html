@@ -509,6 +509,40 @@
         <button class="btn btn-accent" id="bday-save-btn">儲存生日優惠設定</button>
       </div>
 
+      <!-- 測試發券：只供 Admin 測試單一會員用，不是正式批次發送按鈕 -->
+      <div class="card" style="margin-bottom:20px">
+        <h3 style="margin-bottom:6px;font-size:15px">測試發券</h3>
+        <p class="hint" style="margin-bottom:16px">只會對下面指定的單一會員發放，不會影響其他人，方便你確認生日券流程正常運作</p>
+
+        <div class="form-group" style="margin-bottom:16px">
+          <label>測試會員</label>
+          <input type="text" id="bday-test-member-search" placeholder="搜尋會員姓名或 Email…" style="margin-bottom:8px">
+          <select id="bday-test-member" size="6" style="width:100%"></select>
+        </div>
+
+        <div class="form-grid form-grid-2" style="margin-bottom:16px">
+          <div class="form-group">
+            <label>測試年度</label>
+            <select id="bday-test-year"></select>
+          </div>
+          <div class="form-group">
+            <label>測試月份</label>
+            <select id="bday-test-month">
+              <option value="1">1 月</option><option value="2">2 月</option>
+              <option value="3">3 月</option><option value="4">4 月</option>
+              <option value="5">5 月</option><option value="6">6 月</option>
+              <option value="7">7 月</option><option value="8">8 月</option>
+              <option value="9">9 月</option><option value="10">10 月</option>
+              <option value="11">11 月</option><option value="12">12 月</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="bday-test-result" style="display:none;padding:12px 14px;border-radius:10px;margin-bottom:16px;font-size:13px;line-height:1.7"></div>
+
+        <button class="btn btn-accent" id="bday-test-btn">發送測試生日券</button>
+      </div>
+
       <div class="toolbar">
         <div class="toolbar-left">
           <div class="search-wrapper">

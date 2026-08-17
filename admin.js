@@ -172,7 +172,7 @@ function initNav() {
     'page-settings': loadSiteSettings,
     'page-orders':   () => loadOrders(),
     'page-members':  () => loadMembers(),
-    'page-coupons':  () => { loadCoupons(); loadBirthdayPromotionCard(); },
+    'page-coupons':  () => { loadCoupons(); loadBirthdayPromotionCard(); loadBirthdayTestPage(); },
     'page-messages': () => loadMessages(),
   };
 
@@ -1609,8 +1609,9 @@ async function loadMembersForCouponPicker() {
   renderCouponMemberOptions(cachedMembersForCoupon);
 }
 
-function renderCouponMemberOptions(list) {
-  const selectEl = $('#coupon-assigned-member');
+function renderCouponMemberOptions(list, targetSelector = '#coupon-assigned-member') {
+  const selectEl = $(targetSelector);
+  if (!selectEl) return;
   const current = selectEl.value;
   selectEl.innerHTML = list.map(m =>
     `<option value="${m.uid}">${escHtml(m.name || '（未填姓名）')}（${escHtml(m.email)}）</option>`
@@ -1777,6 +1778,138 @@ function bindBirthdayPromotionEvents() {
   $('#bday-year-select')?.addEventListener('change', (e) => loadBirthdayPromotionYear(e.target.value));
   $('#bday-type')?.addEventListener('change', toggleBdayMaxDiscountField);
   $('#bday-save-btn')?.addEventListener('click', saveBirthdayPromotion);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   測試發券：只呼叫 API 對「單一指定會員」測試，不是正式批次按鈕。
+   重用 Part 1 已經有的會員資料 cache(cachedMembersForCoupon)，
+   不重新做一套會員搜尋。
+════════════════════════════════════════════════════════════ */
+async function loadMembersForBirthdayTestPicker() {
+  await loadMembersForCouponPicker(); // 確保 cachedMembersForCoupon 有資料(有快取就不會重打)
+  renderCouponMemberOptions(cachedMembersForCoupon || [], '#bday-test-member');
+}
+
+function initBirthdayTestYearMonth() {
+  const yearSelect = $('#bday-test-year');
+  if (!yearSelect) return;
+  const thisYear = new Date().getFullYear();
+  yearSelect.innerHTML = [thisYear, thisYear + 1].map(y => `<option value="${y}">${y}</option>`).join('');
+  setValue('#bday-test-month', String(new Date().getMonth() + 1));
+}
+
+async function loadBirthdayTestPage() {
+  await loadMembersForBirthdayTestPicker();
+  initBirthdayTestYearMonth();
+}
+
+function bindBirthdayTestEvents() {
+  $('#bday-test-member-search')?.addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    if (!cachedMembersForCoupon) return;
+    const filtered = q
+      ? cachedMembersForCoupon.filter(m => m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q))
+      : cachedMembersForCoupon;
+    renderCouponMemberOptions(filtered, '#bday-test-member');
+  });
+
+  $('#bday-test-btn')?.addEventListener('click', sendTestBirthdayCoupon);
+}
+
+function renderBdayTestResult(html, tone = 'info') {
+  const el = $('#bday-test-result');
+  if (!el) return;
+  const colors = {
+    success: { bg: 'var(--success-bg)', color: '#7ac48a' },
+    error:   { bg: 'var(--danger-bg)',  color: 'var(--danger)' },
+    info:    { bg: 'var(--bg-hover)',   color: 'var(--text-secondary)' },
+  };
+  const c = colors[tone] || colors.info;
+  el.style.background = c.bg;
+  el.style.color = c.color;
+  el.innerHTML = html;
+  el.style.display = '';
+}
+
+async function sendTestBirthdayCoupon() {
+  const memberSelect = $('#bday-test-member');
+  const testCustomerId = memberSelect?.value;
+
+  if (!testCustomerId) {
+    renderBdayTestResult('請先選擇一位測試會員', 'error');
+    return;
+  }
+
+  const year  = getValue('#bday-test-year');
+  const month = getValue('#bday-test-month');
+  const memberLabel = memberSelect.options[memberSelect.selectedIndex]?.textContent || testCustomerId;
+
+  const btn = $('#bday-test-btn');
+  btn.disabled = true;
+  btn.textContent = '發送中…';
+  renderBdayTestResult('處理中…', 'info');
+
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error('登入狀態已失效，請重新登入後台');
+    const token = await user.getIdToken();
+
+    const res = await fetch('https://arochemy-backend-production.up.railway.app/api/admin/birthday-coupons/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ year: Number(year), month: Number(month), testCustomerId }),
+    });
+
+    if (res.status === 401 || res.status === 403) {
+      renderBdayTestResult('權限驗證失敗，請確認目前登入的帳號是管理員身分', 'error');
+      return;
+    }
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      renderBdayTestResult(`發送失敗：${escHtml(data.error || '未知錯誤')}`, 'error');
+      return;
+    }
+
+    if (data.skipped) {
+      const reasonText = {
+        BIRTHDAY_PROMOTION_NOT_CONFIGURED: `${year} 年尚未設定生日優惠，請先在上方「生日優惠設定」建立`,
+        BIRTHDAY_PROMOTION_DISABLED:       `${year} 年生日優惠目前是停用狀態`,
+        TEST_MEMBER_NOT_FOUND:             '找不到這位會員資料',
+      }[data.reason] || data.reason;
+      renderBdayTestResult(reasonText, 'error');
+      return;
+    }
+
+    const detail = data.details?.[0];
+    if (!detail) {
+      renderBdayTestResult('沒有回傳結果，請確認後端記錄', 'error');
+      return;
+    }
+
+    if (detail.outcome === 'invalidBirthday') {
+      renderBdayTestResult(`${escHtml(memberLabel)} 的生日不在 ${month} 月，不符合測試條件`, 'error');
+    } else if (detail.outcome === 'alreadyGranted') {
+      renderBdayTestResult(`此會員 ${year} 年生日券已經發放過了，不會建立第二張`, 'error');
+    } else if (detail.outcome === 'granted') {
+      const emailText = { sent: '已寄送', skipped: '未寄送（會員沒有 Email）', failed: '寄送失敗（券已正常建立，可之後手動處理）' }[detail.email] || detail.email;
+      renderBdayTestResult(`
+        ✓ 生日券建立成功<br>
+        優惠碼：<strong>${escHtml(detail.couponCode)}</strong><br>
+        Email：${emailText}
+      `, 'success');
+    }
+
+  } catch (e) {
+    renderBdayTestResult('發送失敗：' + escHtml(e.message), 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '發送測試生日券';
+  }
 }
 
 async function saveBirthdayPromotion() {
@@ -2149,6 +2282,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initMembersPage();
   initCouponsPage();
   bindBirthdayPromotionEvents();
+  bindBirthdayTestEvents();
   initMessagesPage();
   initSettingsPage();
 

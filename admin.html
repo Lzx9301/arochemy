@@ -461,6 +461,54 @@
     <main id="page-coupons" class="page">
       <div class="page-hero"><h1>折價券管理</h1><p>建立與管理優惠碼，設定折扣條件與使用限制</p></div>
 
+      <!-- 生日優惠年度設定：這裡只是「設定」，不會實際建立/發放優惠券 -->
+      <div class="card" style="margin-bottom:20px">
+        <h3 style="margin-bottom:16px;font-size:15px">生日優惠設定</h3>
+
+        <div class="form-group" style="margin-bottom:16px;max-width:180px">
+          <label>年度</label>
+          <select id="bday-year-select"></select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+            <label class="toggle" style="margin:0"><input type="checkbox" id="bday-enabled"><span class="toggle-track"></span></label>
+            <span>啟用該年度生日優惠</span>
+          </label>
+        </div>
+
+        <div class="form-grid form-grid-2" style="margin-bottom:16px">
+          <div class="form-group">
+            <label>折扣類型</label>
+            <select id="bday-type">
+              <option value="fixed">固定金額折抵</option>
+              <option value="percent">百分比折扣</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>折扣數值</label>
+            <input type="number" id="bday-value" min="0" placeholder="例如 100 或 10">
+          </div>
+        </div>
+
+        <div class="form-grid form-grid-2" style="margin-bottom:16px">
+          <div class="form-group">
+            <label>最低消費</label>
+            <input type="number" id="bday-min-spend" min="0" placeholder="0 = 無門檻">
+          </div>
+          <div class="form-group" id="bday-max-discount-field">
+            <label>最高折抵金額（僅百分比適用）</label>
+            <input type="number" id="bday-max-discount" min="0" placeholder="留空 = 無上限">
+          </div>
+        </div>
+
+        <div id="bday-summary" class="hint" style="margin-bottom:16px"></div>
+
+        <div id="bday-error" style="display:none;color:var(--danger);font-size:13px;margin-bottom:12px"></div>
+
+        <button class="btn btn-accent" id="bday-save-btn">儲存生日優惠設定</button>
+      </div>
+
       <div class="toolbar">
         <div class="toolbar-left">
           <div class="search-wrapper">

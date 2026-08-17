@@ -172,7 +172,7 @@ function initNav() {
     'page-settings': loadSiteSettings,
     'page-orders':   () => loadOrders(),
     'page-members':  () => loadMembers(),
-    'page-coupons':  () => loadCoupons(),
+    'page-coupons':  () => { loadCoupons(); loadBirthdayPromotionCard(); },
     'page-messages': () => loadMessages(),
   };
 
@@ -1702,6 +1702,154 @@ async function saveCoupon() {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   生日優惠年度設定 (settings/birthdayPromotions)
+   注意：這裡只是「設定」，不會建立/發放任何實際優惠券，
+   跟一般折價券的 CRUD、checkCoupon()、eligible/validate/orders
+   完全是兩件事、互不影響。
+════════════════════════════════════════════════════════════ */
+function buildBirthdayYearOptions(existingYears = []) {
+  const thisYear = new Date().getFullYear();
+  // 至少提供「當年度、下一年度」，如果 Firestore 已經有更早/更晚的年份設定，一併合併進來
+  const years = new Set([thisYear, thisYear + 1, ...existingYears.map(Number)]);
+  return [...years].filter(y => !isNaN(y)).sort((a, b) => a - b);
+}
+
+function toggleBdayMaxDiscountField() {
+  const isPercent = getValue('#bday-type') === 'percent';
+  $('#bday-max-discount-field').style.display = isPercent ? '' : 'none';
+}
+
+function renderBdaySummary(cfg, year) {
+  const el = $('#bday-summary');
+  if (!el) return;
+
+  if (!cfg || !cfg.type || !cfg.value) {
+    el.textContent = `${year} 年目前尚未設定生日優惠`;
+    return;
+  }
+
+  const spendText  = cfg.minSpend ? `滿 NT$${Number(cfg.minSpend).toLocaleString()} ` : '';
+  const statusText = cfg.enabled ? '' : '（目前停用中）';
+
+  if (cfg.type === 'fixed') {
+    el.textContent = `${year} 年生日優惠：${spendText}折 NT$${Number(cfg.value).toLocaleString()}${statusText}`;
+  } else {
+    const maxText = cfg.maxDiscount ? `，最高折 NT$${Number(cfg.maxDiscount).toLocaleString()}` : '';
+    el.textContent = `${year} 年生日優惠：${spendText}享 ${cfg.value}% 折扣${maxText}${statusText}`;
+  }
+}
+
+async function loadBirthdayPromotionYear(year) {
+  const d   = await safeGetDoc(db.collection('settings').doc('birthdayPromotions'));
+  const cfg = d[String(year)] || {};
+
+  // 該年度尚未設定過時，顯示空白狀態，不會自動寫入 Firestore
+  $('#bday-enabled').checked = cfg.enabled === true;
+  setValue('#bday-type', cfg.type || 'fixed');
+  setValue('#bday-value', cfg.value ?? '');
+  setValue('#bday-min-spend', cfg.minSpend ?? '');
+  setValue('#bday-max-discount', cfg.maxDiscount ?? '');
+
+  toggleBdayMaxDiscountField();
+  renderBdaySummary(cfg, year);
+}
+
+async function loadBirthdayPromotionCard() {
+  const yearSelect = $('#bday-year-select');
+  if (!yearSelect) return;
+
+  // safeGetDoc 對文件不存在的情況已經有防呆(回傳空物件)，不會報錯，
+  // 符合「settings/birthdayPromotions 第一次還不存在時 UI 要正常顯示」的要求
+  const d = await safeGetDoc(db.collection('settings').doc('birthdayPromotions'));
+  const existingYears = Object.keys(d).filter(k => /^\d{4}$/.test(k));
+  const years = buildBirthdayYearOptions(existingYears);
+
+  const currentSelection = yearSelect.value;
+  yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+  // 重新進入頁面時，如果原本選的年度還在清單裡就保留，不然預設回當年度
+  yearSelect.value = years.map(String).includes(currentSelection) ? currentSelection : String(new Date().getFullYear());
+
+  await loadBirthdayPromotionYear(yearSelect.value);
+}
+
+function bindBirthdayPromotionEvents() {
+  $('#bday-year-select')?.addEventListener('change', (e) => loadBirthdayPromotionYear(e.target.value));
+  $('#bday-type')?.addEventListener('change', toggleBdayMaxDiscountField);
+  $('#bday-save-btn')?.addEventListener('click', saveBirthdayPromotion);
+}
+
+async function saveBirthdayPromotion() {
+  const errorEl = $('#bday-error');
+  errorEl.style.display = 'none';
+
+  const year = getValue('#bday-year-select');
+  if (!/^\d{4}$/.test(year)) {
+    errorEl.textContent = '年度格式異常，請重新整理頁面'; errorEl.style.display = ''; return;
+  }
+
+  const type = getValue('#bday-type');
+  if (type !== 'fixed' && type !== 'percent') {
+    errorEl.textContent = '折扣類型異常'; errorEl.style.display = ''; return;
+  }
+
+  const value = Number(getValue('#bday-value'));
+  if (!value || isNaN(value) || value <= 0) {
+    errorEl.textContent = '請輸入有效的折扣數值'; errorEl.style.display = ''; return;
+  }
+  if (type === 'percent' && value > 100) {
+    errorEl.textContent = '百分比折扣不能超過 100'; errorEl.style.display = ''; return;
+  }
+
+  const minSpendRaw = getValue('#bday-min-spend');
+  const minSpend = minSpendRaw === '' ? 0 : Number(minSpendRaw);
+  if (isNaN(minSpend) || minSpend < 0) {
+    errorEl.textContent = '最低消費不能是負數'; errorEl.style.display = ''; return;
+  }
+
+  let maxDiscount = null;
+  if (type === 'percent') {
+    const maxRaw = getValue('#bday-max-discount');
+    if (maxRaw !== '') {
+      maxDiscount = Number(maxRaw);
+      if (isNaN(maxDiscount) || maxDiscount <= 0) {
+        errorEl.textContent = '最高折抵金額必須大於 0，或留空代表無上限'; errorEl.style.display = ''; return;
+      }
+    }
+  } else {
+    maxDiscount = null; // fixed 模式強制清成 null，不受畫面上殘留數值影響
+  }
+
+  const enabled = $('#bday-enabled').checked;
+
+  const saveBtn = $('#bday-save-btn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = '儲存中…';
+
+  try {
+    // 用 set(..., {merge:true}) 而不是 update()：
+    // 1) 文件第一次還不存在時，set+merge 會直接建立文件，update() 則會失敗
+    // 2) 只寫入 { [year]: {...} } 這一個 key，Firestore 的 merge 對巢狀物件
+    //    是深度合併，只會動到這個年度的欄位，其他年度(例如 2027)完全不受影響
+    await db.collection('settings').doc('birthdayPromotions').set({
+      [year]: {
+        enabled, type, value, minSpend, maxDiscount,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      },
+    }, { merge: true });
+
+    toast(`${year} 年生日優惠設定已儲存`, 'success');
+    renderBdaySummary({ enabled, type, value, minSpend, maxDiscount }, year);
+
+  } catch (e) {
+    errorEl.textContent = '儲存失敗：' + e.message;
+    errorEl.style.display = '';
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = '儲存生日優惠設定';
+  }
+}
+
 function initCouponsPage() {
   $('#coupon-search')?.addEventListener('input', e => loadCoupons(e.target.value));
   $('#add-coupon-btn')?.addEventListener('click', () => openCouponModal());
@@ -2000,6 +2148,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initOrdersPage();
   initMembersPage();
   initCouponsPage();
+  bindBirthdayPromotionEvents();
   initMessagesPage();
   initSettingsPage();
 

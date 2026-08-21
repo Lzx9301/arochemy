@@ -190,13 +190,8 @@
           <div class="card-header"><span class="card-title">Hero 橫幅文字</span></div>
           <div class="card-body">
             <div class="form-grid">
-              <div class="form-group"><label>小標（Kicker）</label><input type="text" id="hero-kicker" placeholder="自然・純淨・安心"></div>
               <div class="form-group"><label>主標題</label><input type="text" id="hero-title" placeholder="讓香氛回到日常，找回生活的平衡"></div>
               <div class="form-group"><label>副標題</label><textarea id="hero-subtitle" rows="3" placeholder="精選天然精油…"></textarea></div>
-              <div class="form-grid form-grid-2">
-                <div class="form-group"><label>按鈕文字</label><input type="text" id="hero-btn-text" placeholder="探索精選產品"></div>
-                <div class="form-group"><label>按鈕連結</label><input type="text" id="hero-btn-link" placeholder="#featured"></div>
-              </div>
             </div>
 
             <!-- 背景媒體 -->
@@ -259,18 +254,9 @@
         <div class="card">
           <div class="card-header"><span class="card-title">⭐ 精選產品（首頁展示）</span></div>
           <div class="card-body">
-            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;line-height:1.7">
-              根據所有訂單的銷售數量，自動計算出熱銷前三名並設為首頁精選產品。<br>
-              點擊按鈕後，系統會掃描全部訂單資料、計算各商品售出數量，並更新 Firestore 中的 <code style="background:var(--bg-elevated);padding:2px 6px;border-radius:3px;font-size:11px">featured</code> 欄位。
+            <p style="font-size:13px;color:var(--text-secondary);line-height:1.7">
+              精選產品改為手動指定：請至「產品管理」頁面，編輯個別商品時勾選「精選商品」，即可將該商品顯示在首頁精選區塊（最多顯示 5 項）。
             </p>
-            <button class="featured-update-btn" id="update-featured-btn">
-              <span class="icon">🔥</span>
-              <span class="text">
-                <strong>一鍵更新本月熱銷精選</strong>
-                <span>自動計算銷量 → 更新前台精選產品顯示</span>
-              </span>
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
-            </button>
           </div>
         </div>
       </div>
@@ -447,10 +433,10 @@
         <div style="overflow-x:auto">
           <table class="data-table">
             <thead>
-              <tr><th>會員姓名</th><th>Email</th><th>電話</th><th>性別</th><th>生日</th><th>電子報</th><th>加入日期</th><th></th></tr>
+              <tr><th>會員姓名</th><th>Email</th><th>電話</th><th>生日</th><th>電子報</th><th>加入日期</th><th></th></tr>
             </thead>
             <tbody id="members-table-body">
-              <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted)">載入中…</td></tr>
+              <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">載入中…</td></tr>
             </tbody>
           </table>
         </div>
@@ -460,88 +446,6 @@
     <!-- ══ 折價券管理 ══ -->
     <main id="page-coupons" class="page">
       <div class="page-hero"><h1>折價券管理</h1><p>建立與管理優惠碼，設定折扣條件與使用限制</p></div>
-
-      <!-- 生日優惠年度設定：這裡只是「設定」，不會實際建立/發放優惠券 -->
-      <div class="card" style="margin-bottom:20px">
-        <h3 style="margin-bottom:16px;font-size:15px">生日優惠設定</h3>
-
-        <div class="form-group" style="margin-bottom:16px;max-width:180px">
-          <label>年度</label>
-          <select id="bday-year-select"></select>
-        </div>
-
-        <div class="form-group" style="margin-bottom:16px">
-          <label class="toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer">
-            <label class="toggle" style="margin:0"><input type="checkbox" id="bday-enabled"><span class="toggle-track"></span></label>
-            <span>啟用該年度生日優惠</span>
-          </label>
-        </div>
-
-        <div class="form-grid form-grid-2" style="margin-bottom:16px">
-          <div class="form-group">
-            <label>折扣類型</label>
-            <select id="bday-type">
-              <option value="fixed">固定金額折抵</option>
-              <option value="percent">百分比折扣</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>折扣數值</label>
-            <input type="number" id="bday-value" min="0" placeholder="例如 100 或 10">
-          </div>
-        </div>
-
-        <div class="form-grid form-grid-2" style="margin-bottom:16px">
-          <div class="form-group">
-            <label>最低消費</label>
-            <input type="number" id="bday-min-spend" min="0" placeholder="0 = 無門檻">
-          </div>
-          <div class="form-group" id="bday-max-discount-field">
-            <label>最高折抵金額（僅百分比適用）</label>
-            <input type="number" id="bday-max-discount" min="0" placeholder="留空 = 無上限">
-          </div>
-        </div>
-
-        <div id="bday-summary" class="hint" style="margin-bottom:16px"></div>
-
-        <div id="bday-error" style="display:none;color:var(--danger);font-size:13px;margin-bottom:12px"></div>
-
-        <button class="btn btn-accent" id="bday-save-btn">儲存生日優惠設定</button>
-      </div>
-
-      <!-- 測試發券：只供 Admin 測試單一會員用，不是正式批次發送按鈕 -->
-      <div class="card" style="margin-bottom:20px">
-        <h3 style="margin-bottom:6px;font-size:15px">測試發券</h3>
-        <p class="hint" style="margin-bottom:16px">只會對下面指定的單一會員發放，不會影響其他人，方便你確認生日券流程正常運作</p>
-
-        <div class="form-group" style="margin-bottom:16px">
-          <label>測試會員</label>
-          <input type="text" id="bday-test-member-search" placeholder="搜尋會員姓名或 Email…" style="margin-bottom:8px">
-          <select id="bday-test-member" size="6" style="width:100%"></select>
-        </div>
-
-        <div class="form-grid form-grid-2" style="margin-bottom:16px">
-          <div class="form-group">
-            <label>測試年度</label>
-            <select id="bday-test-year"></select>
-          </div>
-          <div class="form-group">
-            <label>測試月份</label>
-            <select id="bday-test-month">
-              <option value="1">1 月</option><option value="2">2 月</option>
-              <option value="3">3 月</option><option value="4">4 月</option>
-              <option value="5">5 月</option><option value="6">6 月</option>
-              <option value="7">7 月</option><option value="8">8 月</option>
-              <option value="9">9 月</option><option value="10">10 月</option>
-              <option value="11">11 月</option><option value="12">12 月</option>
-            </select>
-          </div>
-        </div>
-
-        <div id="bday-test-result" style="display:none;padding:12px 14px;border-radius:10px;margin-bottom:16px;font-size:13px;line-height:1.7"></div>
-
-        <button class="btn btn-accent" id="bday-test-btn">發送測試生日券</button>
-      </div>
 
       <div class="toolbar">
         <div class="toolbar-left">
@@ -702,21 +606,9 @@
         <input type="text" id="member-phone" placeholder="會員電話">
       </div>
 
-      <div class="form-grid form-grid-2" style="margin-bottom:16px">
-        <div class="form-group">
-          <label>性別</label>
-          <select id="member-gender">
-            <option value="">未設定</option>
-            <option value="female">女性</option>
-            <option value="male">男性</option>
-            <option value="other">其他</option>
-            <option value="prefer_not_to_say">不透露</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>生日</label>
-          <input type="date" id="member-birthday">
-        </div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label>生日</label>
+        <input type="date" id="member-birthday">
       </div>
 
       <div id="member-error" class="form-error" style="display:none;color:var(--danger);font-size:13px;margin-bottom:8px"></div>
@@ -875,6 +767,12 @@
             <option value="active">上架中</option>
             <option value="hidden">下架</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label class="toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-top:8px">
+            <label class="toggle" style="margin:0"><input type="checkbox" id="product-featured"><span class="toggle-track"></span></label>
+            <span>精選商品（顯示在首頁精選區塊）</span>
+          </label>
         </div>
       </div>
 

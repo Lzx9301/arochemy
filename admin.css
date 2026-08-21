@@ -1302,31 +1302,6 @@ hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
   text-align: right;
 }
 
-/* ── 熱銷更新按鈕 ── */
-.featured-update-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--accent-dim);
-  border: 1px solid var(--accent-border);
-  border-radius: var(--radius-md);
-  padding: 14px 20px;
-  cursor: pointer;
-  transition: all var(--transition);
-  width: 100%;
-  text-align: left;
-}
-
-.featured-update-btn:hover {
-  background: rgba(184,151,90,0.2);
-  border-color: var(--accent);
-}
-
-.featured-update-btn .icon { font-size: 20px; }
-.featured-update-btn .text { flex: 1; }
-.featured-update-btn .text strong { display: block; font-size: 13px; color: var(--accent); }
-.featured-update-btn .text span   { font-size: 11px; color: var(--text-muted); }
-
 /* ── 會員列表 ── */
 .member-avatar {
   width: 32px; height: 32px;

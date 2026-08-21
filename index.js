@@ -53,10 +53,8 @@ async function loadSettings() {
     const site = siteSnap.exists() ? siteSnap.data() : {};
 
     // Hero 文字
-    if (home.heroKicker)   setText('heroKicker',   home.heroKicker);
     if (home.heroTitle)    setText('heroTitle',     home.heroTitle);
     if (home.heroSubtitle) setText('heroSubtitle',  home.heroSubtitle);
-    if (home.heroBtnText)  { const el = document.getElementById('heroBtnPrimary'); if (el) el.textContent = home.heroBtnText; }
 
     // Hero 媒體
     if (home.heroMedia?.url) {

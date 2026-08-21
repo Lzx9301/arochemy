@@ -172,7 +172,7 @@ function initNav() {
     'page-settings': loadSiteSettings,
     'page-orders':   () => loadOrders(),
     'page-members':  () => loadMembers(),
-    'page-coupons':  () => { loadCoupons(); loadBirthdayPromotionCard(); loadBirthdayTestPage(); },
+    'page-coupons':  () => loadCoupons(),
     'page-messages': () => loadMessages(),
   };
 
@@ -269,11 +269,8 @@ async function loadHomepageSettings() {
   // 用 safeGetDoc，settings doc 不存在時回傳 {}
   const data = await safeGetDoc(db.collection('settings').doc('homepage'));
 
-  setValue('#hero-kicker',   data.heroKicker   || '');
   setValue('#hero-title',    data.heroTitle    || '');
   setValue('#hero-subtitle', data.heroSubtitle || '');
-  setValue('#hero-btn-text', data.heroBtnText  || '');
-  setValue('#hero-btn-link', data.heroBtnLink  || '');
 
   // 讀取 Hero 媒體預覽
   if (data.heroMedia?.url) {
@@ -340,11 +337,8 @@ function initHomepageSettings() {
     }
 
     await saveHomepageSection({
-      heroKicker:   getValue('#hero-kicker'),
       heroTitle:    getValue('#hero-title'),
       heroSubtitle: getValue('#hero-subtitle'),
-      heroBtnText:  getValue('#hero-btn-text'),
-      heroBtnLink:  getValue('#hero-btn-link'),
       heroMedia:    mediaUrl ? { type: mediaType, url: mediaUrl } : null,
     });
 
@@ -361,8 +355,6 @@ function initHomepageSettings() {
   $('#save-faq-btn')?.addEventListener('click', () => {
     saveHomepageSection({ faqs: collectFaqs() });
   });
-
-  $('#update-featured-btn')?.addEventListener('click', updateFeaturedProducts);
 }
 
 async function saveHomepageSection(data) {
@@ -409,54 +401,6 @@ function collectFaqs() {
     q: item.querySelector('.faq-q').value.trim(),
     a: item.querySelector('.faq-a').value.trim(),
   })).filter(f => f.q);
-}
-
-/* ── 更新精選產品 ── */
-async function updateFeaturedProducts() {
-  const btn       = $('#update-featured-btn');
-  const strongEl  = btn?.querySelector('.text strong');
-  if (strongEl) strongEl.textContent = '計算中…';
-  if (btn) btn.disabled = true;
-
-  try {
-    const orders   = await safeGet(db.collection('orders'));
-    const salesMap = {};
-
-    orders.forEach(o => {
-      if (o.status === 'cancel') return;
-      (o.items || []).forEach(item => {
-        const key = item.productId || item.name;
-        if (!key) return;
-        if (!salesMap[key]) salesMap[key] = { name: item.name || key, qty: 0, productId: item.productId };
-        salesMap[key].qty += Number(item.qty || item.quantity || 1);
-      });
-    });
-
-    const top3 = Object.values(salesMap)
-      .sort((a, b) => b.qty - a.qty)
-      .slice(0, 3)
-      .map(p => p.productId)
-      .filter(Boolean);
-
-    if (!top3.length) {
-      toast('目前沒有訂單銷售紀錄，無法計算熱銷', 'info');
-      return;
-    }
-
-    const allProducts = await safeGet(db.collection('products'));
-    const batch = db.batch();
-    allProducts.forEach(p => {
-      batch.update(db.collection('products').doc(p.id), { featured: top3.includes(p.id) });
-    });
-    await batch.commit();
-    await saveHomepageSection({ featuredProductIds: top3, featuredUpdatedAt: new Date().toISOString() });
-    toast(`精選產品已更新（熱銷前 ${top3.length} 名）`, 'success');
-  } catch (e) {
-    toast('更新失敗：' + e.message, 'error');
-  } finally {
-    if (strongEl) strongEl.textContent = '一鍵更新本月熱銷精選';
-    if (btn) btn.disabled = false;
-  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -583,6 +527,7 @@ async function openProductModal(id = null) {
   $('#product-image-previews').innerHTML = '';
   $('#product-desc-image-previews').innerHTML = '';
   setValue('#product-status', 'active');
+  $('#product-featured').checked = false;
   $('#product-modal-title').textContent = id ? '編輯產品' : '新增產品';
 
   // 新增模式才套用預設值
@@ -605,6 +550,7 @@ async function openProductModal(id = null) {
       setValue('#product-category',    data.category    || '');
       setValue('#product-description', data.description || '');
       setValue('#product-status',      data.status      || 'active');
+      $('#product-featured').checked = data.featured === true;
       setValue('#product-origin',      data.origin      || '');
       setValue('#product-family',      data.family      || '');
       setValue('#product-latin-name',  data.latinName   || '');
@@ -784,6 +730,7 @@ async function saveProduct() {
       category:    getValue('#product-category'),
       description: getValue('#product-description'),
       status,
+      featured:    $('#product-featured').checked,
       origin:      getValue('#product-origin'),
       family:      getValue('#product-family'),
       latinName:   getValue('#product-latin-name'),
@@ -1356,15 +1303,12 @@ async function loadMembers(filter = '') {
 
   tbody.innerHTML = '';
   if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted)">目前沒有會員資料</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">目前沒有會員資料</td></tr>`;
     return;
   }
 
-  const GENDER_LABEL = { female: '女性', male: '男性', other: '其他', prefer_not_to_say: '不透露' };
-
   filtered.forEach(m => {
     const initials = (m.name || m.email || '?')[0].toUpperCase();
-    const genderText   = GENDER_LABEL[m.gender] || '未設定';
     const birthdayText = m.birthday || '未設定';
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -1376,7 +1320,6 @@ async function loadMembers(filter = '') {
       </td>
       <td style="color:var(--text-secondary);font-size:12px">${escHtml(m.email || '—')}</td>
       <td style="font-size:12px;color:var(--text-secondary)">${escHtml(m.phone || '—')}</td>
-      <td style="font-size:12px;color:var(--text-secondary)">${escHtml(genderText)}</td>
       <td style="font-size:12px;color:var(--text-secondary)">${escHtml(birthdayText)}</td>
       <td><span class="badge badge-${m.subscribed ? 'success' : 'hidden'}">${m.subscribed ? '✓ 已訂閱' : '未訂閱'}</span></td>
       <td style="font-size:12px;color:var(--text-muted)">${formatDate(m.createdAt)}</td>
@@ -1400,7 +1343,6 @@ async function openMemberModal(uid) {
   setValue('#member-email',    d.email    || '');
   setValue('#member-name',     d.name     || '');
   setValue('#member-phone',    d.phone    || '');
-  setValue('#member-gender',   d.gender   || '');
   setValue('#member-birthday', d.birthday || '');
 
   openModal('member-modal');
@@ -1421,7 +1363,6 @@ async function saveMember() {
     await db.collection('members').doc(editingMemberId).update({
       name:     getValue('#member-name'),
       phone:    getValue('#member-phone'),
-      gender:   getValue('#member-gender'),
       birthday: getValue('#member-birthday'),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
@@ -1700,286 +1641,6 @@ async function saveCoupon() {
   } finally {
     saveBtn.disabled = false;
     saveBtn.textContent = '儲存';
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   生日優惠年度設定 (settings/birthdayPromotions)
-   注意：這裡只是「設定」，不會建立/發放任何實際優惠券，
-   跟一般折價券的 CRUD、checkCoupon()、eligible/validate/orders
-   完全是兩件事、互不影響。
-════════════════════════════════════════════════════════════ */
-function buildBirthdayYearOptions(existingYears = []) {
-  const thisYear = new Date().getFullYear();
-  // 至少提供「當年度、下一年度」，如果 Firestore 已經有更早/更晚的年份設定，一併合併進來
-  const years = new Set([thisYear, thisYear + 1, ...existingYears.map(Number)]);
-  return [...years].filter(y => !isNaN(y)).sort((a, b) => a - b);
-}
-
-function toggleBdayMaxDiscountField() {
-  const isPercent = getValue('#bday-type') === 'percent';
-  $('#bday-max-discount-field').style.display = isPercent ? '' : 'none';
-}
-
-function renderBdaySummary(cfg, year) {
-  const el = $('#bday-summary');
-  if (!el) return;
-
-  if (!cfg || !cfg.type || !cfg.value) {
-    el.textContent = `${year} 年目前尚未設定生日優惠`;
-    return;
-  }
-
-  const spendText  = cfg.minSpend ? `滿 NT$${Number(cfg.minSpend).toLocaleString()} ` : '';
-  const statusText = cfg.enabled ? '' : '（目前停用中）';
-
-  if (cfg.type === 'fixed') {
-    el.textContent = `${year} 年生日優惠：${spendText}折 NT$${Number(cfg.value).toLocaleString()}${statusText}`;
-  } else {
-    const maxText = cfg.maxDiscount ? `，最高折 NT$${Number(cfg.maxDiscount).toLocaleString()}` : '';
-    el.textContent = `${year} 年生日優惠：${spendText}享 ${cfg.value}% 折扣${maxText}${statusText}`;
-  }
-}
-
-async function loadBirthdayPromotionYear(year) {
-  const d   = await safeGetDoc(db.collection('settings').doc('birthdayPromotions'));
-  const cfg = d[String(year)] || {};
-
-  // 該年度尚未設定過時，顯示空白狀態，不會自動寫入 Firestore
-  $('#bday-enabled').checked = cfg.enabled === true;
-  setValue('#bday-type', cfg.type || 'fixed');
-  setValue('#bday-value', cfg.value ?? '');
-  setValue('#bday-min-spend', cfg.minSpend ?? '');
-  setValue('#bday-max-discount', cfg.maxDiscount ?? '');
-
-  toggleBdayMaxDiscountField();
-  renderBdaySummary(cfg, year);
-}
-
-async function loadBirthdayPromotionCard() {
-  const yearSelect = $('#bday-year-select');
-  if (!yearSelect) return;
-
-  // safeGetDoc 對文件不存在的情況已經有防呆(回傳空物件)，不會報錯，
-  // 符合「settings/birthdayPromotions 第一次還不存在時 UI 要正常顯示」的要求
-  const d = await safeGetDoc(db.collection('settings').doc('birthdayPromotions'));
-  const existingYears = Object.keys(d).filter(k => /^\d{4}$/.test(k));
-  const years = buildBirthdayYearOptions(existingYears);
-
-  const currentSelection = yearSelect.value;
-  yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
-  // 重新進入頁面時，如果原本選的年度還在清單裡就保留，不然預設回當年度
-  yearSelect.value = years.map(String).includes(currentSelection) ? currentSelection : String(new Date().getFullYear());
-
-  await loadBirthdayPromotionYear(yearSelect.value);
-}
-
-function bindBirthdayPromotionEvents() {
-  $('#bday-year-select')?.addEventListener('change', (e) => loadBirthdayPromotionYear(e.target.value));
-  $('#bday-type')?.addEventListener('change', toggleBdayMaxDiscountField);
-  $('#bday-save-btn')?.addEventListener('click', saveBirthdayPromotion);
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   測試發券：只呼叫 API 對「單一指定會員」測試，不是正式批次按鈕。
-   重用 Part 1 已經有的會員資料 cache(cachedMembersForCoupon)，
-   不重新做一套會員搜尋。
-════════════════════════════════════════════════════════════ */
-async function loadMembersForBirthdayTestPicker() {
-  await loadMembersForCouponPicker(); // 確保 cachedMembersForCoupon 有資料(有快取就不會重打)
-  renderCouponMemberOptions(cachedMembersForCoupon || [], '#bday-test-member');
-}
-
-function initBirthdayTestYearMonth() {
-  const yearSelect = $('#bday-test-year');
-  if (!yearSelect) return;
-  const thisYear = new Date().getFullYear();
-  yearSelect.innerHTML = [thisYear, thisYear + 1].map(y => `<option value="${y}">${y}</option>`).join('');
-  setValue('#bday-test-month', String(new Date().getMonth() + 1));
-}
-
-async function loadBirthdayTestPage() {
-  await loadMembersForBirthdayTestPicker();
-  initBirthdayTestYearMonth();
-}
-
-function bindBirthdayTestEvents() {
-  $('#bday-test-member-search')?.addEventListener('input', (e) => {
-    const q = e.target.value.trim().toLowerCase();
-    if (!cachedMembersForCoupon) return;
-    const filtered = q
-      ? cachedMembersForCoupon.filter(m => m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q))
-      : cachedMembersForCoupon;
-    renderCouponMemberOptions(filtered, '#bday-test-member');
-  });
-
-  $('#bday-test-btn')?.addEventListener('click', sendTestBirthdayCoupon);
-}
-
-function renderBdayTestResult(html, tone = 'info') {
-  const el = $('#bday-test-result');
-  if (!el) return;
-  const colors = {
-    success: { bg: 'var(--success-bg)', color: '#7ac48a' },
-    error:   { bg: 'var(--danger-bg)',  color: 'var(--danger)' },
-    info:    { bg: 'var(--bg-hover)',   color: 'var(--text-secondary)' },
-  };
-  const c = colors[tone] || colors.info;
-  el.style.background = c.bg;
-  el.style.color = c.color;
-  el.innerHTML = html;
-  el.style.display = '';
-}
-
-async function sendTestBirthdayCoupon() {
-  const memberSelect = $('#bday-test-member');
-  const testCustomerId = memberSelect?.value;
-
-  if (!testCustomerId) {
-    renderBdayTestResult('請先選擇一位測試會員', 'error');
-    return;
-  }
-
-  const year  = getValue('#bday-test-year');
-  const month = getValue('#bday-test-month');
-  const memberLabel = memberSelect.options[memberSelect.selectedIndex]?.textContent || testCustomerId;
-
-  const btn = $('#bday-test-btn');
-  btn.disabled = true;
-  btn.textContent = '發送中…';
-  renderBdayTestResult('處理中…', 'info');
-
-  try {
-    const user = auth.currentUser;
-    if (!user) throw new Error('登入狀態已失效，請重新登入後台');
-    const token = await user.getIdToken();
-
-    const res = await fetch('https://arochemy-backend-production.up.railway.app/api/admin/birthday-coupons/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({ year: Number(year), month: Number(month), testCustomerId }),
-    });
-
-    if (res.status === 401 || res.status === 403) {
-      renderBdayTestResult('權限驗證失敗，請確認目前登入的帳號是管理員身分', 'error');
-      return;
-    }
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      renderBdayTestResult(`發送失敗：${escHtml(data.error || '未知錯誤')}`, 'error');
-      return;
-    }
-
-    if (data.skipped) {
-      const reasonText = {
-        BIRTHDAY_PROMOTION_NOT_CONFIGURED: `${year} 年尚未設定生日優惠，請先在上方「生日優惠設定」建立`,
-        BIRTHDAY_PROMOTION_DISABLED:       `${year} 年生日優惠目前是停用狀態`,
-        TEST_MEMBER_NOT_FOUND:             '找不到這位會員資料',
-      }[data.reason] || data.reason;
-      renderBdayTestResult(reasonText, 'error');
-      return;
-    }
-
-    const detail = data.details?.[0];
-    if (!detail) {
-      renderBdayTestResult('沒有回傳結果，請確認後端記錄', 'error');
-      return;
-    }
-
-    if (detail.outcome === 'invalidBirthday') {
-      renderBdayTestResult(`${escHtml(memberLabel)} 的生日不在 ${month} 月，不符合測試條件`, 'error');
-    } else if (detail.outcome === 'alreadyGranted') {
-      renderBdayTestResult(`此會員 ${year} 年生日券已經發放過了，不會建立第二張`, 'error');
-    } else if (detail.outcome === 'granted') {
-      const emailText = { sent: '已寄送', skipped: '未寄送（會員沒有 Email）', failed: '寄送失敗（券已正常建立，可之後手動處理）' }[detail.email] || detail.email;
-      renderBdayTestResult(`
-        ✓ 生日券建立成功<br>
-        優惠碼：<strong>${escHtml(detail.couponCode)}</strong><br>
-        Email：${emailText}
-      `, 'success');
-    }
-
-  } catch (e) {
-    renderBdayTestResult('發送失敗：' + escHtml(e.message), 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '發送測試生日券';
-  }
-}
-
-async function saveBirthdayPromotion() {
-  const errorEl = $('#bday-error');
-  errorEl.style.display = 'none';
-
-  const year = getValue('#bday-year-select');
-  if (!/^\d{4}$/.test(year)) {
-    errorEl.textContent = '年度格式異常，請重新整理頁面'; errorEl.style.display = ''; return;
-  }
-
-  const type = getValue('#bday-type');
-  if (type !== 'fixed' && type !== 'percent') {
-    errorEl.textContent = '折扣類型異常'; errorEl.style.display = ''; return;
-  }
-
-  const value = Number(getValue('#bday-value'));
-  if (!value || isNaN(value) || value <= 0) {
-    errorEl.textContent = '請輸入有效的折扣數值'; errorEl.style.display = ''; return;
-  }
-  if (type === 'percent' && value > 100) {
-    errorEl.textContent = '百分比折扣不能超過 100'; errorEl.style.display = ''; return;
-  }
-
-  const minSpendRaw = getValue('#bday-min-spend');
-  const minSpend = minSpendRaw === '' ? 0 : Number(minSpendRaw);
-  if (isNaN(minSpend) || minSpend < 0) {
-    errorEl.textContent = '最低消費不能是負數'; errorEl.style.display = ''; return;
-  }
-
-  let maxDiscount = null;
-  if (type === 'percent') {
-    const maxRaw = getValue('#bday-max-discount');
-    if (maxRaw !== '') {
-      maxDiscount = Number(maxRaw);
-      if (isNaN(maxDiscount) || maxDiscount <= 0) {
-        errorEl.textContent = '最高折抵金額必須大於 0，或留空代表無上限'; errorEl.style.display = ''; return;
-      }
-    }
-  } else {
-    maxDiscount = null; // fixed 模式強制清成 null，不受畫面上殘留數值影響
-  }
-
-  const enabled = $('#bday-enabled').checked;
-
-  const saveBtn = $('#bday-save-btn');
-  saveBtn.disabled = true;
-  saveBtn.textContent = '儲存中…';
-
-  try {
-    // 用 set(..., {merge:true}) 而不是 update()：
-    // 1) 文件第一次還不存在時，set+merge 會直接建立文件，update() 則會失敗
-    // 2) 只寫入 { [year]: {...} } 這一個 key，Firestore 的 merge 對巢狀物件
-    //    是深度合併，只會動到這個年度的欄位，其他年度(例如 2027)完全不受影響
-    await db.collection('settings').doc('birthdayPromotions').set({
-      [year]: {
-        enabled, type, value, minSpend, maxDiscount,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      },
-    }, { merge: true });
-
-    toast(`${year} 年生日優惠設定已儲存`, 'success');
-    renderBdaySummary({ enabled, type, value, minSpend, maxDiscount }, year);
-
-  } catch (e) {
-    errorEl.textContent = '儲存失敗：' + e.message;
-    errorEl.style.display = '';
-  } finally {
-    saveBtn.disabled = false;
-    saveBtn.textContent = '儲存生日優惠設定';
   }
 }
 
@@ -2281,8 +1942,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initOrdersPage();
   initMembersPage();
   initCouponsPage();
-  bindBirthdayPromotionEvents();
-  bindBirthdayTestEvents();
   initMessagesPage();
   initSettingsPage();
 

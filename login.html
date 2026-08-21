@@ -273,16 +273,6 @@
             <input id="regEmail" type="email" placeholder="請輸入 Email" autocomplete="username">
           </div>
           <div class="auth-field">
-            <label for="regGender">性別</label>
-            <select id="regGender">
-              <option value="">請選擇</option>
-              <option value="female">女性</option>
-              <option value="male">男性</option>
-              <option value="other">其他</option>
-              <option value="prefer_not_to_say">不透露</option>
-            </select>
-          </div>
-          <div class="auth-field">
             <label for="regBirthday">生日</label>
             <input id="regBirthday" type="date">
           </div>
@@ -354,16 +344,6 @@
           <div class="auth-field">
             <label>Email</label>
             <input id="editEmail" type="email" disabled>
-          </div>
-          <div class="auth-field">
-            <label for="editGender">性別</label>
-            <select id="editGender">
-              <option value="">未設定</option>
-              <option value="female">女性</option>
-              <option value="male">男性</option>
-              <option value="other">其他</option>
-              <option value="prefer_not_to_say">不透露</option>
-            </select>
           </div>
           <div class="auth-field">
             <label for="editBirthday">生日</label>
@@ -490,13 +470,11 @@ $('registerBtn')?.addEventListener('click', async () => {
   const name     = $('regName')?.value.trim();
   const phone    = $('regPhone')?.value.trim();
   const email    = $('regEmail')?.value.trim();
-  const gender   = $('regGender')?.value || '';
   const birthday = $('regBirthday')?.value || ''; // <input type="date"> 原生就是 YYYY-MM-DD 字串，直接用，不轉成 Date 物件避免時區偏移
   const pw       = $('regPassword')?.value;
   const sub      = $('regSubscribed')?.checked || false;
   if (!email || !pw) { msg('authMsg', '請填寫 Email 與密碼。', true); return; }
   if (pw.length < 6) { msg('authMsg', '密碼至少需要 6 個字元。', true); return; }
-  if (!gender)   { msg('authMsg', '請選擇性別。', true); return; }
   if (!birthday) { msg('authMsg', '請選擇生日。', true); return; }
   const btn = $('registerBtn');
   btn.disabled = true; btn.textContent = '註冊中…';
@@ -506,7 +484,7 @@ $('registerBtn')?.addEventListener('click', async () => {
     // 會員資料一定要先寫入成功，就算後面寄驗證信失敗，帳號跟會員資料也都已經建立好了
     await setDoc(doc(db, 'members', cred.user.uid), {
       uid: cred.user.uid, name: name||'', phone: phone||'',
-      email, gender, birthday, subscribed: sub, createdAt: serverTimestamp(),
+      email, birthday, subscribed: sub, createdAt: serverTimestamp(),
     });
 
     // 寄送驗證信；就算寄送失敗也不能刪掉剛建立的帳號/會員資料，只是提示可以之後重寄
@@ -607,7 +585,6 @@ $('saveProfileBtn')?.addEventListener('click', async () => {
   const user   = auth.currentUser; if (!user) return;
   const name   = $('editName')?.value.trim();
   const phone  = $('editPhone')?.value.trim();
-  const gender = $('editGender')?.value || '';
   // 注意：這裡刻意不讀取 editBirthday 的值。生日只能由後台管理員修改，
   // 就算前端這個 disabled input 被人用開發者工具改掉值，這裡也完全不會用到它，
   // 送給 Firestore 的更新內容裡永遠不會包含 birthday 這個欄位。
@@ -615,7 +592,7 @@ $('saveProfileBtn')?.addEventListener('click', async () => {
   btn.disabled = true; btn.textContent = '儲存中…';
   try {
     await updateDoc(doc(db, 'members', user.uid), {
-      name: name||'', phone: phone||'', gender: gender||'',
+      name: name||'', phone: phone||'',
       updatedAt: serverTimestamp(),
     });
     if ($('memberName')) $('memberName').textContent = name || '會員';
@@ -684,10 +661,6 @@ onAuthStateChanged(auth, async user => {
         if ($('subToggle'))   $('subToggle').checked = d.subscribed || false;
         if ($('memberName'))  $('memberName').textContent   = d.name || '會員';
         if ($('memberInitial'))$('memberInitial').textContent = (d.name || user.email)[0].toUpperCase();
-
-        /* 性別：舊會員可能沒有這個欄位，沒有就顯示「未設定」(下拉選單的空值選項)，
-           會員可以自己選擇並在下面「儲存資料」時更新 */
-        if ($('editGender')) $('editGender').value = d.gender || '';
 
         /* 生日：一律唯讀，會員本人不能自己新增或修改，只能由後台管理員處理。
            舊會員/尚未由客服補上生日的情況下，欄位留空，並換一句提示文字說明。 */

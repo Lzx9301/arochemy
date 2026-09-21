@@ -404,6 +404,13 @@ const auth = getAuth(app);
 const db   = getFirestore(app);
 const $    = id => document.getElementById(id);
 
+// 讓密碼重設信/Email 驗證信裡的連結，導向 Arochemy 自訂品牌化頁面(auth-action.html)，
+// 而不是 Firebase 預設、完全沒有品牌識別的頁面
+const actionCodeSettings = {
+  url: 'https://www.arochemy.com/auth-action.html',
+  handleCodeInApp: false,
+};
+
 function msg(id, text, err = false) {
   const el = $(id); if (!el) return;
   el.textContent = text;
@@ -490,7 +497,7 @@ $('registerBtn')?.addEventListener('click', async () => {
     // 寄送驗證信；就算寄送失敗也不能刪掉剛建立的帳號/會員資料，只是提示可以之後重寄
     let verifyEmailSent = true;
     try {
-      await sendEmailVerification(cred.user);
+      await sendEmailVerification(cred.user, actionCodeSettings);
     } catch (e) {
       verifyEmailSent = false;
       console.warn('[Auth] 驗證信寄送失敗：', e.message);
@@ -526,7 +533,7 @@ $('resendVerifyBtn')?.addEventListener('click', async () => {
   const btn = $('resendVerifyBtn');
   btn.disabled = true; btn.textContent = '寄送中…';
   try {
-    await sendEmailVerification(user);
+    await sendEmailVerification(user, actionCodeSettings);
     msg('verifyPendingMsg', '驗證信已重新寄送，請至信箱查看。');
     // 成功後鎖定按鈕一段時間，避免使用者連續點擊灌爆信箱、觸發 Firebase 的寄送次數限制
     setTimeout(() => {
@@ -560,7 +567,7 @@ $('sendResetBtn')?.addEventListener('click', async () => {
   const genericMsg = '如果此 Email 已註冊，系統將寄送密碼重設信至該信箱，請至信箱查看。';
 
   try {
-    await sendPasswordResetEmail(auth, email);
+    await sendPasswordResetEmail(auth, email, actionCodeSettings);
     msg('forgotMsg', genericMsg);
   } catch(e) {
     if (e.code === 'auth/user-not-found') {

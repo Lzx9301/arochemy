@@ -385,7 +385,7 @@
 import { initializeApp, getApps, getApp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-         signOut, onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail }
+         signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -403,13 +403,6 @@ const app  = getApps().length ? getApp() : initializeApp(cfg);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 const $    = id => document.getElementById(id);
-
-// 讓密碼重設信/Email 驗證信裡的連結，導向 Arochemy 自訂品牌化頁面(auth-action.html)，
-// 而不是 Firebase 預設、完全沒有品牌識別的頁面
-const actionCodeSettings = {
-  url: 'https://www.arochemy.com/auth-action.html',
-  handleCodeInApp: false,
-};
 
 function msg(id, text, err = false) {
   const el = $(id); if (!el) return;
@@ -497,14 +490,24 @@ $('registerBtn')?.addEventListener('click', async () => {
     // 寄送驗證信；就算寄送失敗也不能刪掉剛建立的帳號/會員資料，只是提示可以之後重寄
     let verifyEmailSent = true;
     try {
-      await sendEmailVerification(cred.user, actionCodeSettings);
+      const token = await cred.user.getIdToken();
+      const res = await fetch('https://arochemy-backend-production.up.railway.app/api/email/auth/verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        verifyEmailSent = false;
+        console.warn('[Auth] 驗證信寄送失敗：', data.error || res.statusText);
+      }
     } catch (e) {
       verifyEmailSent = false;
       console.warn('[Auth] 驗證信寄送失敗：', e.message);
     }
 
-    // 注意：這裡刻意不立刻 signOut。因為 sendEmailVerification() 一定要有登入中的
-    // user 物件才能呼叫，如果馬上登出，待驗證畫面上的「重新寄送驗證信」會沒辦法用。
+    // 注意：這裡刻意不立刻 signOut。因為「重新寄送驗證信」呼叫後端 API 時
+    // 需要用 user.getIdToken() 拿目前登入者的憑證，如果馬上登出，
+    // 待驗證畫面上的「重新寄送驗證信」會沒辦法用。
     // 讓 onAuthStateChanged 偵測到「已登入但 emailVerified=false」，
     // 自動顯示待驗證畫面(不會進會員中心)；真正要登出要按畫面上的「返回登入／登出」。
     showVerifyPending(email);
@@ -533,9 +536,26 @@ $('resendVerifyBtn')?.addEventListener('click', async () => {
   const btn = $('resendVerifyBtn');
   btn.disabled = true; btn.textContent = '寄送中…';
   try {
-    await sendEmailVerification(user, actionCodeSettings);
-    msg('verifyPendingMsg', '驗證信已重新寄送，請至信箱查看。');
-    // 成功後鎖定按鈕一段時間，避免使用者連續點擊灌爆信箱、觸發 Firebase 的寄送次數限制
+    const token = await user.getIdToken();
+    const res = await fetch('https://arochemy-backend-production.up.railway.app/api/email/auth/verification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    });
+
+    if (res.status === 429) {
+      msg('verifyPendingMsg', '寄送次數過多，請稍後再試。', true);
+      resendInFlight = false;
+      btn.disabled = false; btn.textContent = '重新寄送驗證信';
+      return;
+    }
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || '寄送失敗');
+    }
+
+    msg('verifyPendingMsg', data.alreadyVerified ? '此帳號已經完成 Email 驗證。' : '驗證信已重新寄送，請至信箱查看。');
+    // 成功後鎖定按鈕一段時間，避免使用者連續點擊灌爆信箱、觸發限流
     setTimeout(() => {
       resendInFlight = false;
       btn.disabled = false; btn.textContent = '重新寄送驗證信';
@@ -543,11 +563,7 @@ $('resendVerifyBtn')?.addEventListener('click', async () => {
   } catch(e) {
     resendInFlight = false;
     btn.disabled = false; btn.textContent = '重新寄送驗證信';
-    if (e.code === 'auth/too-many-requests') {
-      msg('verifyPendingMsg', '寄送次數過多，請稍後再試。', true);
-    } else {
-      msg('verifyPendingMsg', errText(e.code), true);
-    }
+    msg('verifyPendingMsg', '寄送失敗，請稍後再試。', true);
   }
 });
 
@@ -567,18 +583,24 @@ $('sendResetBtn')?.addEventListener('click', async () => {
   const genericMsg = '如果此 Email 已註冊，系統將寄送密碼重設信至該信箱，請至信箱查看。';
 
   try {
-    await sendPasswordResetEmail(auth, email, actionCodeSettings);
-    msg('forgotMsg', genericMsg);
-  } catch(e) {
-    if (e.code === 'auth/user-not-found') {
-      msg('forgotMsg', genericMsg);
-    } else if (e.code === 'auth/invalid-email') {
-      msg('forgotMsg', 'Email 格式不正確。', true);
-    } else if (e.code === 'auth/too-many-requests') {
+    const res = await fetch('https://arochemy-backend-production.up.railway.app/api/email/auth/password-reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+
+    if (res.status === 429) {
       msg('forgotMsg', '寄送次數過多，請稍後再試。', true);
+    } else if (res.status === 400) {
+      msg('forgotMsg', 'Email 格式不正確。', true);
     } else {
-      msg('forgotMsg', errText(e.code), true);
+      // 不論帳號存不存在，後端都回傳一樣的成功訊息，這裡統一顯示同一句話，
+      // 不會因為 response 內容洩漏帳號是否已經註冊過
+      msg('forgotMsg', genericMsg);
     }
+  } catch(e) {
+    // 網路等異常情況，一樣不能洩漏任何帳號存在與否的線索，顯示同一句通用訊息
+    msg('forgotMsg', genericMsg);
   } finally {
     btn.disabled = false; btn.textContent = '寄送密碼重設信';
   }

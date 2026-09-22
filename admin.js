@@ -30,6 +30,7 @@ let productDescImages  = [];
 let coverImageFile     = null;
 let allOrders          = [];
 let currentOrderFilter = 'all';
+let currentEditingOrderId = null; // 訂單詳細資料Modal目前正在編輯的訂單ID
 
 // ── DOM 工具 ──────────────────────────────────────────────────
 const $  = (sel, ctx = document) => ctx.querySelector(sel);
@@ -1086,6 +1087,33 @@ async function openNewsletterModal(articleId, articleTitle) {
 /* ═══════════════════════════════════════════════════════════════
    訂單管理
 ════════════════════════════════════════════════════════════ */
+
+/* 統一由這支函式呼叫後端 PATCH /api/orders/:id/status，
+   不再讓任何地方直接寫 Firestore 的 orders.status —— 這樣後端
+   requireAdmin 驗證、shipped 通知信、避免重複寄信的邏輯才會確實生效。 */
+async function updateOrderStatus(orderId, { status, trackingNumber }) {
+  const user = auth.currentUser;
+  if (!user) throw new Error('登入狀態已失效，請重新登入');
+  const token = await user.getIdToken();
+
+  const res = await fetch(`https://arochemy-backend-production.up.railway.app/api/orders/${orderId}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ status, trackingNumber: trackingNumber || '' }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(data.error || `更新失敗（${res.status}）`);
+  }
+
+  return data;
+}
+
 async function loadOrders(statusFilter = null) {
   const tbody = $('#orders-table-body');
   if (!tbody) return;
@@ -1159,14 +1187,21 @@ async function loadOrders(statusFilter = null) {
 
     $$('.status-select-inline').forEach(sel => {
       sel.addEventListener('change', async () => {
+        const newStatus = sel.value;
+        const orderId   = sel.dataset.id;
         try {
-          await db.collection('orders').doc(sel.dataset.id).update({
-            status: sel.value,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          });
-          toast('訂單狀態已更新', 'success');
+          await updateOrderStatus(orderId, { status: newStatus });
+          toast(
+            newStatus === 'shipped'
+              ? '訂單已標記為已出貨，如需填寫物流單號請點「查看」進入詳細資料'
+              : '訂單狀態已更新',
+            'success'
+          );
           loadOrders();
-        } catch (e) { toast('更新失敗：' + e.message, 'error'); }
+        } catch (e) {
+          toast('更新失敗：' + e.message, 'error');
+          loadOrders(); // 失敗時重新讀取實際資料，不讓下拉選單停在使用者選擇但實際沒生效的狀態
+        }
       });
     });
 
@@ -1196,6 +1231,34 @@ function initOrdersPage() {
       loadOrders(chip.dataset.status);
     });
   });
+
+  $('#order-detail-save-status-btn')?.addEventListener('click', async () => {
+    if (!currentEditingOrderId) return;
+
+    const errorEl = $('#order-detail-status-error');
+    errorEl.style.display = 'none';
+
+    const status         = getValue('#order-detail-status-select');
+    const trackingNumber = getValue('#order-detail-tracking-input').trim();
+
+    const btn = $('#order-detail-save-status-btn');
+    btn.disabled = true;
+    btn.textContent = '儲存中…';
+
+    try {
+      await updateOrderStatus(currentEditingOrderId, { status, trackingNumber });
+      toast('訂單狀態已更新', 'success');
+      closeModal('order-detail-modal');
+      loadOrders(); // 更新成功後重新載入訂單列表，反映最新實際資料
+    } catch (e) {
+      // 更新失敗：不假裝成功，顯示錯誤，且不關閉 Modal，讓管理員可以重試
+      errorEl.textContent = '更新失敗：' + e.message;
+      errorEl.style.display = '';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '儲存狀態';
+    }
+  });
 }
 
 function openOrderDetail(o) {
@@ -1209,6 +1272,12 @@ function openOrderDetail(o) {
   setText('#order-detail-addr',  o.address || o.storeInfo || '—');
   setText('#order-detail-note',  o.note || '（無備註）');
   setText('#order-detail-status', statusLabel(o.status));
+
+  // 狀態編輯區塊：帶入目前狀態跟既有物流單號(如果有)
+  currentEditingOrderId = o.id;
+  setValue('#order-detail-status-select', o.status || 'pending');
+  setValue('#order-detail-tracking-input', o.trackingNumber || '');
+  $('#order-detail-status-error').style.display = 'none';
 
   const itemsEl = $('#order-detail-items');
   itemsEl.innerHTML = '';

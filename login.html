@@ -109,6 +109,61 @@
     }
     .m-toggle input:checked + .m-toggle-track::after { transform:translateX(20px); }
 
+    /* 我的訂單 */
+    .my-order-card {
+      background:#fff; border:1px solid #eee; border-radius:12px;
+      padding:14px 16px; margin-bottom:10px;
+    }
+    .my-order-top {
+      display:flex; align-items:center; justify-content:space-between;
+      gap:8px; flex-wrap:wrap;
+    }
+    .my-order-id { font-size:13px; font-weight:700; color:#111; }
+    .my-order-date { font-size:12px; color:#999; margin-top:2px; }
+    .my-order-total { font-size:14px; font-weight:700; color:#111; }
+    .my-order-status {
+      display:inline-block; font-size:11px; font-weight:700;
+      padding:3px 10px; border-radius:999px; white-space:nowrap;
+    }
+    .my-order-status.pending { background:#f0f0f0; color:#666; }
+    .my-order-status.paid    { background:#e8f0fe; color:#3b6fd6; }
+    .my-order-status.shipped { background:#fff2e0; color:#c67d17; }
+    .my-order-status.done    { background:#e9f7ee; color:#2f8a4c; }
+    .my-order-status.cancel  { background:#fbe9e9; color:#b94a48; }
+    .my-order-toggle-btn {
+      background:none; border:none; color:#666; font-size:12px;
+      text-decoration:underline; cursor:pointer; padding:8px 0 0; font-family:inherit;
+    }
+    .my-order-detail {
+      display:none; margin-top:12px; padding-top:12px;
+      border-top:1px dashed #e5e5e5;
+    }
+    .my-order-detail.open { display:block; }
+    .my-order-detail h5 {
+      font-size:11px; font-weight:700; letter-spacing:0.08em;
+      text-transform:uppercase; color:#aaa; margin:12px 0 6px;
+    }
+    .my-order-detail h5:first-child { margin-top:0; }
+    .my-order-item-row {
+      display:flex; align-items:center; gap:10px; padding:6px 0;
+      font-size:13px;
+    }
+    .my-order-item-thumb {
+      width:40px; height:40px; border-radius:8px; overflow:hidden;
+      background:#f5f5f5; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    }
+    .my-order-item-thumb img { width:100%; height:100%; object-fit:cover; }
+    .my-order-item-info { flex:1; min-width:0; }
+    .my-order-item-name { color:#111; }
+    .my-order-item-spec { color:#999; font-size:12px; }
+    .my-order-item-sub { color:#666; white-space:nowrap; }
+    .my-order-line {
+      display:flex; justify-content:space-between; font-size:13px;
+      color:#555; padding:3px 0;
+    }
+    .my-order-line.total { font-weight:700; color:#111; font-size:14px; padding-top:6px; }
+    .my-order-empty { color:#999; font-size:13px; text-align:center; padding:20px 0; }
+
     @media (max-width:520px) {
       .auth-card { padding:28px 20px; border-radius:22px; }
       .auth-title { font-size:24px; }
@@ -366,6 +421,13 @@
           <button class="auth-btn secondary" id="saveSubBtn" type="button" style="margin-top:14px">更新訂閱設定</button>
         </div>
 
+        <!-- 我的訂單 -->
+        <div class="member-section">
+          <h3>我的訂單</h3>
+          <p id="myOrdersMsg" class="auth-msg" style="margin-top:0"></p>
+          <div id="myOrdersList"></div>
+        </div>
+
         <!-- 登出 -->
         <div class="auth-actions">
           <button class="auth-btn danger" id="logoutBtn" type="button">登出</button>
@@ -408,6 +470,12 @@ function msg(id, text, err = false) {
   const el = $(id); if (!el) return;
   el.textContent = text;
   el.style.color = err ? '#b94a48' : '#456b55';
+}
+
+function escHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function errText(code) {
@@ -704,6 +772,9 @@ onAuthStateChanged(auth, async user => {
       }
     } catch(e) { console.warn('讀取會員資料失敗：', e.message); }
 
+    /* 我的訂單：只有已驗證會員才載入 */
+    loadMyOrders(user);
+
     /* 登入完成後，如果之前有頁面要求先登入才能繼續(例如結帳)，導回去 */
     const redirect = sessionStorage.getItem('loginRedirect');
     if (redirect) {
@@ -722,8 +793,142 @@ onAuthStateChanged(auth, async user => {
     if (memberPanel) memberPanel.style.display = 'none';
     if (authPanel)   authPanel.style.display  = '';
     showAuthMode('login');
+    const listEl = $('myOrdersList');
+    if (listEl) listEl.innerHTML = ''; // 登出/未登入時清空，避免殘留上一個帳號的訂單資料
   }
 });
+
+/* ══════════════════════════════════════════════════════════
+   我的訂單：只有已驗證會員才會呼叫(見上方 onAuthStateChanged 分支)
+══════════════════════════════════════════════════════════ */
+const ORDER_STATUS_LABEL = { pending: '待處理', paid: '已付款', shipped: '已出貨', done: '已完成', cancel: '已取消' };
+
+async function loadMyOrders(user) {
+  const listEl = $('myOrdersList');
+  const msgEl  = $('myOrdersMsg');
+  if (!listEl) return;
+
+  listEl.innerHTML = '<p class="my-order-empty">載入中…</p>';
+  if (msgEl) { msgEl.textContent = ''; msgEl.className = 'auth-msg'; }
+
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch('https://arochemy-backend-production.up.railway.app/api/orders/mine', {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (res.status === 401) {
+      listEl.innerHTML = '';
+      if (msgEl) { msgEl.textContent = '登入狀態已失效，請重新登入後再試一次。'; msgEl.className = 'auth-msg error'; }
+      return;
+    }
+    if (res.status === 403) {
+      listEl.innerHTML = '';
+      if (msgEl) { msgEl.textContent = '請先完成 Email 驗證後再查看訂單。'; msgEl.className = 'auth-msg error'; }
+      return;
+    }
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || '讀取訂單失敗');
+    }
+
+    renderMyOrders(data.orders || []);
+
+  } catch (e) {
+    listEl.innerHTML = '';
+    if (msgEl) { msgEl.textContent = '訂單載入失敗，請稍後再試。'; msgEl.className = 'auth-msg error'; }
+    console.warn('[MyOrders] 載入失敗：', e.message);
+  }
+}
+
+function renderMyOrders(orders) {
+  const listEl = $('myOrdersList');
+  if (!listEl) return;
+
+  if (!orders.length) {
+    listEl.innerHTML = '<p class="my-order-empty">目前還沒有訂單紀錄。</p>';
+    return;
+  }
+
+  listEl.innerHTML = orders.map((o, i) => {
+    const shortId    = String(o.id || '').slice(-6).toUpperCase();
+    const dateStr    = formatOrderDate(o.createdAt);
+    const statusText = ORDER_STATUS_LABEL[o.status] || o.status || '—';
+
+    const itemsHtml = (o.items || []).map(item => {
+      const sub = (Number(item.price) || 0) * (Number(item.qty) || 1);
+      return `
+        <div class="my-order-item-row">
+          <div class="my-order-item-thumb">${item.image ? `<img src="${escHtml(item.image)}" alt="">` : '🌿'}</div>
+          <div class="my-order-item-info">
+            <div class="my-order-item-name">${escHtml(item.name || '—')}</div>
+            <div class="my-order-item-spec">${escHtml(item.spec || '')}${item.spec ? '　' : ''}× ${Number(item.qty) || 1}・單價 NT$ ${Number(item.price || 0).toLocaleString()}</div>
+          </div>
+          <div class="my-order-item-sub">NT$ ${sub.toLocaleString()}</div>
+        </div>
+      `;
+    }).join('');
+
+    const addressText = o.address || o.storeInfo || '—';
+
+    return `
+      <div class="my-order-card">
+        <div class="my-order-top">
+          <div>
+            <div class="my-order-id">#${escHtml(shortId)}</div>
+            <div class="my-order-date">${escHtml(dateStr)}</div>
+          </div>
+          <span class="my-order-status ${escHtml(o.status || '')}">${escHtml(statusText)}</span>
+        </div>
+        <div class="my-order-top" style="margin-top:8px">
+          <div class="my-order-total">NT$ ${Number(o.total || 0).toLocaleString()}</div>
+          <button class="my-order-toggle-btn" type="button" data-idx="${i}">查看詳細資料 ▾</button>
+        </div>
+        <div class="my-order-detail" id="myOrderDetail-${i}">
+          <h5>商品</h5>
+          ${itemsHtml || '<p class="my-order-empty" style="padding:8px 0">（無商品資料）</p>'}
+          <h5>金額</h5>
+          <div class="my-order-line"><span>商品小計</span><span>NT$ ${Number(o.subtotal ?? o.total ?? 0).toLocaleString()}</span></div>
+          ${o.discount ? `<div class="my-order-line"><span>優惠折抵</span><span>-NT$ ${Number(o.discount).toLocaleString()}</span></div>` : ''}
+          ${o.coupon?.code ? `<div class="my-order-line"><span>使用優惠券</span><span>${escHtml(o.coupon.code)}</span></div>` : ''}
+          <div class="my-order-line total"><span>訂單總額</span><span>NT$ ${Number(o.total || 0).toLocaleString()}</span></div>
+          <h5>配送／收件</h5>
+          <div class="my-order-line"><span>收件人</span><span>${escHtml(o.customerName || '—')}</span></div>
+          <div class="my-order-line"><span>Email</span><span>${escHtml(o.customerEmail || '—')}</span></div>
+          <div class="my-order-line"><span>電話</span><span>${escHtml(o.customerPhone || '—')}</span></div>
+          <div class="my-order-line"><span>配送方式</span><span>${escHtml(o.shippingMethod || '—')}</span></div>
+          <div class="my-order-line"><span>地址／門市</span><span>${escHtml(addressText)}</span></div>
+          ${o.note ? `<div class="my-order-line"><span>訂單備註</span><span>${escHtml(o.note)}</span></div>` : ''}
+          ${o.trackingNumber ? `<div class="my-order-line"><span>物流單號</span><span>${escHtml(o.trackingNumber)}</span></div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  listEl.querySelectorAll('.my-order-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const detailEl = $('myOrderDetail-' + btn.dataset.idx);
+      if (!detailEl) return;
+      const willOpen = !detailEl.classList.contains('open');
+      detailEl.classList.toggle('open', willOpen);
+      btn.textContent = willOpen ? '收合詳細資料 ▴' : '查看詳細資料 ▾';
+    });
+  });
+}
+
+/* 後端已經把 createdAt 轉成明確的 ISO 字串再回傳(見 routes/orders.js /mine)，
+   這裡多留幾種判斷只是保險，不會影響正常運作 */
+function formatOrderDate(ts) {
+  let d;
+  if (!ts) return '—';
+  if (ts.toDate) d = ts.toDate();
+  else if (ts._seconds != null) d = new Date(ts._seconds * 1000);
+  else if (ts.seconds != null) d = new Date(ts.seconds * 1000);
+  else d = new Date(ts);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' });
+}
   </script>
 </body>
 </html>

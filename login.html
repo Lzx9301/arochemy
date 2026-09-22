@@ -109,6 +109,44 @@
     }
     .m-toggle input:checked + .m-toggle-track::after { transform:translateX(20px); }
 
+    /* ── 會員中心：桌機版左右雙欄排版 ──
+       .auth-card 這個容器同時被登入/註冊/忘記密碼(窄卡片480px)跟
+       會員中心共用，不能直接改動 .auth-card 本身的寬度，
+       所以另外用 .member-view 這個修飾 class 只在顯示會員中心時
+       放寬容器(JS 在切換 memberPanel 顯示狀態的同時，一併切換這個
+       class，見下方 script)，完全不影響登入/註冊等其他畫面的寬度。 */
+    .auth-card.member-view {
+      width: min(100%, 1100px);
+    }
+
+    .member-layout {
+      display: grid;
+      grid-template-columns: 1.86fr 1fr; /* 約 65% : 35% */
+      gap: 32px;
+    }
+
+    .member-col-orders { min-width: 0; }
+
+    /* 「我的訂單」是會員中心的主要內容，標題視覺上要比右側設定更明顯，
+       跟右側 .member-section h3 那種低調的小型大寫標籤做出區隔 */
+    .member-section--orders h3 {
+      font-size: 16px; font-weight: 700;
+      letter-spacing: normal; text-transform: none;
+      color: #111; margin: 0 0 16px;
+    }
+
+    /* 右欄：桌機版 sticky，跟著頁面往下捲時停留在 Header 下方。
+       align-self:start 是關鍵，沒有這個 grid 預設會把子項目拉伸
+       撐滿整個 row 高度，sticky 會完全失效。
+       這裡刻意不加 max-height/overflow，如果右欄內容比視窗還高，
+       用瀏覽器原生 sticky 行為讓它自然跟著頁面捲動，
+       不會截斷任何內容，也不會產生內部小 scrollbar。 */
+    .member-col-profile {
+      position: sticky;
+      top: calc(var(--header-h) + 16px);
+      align-self: start;
+    }
+
     /* 我的訂單 */
     .my-order-card {
       background:#fff; border:1px solid #eee; border-radius:12px;
@@ -163,6 +201,19 @@
     }
     .my-order-line.total { font-weight:700; color:#111; font-size:14px; padding-top:6px; }
     .my-order-empty { color:#999; font-size:13px; text-align:center; padding:20px 0; }
+
+    /* ── 900px 以下：會員中心自動恢復單欄，取消 sticky ──
+       HTML 裡「我的訂單」本來就寫在「個人資料」之前，
+       所以恢復單欄後順序自然就是：我的訂單 → 個人資料 → 電子報 → 登出，
+       不需要額外用 order 調整。 */
+    @media (max-width: 900px) {
+      .auth-card.member-view { width: min(100%, 480px); }
+      .member-layout { display: block; }
+      .member-col-profile {
+        position: static;
+        margin-top: 24px; /* display:block 時 grid 的 gap 不會生效，補上間距 */
+      }
+    }
 
     @media (max-width:520px) {
       .auth-card { padding:28px 20px; border-radius:22px; }
@@ -375,65 +426,74 @@
 
       <!-- ── 會員中心面板（登入後顯示）── -->
       <div id="memberPanel" class="member-panel">
+        <div class="member-layout">
 
-        <!-- 歡迎列 -->
-        <div class="member-welcome">
-          <div class="member-avatar-lg" id="memberInitial">A</div>
-          <div class="member-welcome-info">
-            <h2 id="memberName">會員</h2>
-            <p id="memberEmailDisplay"></p>
+          <!-- 左欄：我的訂單 -->
+          <div class="member-col-orders">
+            <div class="member-section member-section--orders">
+              <h3>我的訂單</h3>
+              <p id="myOrdersMsg" class="auth-msg" style="margin-top:0"></p>
+              <div id="myOrdersList"></div>
+            </div>
           </div>
+
+          <!-- 右欄：會員資料(桌機版 sticky) -->
+          <div class="member-col-profile">
+
+            <!-- 歡迎列 -->
+            <div class="member-welcome">
+              <div class="member-avatar-lg" id="memberInitial">A</div>
+              <div class="member-welcome-info">
+                <h2 id="memberName">會員</h2>
+                <p id="memberEmailDisplay"></p>
+              </div>
+            </div>
+
+            <!-- 個人資料 -->
+            <div class="member-section">
+              <h3>個人資料</h3>
+              <div class="auth-field">
+                <label for="editName">姓名</label>
+                <input id="editName" placeholder="請輸入姓名">
+              </div>
+              <div class="auth-field">
+                <label for="editPhone">電話</label>
+                <input id="editPhone" placeholder="請輸入電話">
+              </div>
+              <div class="auth-field">
+                <label>Email</label>
+                <input id="editEmail" type="email" disabled>
+              </div>
+              <div class="auth-field">
+                <label for="editBirthday">生日</label>
+                <input id="editBirthday" type="date" disabled readonly>
+                <div class="hint" id="birthdayHint" style="margin-top:6px;font-size:12px;color:#999">如需修改生日，請聯絡客服協助處理。</div>
+              </div>
+              <button class="auth-btn primary" id="saveProfileBtn" type="button" style="margin-top:4px">儲存資料</button>
+            </div>
+
+            <!-- 電子報訂閱 -->
+            <div class="member-section">
+              <h3>電子報設定</h3>
+              <div class="member-sub-row">
+                <span>訂閱 Arochemy 電子報<br><small style="color:#aaa;font-size:12px">接收新品上市與活動資訊</small></span>
+                <label class="m-toggle">
+                  <input type="checkbox" id="subToggle">
+                  <span class="m-toggle-track"></span>
+                </label>
+              </div>
+              <button class="auth-btn secondary" id="saveSubBtn" type="button" style="margin-top:14px">更新訂閱設定</button>
+            </div>
+
+            <!-- 登出 -->
+            <div class="auth-actions">
+              <button class="auth-btn danger" id="logoutBtn" type="button">登出</button>
+            </div>
+
+            <p id="memberMsg" class="auth-msg"></p>
+          </div>
+
         </div>
-
-        <!-- 個人資料 -->
-        <div class="member-section">
-          <h3>個人資料</h3>
-          <div class="auth-field">
-            <label for="editName">姓名</label>
-            <input id="editName" placeholder="請輸入姓名">
-          </div>
-          <div class="auth-field">
-            <label for="editPhone">電話</label>
-            <input id="editPhone" placeholder="請輸入電話">
-          </div>
-          <div class="auth-field">
-            <label>Email</label>
-            <input id="editEmail" type="email" disabled>
-          </div>
-          <div class="auth-field">
-            <label for="editBirthday">生日</label>
-            <input id="editBirthday" type="date" disabled readonly>
-            <div class="hint" id="birthdayHint" style="margin-top:6px;font-size:12px;color:#999">如需修改生日，請聯絡客服協助處理。</div>
-          </div>
-          <button class="auth-btn primary" id="saveProfileBtn" type="button" style="margin-top:4px">儲存資料</button>
-        </div>
-
-        <!-- 電子報訂閱 -->
-        <div class="member-section">
-          <h3>電子報設定</h3>
-          <div class="member-sub-row">
-            <span>訂閱 Arochemy 電子報<br><small style="color:#aaa;font-size:12px">接收新品上市與活動資訊</small></span>
-            <label class="m-toggle">
-              <input type="checkbox" id="subToggle">
-              <span class="m-toggle-track"></span>
-            </label>
-          </div>
-          <button class="auth-btn secondary" id="saveSubBtn" type="button" style="margin-top:14px">更新訂閱設定</button>
-        </div>
-
-        <!-- 我的訂單 -->
-        <div class="member-section">
-          <h3>我的訂單</h3>
-          <p id="myOrdersMsg" class="auth-msg" style="margin-top:0"></p>
-          <div id="myOrdersList"></div>
-        </div>
-
-        <!-- 登出 -->
-        <div class="auth-actions">
-          <button class="auth-btn danger" id="logoutBtn" type="button">登出</button>
-        </div>
-
-        <p id="memberMsg" class="auth-msg"></p>
       </div>
 
       <a class="auth-back" href="index.html">← 回到首頁</a>
@@ -728,11 +788,13 @@ $('saveSubBtn')?.addEventListener('click', async () => {
 onAuthStateChanged(auth, async user => {
   const authPanel   = $('authPanel');
   const memberPanel = $('memberPanel');
+  const authCard    = document.querySelector('.auth-card');
 
   if (user && user.emailVerified) {
     /* ── 已驗證，正常登入 ── */
     if (authPanel)   authPanel.style.display  = 'none';
     if (memberPanel) memberPanel.style.display = 'block';
+    authCard?.classList.add('member-view');
 
     /* 填入 email */
     if ($('editEmail'))         $('editEmail').value          = user.email;
@@ -786,12 +848,14 @@ onAuthStateChanged(auth, async user => {
     /* ── 已登入，但 Email 還沒驗證：不能進會員中心 ── */
     if (memberPanel) memberPanel.style.display = 'none';
     if (authPanel)   authPanel.style.display  = '';
+    authCard?.classList.remove('member-view');
     showVerifyPending(user.email);
 
   } else {
     /* ── 沒有登入 ── */
     if (memberPanel) memberPanel.style.display = 'none';
     if (authPanel)   authPanel.style.display  = '';
+    authCard?.classList.remove('member-view');
     showAuthMode('login');
     const listEl = $('myOrdersList');
     if (listEl) listEl.innerHTML = ''; // 登出/未登入時清空，避免殘留上一個帳號的訂單資料
@@ -851,7 +915,17 @@ function renderMyOrders(orders) {
     return;
   }
 
-  listEl.innerHTML = orders.map((o, i) => {
+  // 前端自己再排序一次，確保「最新訂單排最上面」不會依賴後端/Firestore回傳順序
+  const sorted = [...orders].sort((a, b) => {
+    const at = parseOrderDate(a.createdAt);
+    const bt = parseOrderDate(b.createdAt);
+    if (!at && !bt) return 0;
+    if (!at) return 1;  // 沒有日期的排到最後
+    if (!bt) return -1;
+    return bt - at; // 新到舊
+  });
+
+  listEl.innerHTML = sorted.map((o, i) => {
     const shortId    = String(o.id || '').slice(-6).toUpperCase();
     const dateStr    = formatOrderDate(o.createdAt);
     const statusText = ORDER_STATUS_LABEL[o.status] || o.status || '—';
@@ -919,15 +993,19 @@ function renderMyOrders(orders) {
 
 /* 後端已經把 createdAt 轉成明確的 ISO 字串再回傳(見 routes/orders.js /mine)，
    這裡多留幾種判斷只是保險，不會影響正常運作 */
-function formatOrderDate(ts) {
+function parseOrderDate(ts) {
+  if (!ts) return null;
   let d;
-  if (!ts) return '—';
   if (ts.toDate) d = ts.toDate();
   else if (ts._seconds != null) d = new Date(ts._seconds * 1000);
   else if (ts.seconds != null) d = new Date(ts.seconds * 1000);
   else d = new Date(ts);
-  if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function formatOrderDate(ts) {
+  const d = parseOrderDate(ts);
+  return d ? d.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '—';
 }
   </script>
 </body>

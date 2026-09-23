@@ -168,6 +168,14 @@
     .my-order-status.shipped { background:#fff2e0; color:#c67d17; }
     .my-order-status.done    { background:#e9f7ee; color:#2f8a4c; }
     .my-order-status.cancel  { background:#fbe9e9; color:#b94a48; }
+    .my-order-status.refunded { background:#f2ecfa; color:#7a5aa8; }
+    .my-order-cancel-btn {
+      background:#fff; color:#c44; border:1.5px solid #fcc;
+      border-radius:999px; padding:8px 18px; font-size:12px; font-weight:700;
+      cursor:pointer; font-family:inherit; margin-top:12px;
+    }
+    .my-order-cancel-btn:hover { background:#fff5f5; }
+    .my-order-cancel-btn:disabled { opacity:0.5; cursor:not-allowed; }
     .my-order-toggle-btn {
       background:none; border:none; color:#666; font-size:12px;
       text-decoration:underline; cursor:pointer; padding:8px 0 0; font-family:inherit;
@@ -865,7 +873,7 @@ onAuthStateChanged(auth, async user => {
 /* ══════════════════════════════════════════════════════════
    我的訂單：只有已驗證會員才會呼叫(見上方 onAuthStateChanged 分支)
 ══════════════════════════════════════════════════════════ */
-const ORDER_STATUS_LABEL = { pending: '待處理', paid: '已付款', shipped: '已出貨', done: '已完成', cancel: '已取消' };
+const ORDER_STATUS_LABEL = { pending: '待處理', paid: '已付款', shipped: '已出貨', done: '已完成', cancel: '已取消', refunded: '已退款' };
 
 async function loadMyOrders(user) {
   const listEl = $('myOrdersList');
@@ -897,7 +905,7 @@ async function loadMyOrders(user) {
       throw new Error(data.error || '讀取訂單失敗');
     }
 
-    renderMyOrders(data.orders || []);
+    renderMyOrders(data.orders || [], user);
 
   } catch (e) {
     listEl.innerHTML = '';
@@ -906,7 +914,7 @@ async function loadMyOrders(user) {
   }
 }
 
-function renderMyOrders(orders) {
+function renderMyOrders(orders, user) {
   const listEl = $('myOrdersList');
   if (!listEl) return;
 
@@ -975,6 +983,7 @@ function renderMyOrders(orders) {
           <div class="my-order-line"><span>地址／門市</span><span>${escHtml(addressText)}</span></div>
           ${o.note ? `<div class="my-order-line"><span>訂單備註</span><span>${escHtml(o.note)}</span></div>` : ''}
           ${o.trackingNumber ? `<div class="my-order-line"><span>物流單號</span><span>${escHtml(o.trackingNumber)}</span></div>` : ''}
+          ${o.status === 'paid' ? `<button class="my-order-cancel-btn" type="button" data-order-id="${escHtml(o.id)}">取消訂單</button>` : ''}
         </div>
       </div>
     `;
@@ -987,6 +996,40 @@ function renderMyOrders(orders) {
       const willOpen = !detailEl.classList.contains('open');
       detailEl.classList.toggle('open', willOpen);
       btn.textContent = willOpen ? '收合詳細資料 ▴' : '查看詳細資料 ▾';
+    });
+  });
+
+  listEl.querySelectorAll('.my-order-cancel-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('確定要取消此訂單嗎？')) return;
+
+      const orderId = btn.dataset.orderId;
+      btn.disabled = true;
+      btn.textContent = '取消中…';
+
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch(`https://arochemy-backend-production.up.railway.app/api/orders/${orderId}/cancel`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || '取消失敗');
+        }
+
+        // 成功後重新載入整份訂單列表，讓狀態/按鈕(取消按鈕會因為狀態不再是paid而消失)都反映最新結果
+        await loadMyOrders(user);
+        // loadMyOrders 執行完才設定訊息，不然會被它內部一開始的清空動作蓋掉
+        const msgEl = $('myOrdersMsg');
+        if (msgEl) { msgEl.textContent = '✓ 訂單已取消'; msgEl.className = 'auth-msg'; }
+
+      } catch (e) {
+        alert('取消失敗：' + e.message);
+        btn.disabled = false;
+        btn.textContent = '取消訂單';
+      }
     });
   });
 }

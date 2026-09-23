@@ -1168,6 +1168,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
 .badge-shipped  { background: rgba(90,140,106,0.12);  color: #7ac48a; }
 .badge-done     { background: rgba(90,140,106,0.2);   color: #5aaa70; border: 1px solid rgba(90,160,106,0.3); }
 .badge-cancel   { background: rgba(160,80,80,0.12);   color: #e07070; }
+.badge-refunded { background: rgba(130,90,160,0.14);  color: #b090d0; }
 
 /* ── 訂單詳細 Modal ── */
 .order-detail-section {

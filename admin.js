@@ -1173,7 +1173,7 @@ async function loadOrders(statusFilter = null) {
         <td style="color:var(--accent);font-weight:500">NT$ ${Number(o.total||0).toLocaleString()}</td>
         <td>
           <select class="status-select-inline" data-id="${o.id}">
-            ${['pending','paid','shipped','done','cancel'].map(s =>
+            ${['pending','paid','shipped','done','cancel','refunded'].map(s =>
               `<option value="${s}" ${o.status===s?'selected':''}>${statusLabel(s)}</option>`
             ).join('')}
           </select>
@@ -1976,7 +1976,7 @@ const setValue   = (sel, val)  => { const el = document.querySelector(sel); if (
 const setText    = (sel, val)  => { const el = document.querySelector(sel); if (el) el.textContent = val; };
 const escHtml    = str => String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const catLabel   = v => ({ single:'單方精油', compound:'複方精油', spray:'噴霧', massage:'按摩油', 'eye-mask':'眼罩', diffuser:'擴香瓶' }[v] || v || '—');
-const statusLabel= s => ({ pending:'待處理', paid:'已付款', shipped:'已出貨', done:'已完成', cancel:'已取消' }[s] || '待處理');
+const statusLabel= s => ({ pending:'待處理', paid:'已付款', shipped:'已出貨', done:'已完成', cancel:'已取消', refunded:'已退款' }[s] || '待處理');
 
 // Firestore Timestamp / Date / 字串 都能轉成 Date
 function toDate(ts) {

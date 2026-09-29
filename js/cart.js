@@ -260,6 +260,14 @@ function openCheckoutModal() {
           <textarea id="co-note" rows="2" placeholder="特殊需求、禮盒包裝等…"></textarea>
         </div>
 
+        <!-- 政策同意 -->
+        <div class="co-field">
+          <label class="co-agree-label">
+            <input type="checkbox" id="co-agree-policy">
+            <span>我已閱讀並同意<a href="shopping-guide.html" target="_blank" rel="noopener">購物須知</a>、<a href="return-policy.html" target="_blank" rel="noopener">退換貨政策</a>、<a href="terms.html" target="_blank" rel="noopener">網站服務條款</a>及<a href="privacy.html" target="_blank" rel="noopener">隱私權政策</a></span>
+          </label>
+        </div>
+
         <div id="co-error" class="co-error" style="display:none"></div>
       </div>
 
@@ -500,6 +508,11 @@ async function submitOrder() {
   if (!name)    errors.push('請填寫姓名');
   if (!phone)   errors.push('請填寫電話');
   if (!address) errors.push(isStore ? '請填寫門市資訊' : '請填寫收件地址');
+  // 未勾選同意購物與網站政策：直接擋在這裡，不會往下建立訂單、也不會呼叫任何 API，
+  // 不能只靠前端「視覺上」畫一個 checkbox，這裡是真正阻止流程繼續的地方
+  if (!document.getElementById('co-agree-policy')?.checked) {
+    errors.push('請先閱讀並同意購物與網站政策');
+  }
 
   if (errors.length) {
     errorEl.textContent  = errors.join('、');
@@ -710,6 +723,27 @@ style.textContent = `
   }
   .co-field input:focus, .co-field textarea:focus { border-color: #111; }
   .co-field textarea { resize: vertical; min-height: 60px; }
+  .co-agree-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.6;
+    cursor: pointer;
+  }
+  .co-agree-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .co-agree-label a {
+    color: #111;
+    text-decoration: underline;
+  }
+  .co-agree-label a:hover { color: #555; }
   .co-ship-options { display: flex; flex-direction: column; gap: 8px; }
   .co-radio { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
   .co-radio input { accent-color: #111; }

@@ -1167,7 +1167,7 @@ async function loadOrders(statusFilter = null) {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td style="font-family:monospace;font-size:11px;color:var(--text-muted)">#${shortId}</td>
-        <td class="td-name">${escHtml(o.customerName || '—')}</td>
+        <td class="td-name">${escHtml(o.customerName || '—')}${o.stockShortage ? ' <span title="已付款但庫存不足，需人工處理" style="color:#b94a48;font-size:11px;font-weight:700;white-space:nowrap">⚠ 庫存不足</span>' : ''}</td>
         <td style="font-size:12px;color:var(--text-secondary)">${escHtml(o.customerEmail || '—')}</td>
         <td style="font-size:12px">${escHtml(o.shippingMethod || '—')}</td>
         <td style="color:var(--accent);font-weight:500">NT$ ${Number(o.total||0).toLocaleString()}</td>
@@ -1270,7 +1270,12 @@ function openOrderDetail(o) {
   setText('#order-detail-phone', o.customerPhone  || '—');
   setText('#order-detail-ship',  o.shippingMethod || '—');
   setText('#order-detail-addr',  o.address || o.storeInfo || '—');
-  setText('#order-detail-note',  o.note || '（無備註）');
+  // 已付款但庫存不足的訂單：在備註欄最前面標示需人工處理的品項
+  const shortageNote = o.stockShortage
+    ? '⚠ 已付款但庫存不足，需人工處理：' + (o.stockShortageItems || [])
+        .map(i => `${i.name || ''}（${i.spec || ''}）訂購 ${i.requested}／付款當下庫存 ${i.available}`).join('；') + '\n'
+    : '';
+  setText('#order-detail-note',  shortageNote + (o.note || '（無備註）'));
   setText('#order-detail-status', statusLabel(o.status));
 
   // 狀態編輯區塊：帶入目前狀態跟既有物流單號(如果有)

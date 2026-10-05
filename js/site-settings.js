@@ -35,6 +35,9 @@ const db  = getFirestore(app);
     setHref('social-ig-btn',   site.socialIG);
     setHref('social-line-btn', site.socialLine);
     setHref('social-fb-btn',   site.socialFB);
+    // 首頁頁尾「追蹤我們」文字連結（其他頁面沒有這兩個元素時不會有任何作用）
+    setHref('footer-ig-link',   site.socialIG);
+    setHref('footer-line-link', site.socialLine);
   } catch (e) {
     console.warn('[site-settings] 讀取網站設定失敗:', e.message);
   }

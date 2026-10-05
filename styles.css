@@ -3075,15 +3075,18 @@ body:not(.hp-page) .header .header-search input::placeholder {
 }
 .hp-page #latestArticles .article-title { font-weight: 500; }
 
-/* ── 頁尾（首頁深色版）── */
-.hp-page .footer { background: var(--hp-umber); border-top: none; padding: 64px 0 72px; color: #fff; }
-.hp-page .footer-inner { width: min(1120px, calc(100% - 48px)); gap: 40px; }
-.hp-page .footer .muted { color: rgba(255,255,255,0.88); font-size: 13px; letter-spacing: 0.08em; line-height: 1.75; }
-.hp-page .footer-info .muted:nth-of-type(3) { margin-top: 22px !important; }
+/* ── 頁尾（全站深色版）── */
+.footer { background: #706961; border-top: none; padding: 64px 0 72px; color: #fff; }
+.footer-inner { width: min(1120px, calc(100% - 48px)); gap: 40px; }
+.footer .muted { color: rgba(255,255,255,0.88); font-size: 13px; letter-spacing: 0.08em; line-height: 1.75; }
+.footer-info .muted:nth-of-type(3) { margin-top: 22px !important; }
 .footer-logo { height: 46px; width: auto; display: block; filter: brightness(0) invert(1); margin: 0 0 22px -4px; }
-.hp-page .footer-link-groups { gap: 34px; }
-.hp-page .footer-link-title { color: #fff; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 16px; }
-.hp-page .footer-link-list { color: rgba(255,255,255,0.88); font-size: 13px; letter-spacing: 0.08em; gap: 5px; }
+.footer-link-groups { gap: 34px; }
+.footer-link-title { color: #fff; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 16px; }
+.footer-link-list { color: rgba(255,255,255,0.88); font-size: 13px; letter-spacing: 0.08em; gap: 5px; }
+body { padding-bottom: 0; }
+/* 內容很短的頁面（例如搜尋無結果）頁尾下方不留白，延續頁尾底色 */
+html { background: #706961; }
 .hp-page .social-fab { bottom: 20px; }
 
 /* ── 平板／手機 ── */
@@ -3116,8 +3119,8 @@ body:not(.hp-page) .header .header-search input::placeholder {
   .hp-science-cta { margin-top: 44px; }
   .hp-science-cta .hp-btn-light { font-size: 18px; padding: 13px 48px; }
   .hp-articles-title { font-size: 26px; }
-  .hp-page .footer-inner { flex-direction: column; }
-  .hp-page .footer-link-groups { gap: 28px 34px; }
+  .footer-inner { flex-direction: column; }
+  .footer-link-groups { gap: 28px 34px; }
 }
 @media (max-width: 600px) {
   .hp-page .hp-gallery-grid { grid-template-columns: repeat(2, 1fr); }

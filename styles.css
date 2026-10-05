@@ -2862,3 +2862,269 @@ body:not(.hp-page) .header .header-search input {
 body:not(.hp-page) .header .header-search input::placeholder {
   color: rgba(0, 0, 0, 0.4) !important;
 }
+
+
+/* ══════════════════════════════════════════════════════════════
+   首頁排版 2026-10（依客戶示意圖）
+   只作用在首頁（body.hp-page），不影響其他頁面
+══════════════════════════════════════════════════════════════ */
+.hp-page {
+  --hp-taupe:  #a39386;   /* 精選系列底色 */
+  --hp-sand:   #d5d1c8;   /* 淺色區塊底色／淺色按鈕 */
+  --hp-umber:  #706961;   /* 深色區塊底色／深色按鈕 */
+  --hp-slate:  #3c4a59;   /* 輪播箭頭 */
+  --hp-ink:    #3a3530;   /* 淺底上的文字 */
+  background: var(--hp-umber);
+  padding-bottom: 0;
+}
+
+/* ── Hero ── */
+.hp-page .hp-hero {
+  height: 88vh;
+  min-height: 520px;
+}
+.hp-page .hp-hero-overlay {
+  background: linear-gradient(to bottom, rgba(40,48,62,0.30) 0%, rgba(40,48,62,0.38) 55%, rgba(40,48,62,0.50) 100%);
+}
+.hp-page .hp-hero-content h1 {
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  font-size: clamp(28px, 3.6vw, 46px);
+  margin-bottom: 44px;
+}
+.hp-page .hp-hero-sub {
+  font-size: 15px;
+  line-height: 2.6;
+  letter-spacing: 0.12em;
+  margin-bottom: 0;
+}
+.hp-hero-cta {
+  position: absolute;
+  z-index: 2;
+  left: max(24px, 10vw);
+  bottom: 8%;
+}
+.hp-page .hp-btn-outline {
+  padding: 13px 34px;
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  border-width: 1px;
+}
+
+/* ── 共用按鈕 ── */
+.hp-btn-light {
+  display: inline-block;
+  padding: 13px 52px;
+  background: var(--hp-sand);
+  color: var(--hp-ink);
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 17px;
+  letter-spacing: 0.06em;
+  transition: background 0.2s;
+}
+.hp-btn-light:hover { background: #e6e2da; }
+
+.hp-page .hp-btn-dark,
+.hp-page .hp-btn-outline-dark {
+  padding: 12px 30px;
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+.hp-page .hp-btn-dark { background: var(--hp-umber); color: var(--hp-sand); }
+.hp-page .hp-btn-dark:hover { background: #5d5750; }
+.hp-page .hp-btn-outline-dark { border: 1px solid var(--hp-ink); color: var(--hp-ink); }
+.hp-page .hp-btn-outline-dark:hover { background: var(--hp-ink); color: #fff; }
+
+.hp-page .hp-kicker {
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--hp-ink);
+  margin: 0 0 30px;
+}
+
+/* ── 精選系列 ── */
+.hp-page .hp-featured,
+.hp-page .hp-featured-right { background: var(--hp-taupe); }
+.hp-page .hp-featured { height: 560px; min-height: 560px; }
+.hp-page .hp-featured-left {
+  flex-basis: 380px;
+  max-width: 380px;
+  padding: 60px 40px 60px max(24px, 10vw);
+}
+.hp-page .hp-featured-left.collapsed { max-width: 0; padding-left: 0; padding-right: 0; }
+.hp-page .hp-featured-left h2 {
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--hp-ink);
+  margin-bottom: 30px;
+}
+.hp-page .hp-featured-desc {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--hp-ink);
+  margin: 0 0 40px;
+}
+.hp-page .hp-featured-left .hp-btn-light { align-self: flex-start; }
+.hp-page .hp-cards-viewport { padding: 0 72px 0 0; }
+.hp-page .hp-cards-track { gap: 20px; padding: 8px 0; }
+.hp-page .hp-prod-card {
+  flex-basis: 260px;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+}
+.hp-page .hp-prod-card:hover { box-shadow: none; }
+.hp-page .hp-prod-card-img {
+  aspect-ratio: 4 / 5;
+  border-radius: 34px;
+  background: #f4f1ec;
+}
+.hp-page .hp-prod-card-body { background: transparent; padding: 14px 6px 0; flex: 0 0 auto; }
+.hp-page .hp-prod-card-cat { display: none; }
+.hp-page .hp-prod-card-name { font-size: 14px; font-weight: 500; color: var(--hp-ink); margin: 0; }
+.hp-page .hp-arrow {
+  width: 68px; height: 60px;
+  border-radius: 10px;
+  background: var(--hp-slate);
+  border: none;
+  color: #fff;
+  font-size: 30px;
+  box-shadow: none;
+}
+.hp-page .hp-arrow:hover { background: #2e3945; color: #fff; }
+.hp-page .hp-arrow-next { right: 14px; }
+.hp-page .hp-arrow-prev { left: 14px; }
+
+/* ── 客製化服務 ── */
+.hp-page .hp-service { background: var(--hp-sand); margin-bottom: 0; }
+.hp-page .hp-service-inner {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+  gap: 48px;
+  align-items: center;
+  min-height: 0;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 64px max(24px, 6vw) 72px max(24px, 10vw);
+}
+.hp-page .hp-service-text { padding: 0; }
+.hp-page .hp-service-text h2 {
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--hp-ink);
+  margin-bottom: 44px;
+}
+.hp-page .hp-service-desc { font-size: 13.5px; line-height: 1.75; color: var(--hp-ink); margin-bottom: 72px; }
+.hp-page .hp-service-desc p { margin: 0 0 18px; }
+.hp-page .hp-service-desc p:last-child { margin-bottom: 0; }
+.hp-page .hp-service-img { height: auto; aspect-ratio: 4 / 5; }
+
+/* ── 氣味與科學 ── */
+.hp-science { background: var(--hp-umber); color: #fff; padding: 76px 0 84px; }
+.hp-science-head { text-align: center; padding: 0 24px; }
+.hp-science-head h2 { margin: 0; font-size: 38px; font-weight: 400; letter-spacing: 0.06em; }
+.hp-science-sub { margin: 14px 0 0; font-size: 18px; letter-spacing: 0.1em; color: rgba(255,255,255,0.92); }
+.hp-science-sub span { margin: 0 8px; }
+.hp-science-quote {
+  display: inline-block;
+  text-align: left;
+  margin: 52px 0 46px;
+  padding: 6px 0 6px 26px;
+  border-left: 5px solid var(--hp-sand);
+  font-size: 18px;
+  line-height: 1.6;
+  letter-spacing: 0.08em;
+  color: var(--hp-sand);
+}
+.hp-page .hp-gallery-grid { grid-template-columns: repeat(4, 1fr); gap: 0; }
+.hp-page .hp-gallery-item { aspect-ratio: 4 / 5; }
+.hp-page .hp-gallery-item:hover img { transform: none; }
+.hp-science-body { max-width: 740px; margin: 0 auto; padding: 72px 24px 0; }
+.hp-science-body h3 { margin: 0 0 14px; font-size: 16px; font-weight: 400; letter-spacing: 0.06em; }
+.hp-page .hp-brand-body {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.75;
+  letter-spacing: 0.04em;
+  color: #fff;
+  white-space: pre-line;
+}
+.hp-science-cta { text-align: center; margin-top: 68px; }
+.hp-science-cta .hp-btn-light { padding: 14px 58px; font-size: 22px; color: var(--hp-umber); }
+
+/* ── 最新文章 ── */
+.hp-page .hp-articles { background: var(--hp-sand); padding: 64px 0 72px; }
+.hp-page .hp-articles .container { width: min(940px, calc(100% - 48px)); }
+.hp-page .hp-section-head { align-items: flex-end; margin-bottom: 34px; }
+.hp-page .hp-section-head .hp-kicker { font-size: 20px; margin-bottom: 14px; }
+.hp-articles-title { margin: 0; font-size: 34px; font-weight: 400; letter-spacing: 0.04em; color: var(--hp-ink); }
+.hp-page .hp-link-more { color: var(--hp-ink); font-weight: 400; white-space: nowrap; }
+.hp-page #latestArticles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.hp-page #latestArticles:empty { display: none; }
+.hp-page #latestArticles .article-card {
+  border: none;
+  border-radius: 26px;
+  padding: 22px;
+  min-height: 290px;
+  color: var(--hp-ink) !important;
+}
+.hp-page #latestArticles .article-title { font-weight: 500; }
+
+/* ── 頁尾（首頁深色版）── */
+.hp-page .footer { background: var(--hp-umber); border-top: none; padding: 64px 0 72px; color: #fff; }
+.hp-page .footer-inner { width: min(1120px, calc(100% - 48px)); gap: 40px; }
+.hp-page .footer .muted { color: rgba(255,255,255,0.88); font-size: 13px; letter-spacing: 0.08em; line-height: 1.75; }
+.hp-page .footer-info .muted:nth-of-type(3) { margin-top: 22px !important; }
+.footer-logo { height: 46px; width: auto; display: block; filter: brightness(0) invert(1); margin: 0 0 22px -4px; }
+.hp-page .footer-link-groups { gap: 34px; }
+.hp-page .footer-link-title { color: #fff; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 16px; }
+.hp-page .footer-link-list { color: rgba(255,255,255,0.88); font-size: 13px; letter-spacing: 0.08em; gap: 5px; }
+.hp-page .social-fab { bottom: 20px; }
+
+/* ── 平板／手機 ── */
+@media (max-width: 900px) {
+  .hp-page .hp-hero { height: 78vh; }
+  .hp-hero-cta { left: 0; right: 0; text-align: center; }
+  .hp-page .hp-featured { height: auto; min-height: 0; }
+  .hp-page .hp-featured-left,
+  .hp-page .hp-featured-left.collapsed {
+    flex-basis: auto;
+    max-width: 100%;
+    padding: 52px 24px 28px;
+    text-align: left;
+    opacity: 1;
+  }
+  .hp-page .hp-featured-right { padding: 0 0 48px; }
+  .hp-page .hp-cards-viewport { padding: 0 24px; }
+  .hp-page .hp-cards-track { padding: 8px 0; }
+  .hp-page .hp-prod-card { flex-basis: 62vw; max-width: 260px; }
+  .hp-page .hp-service-inner { grid-template-columns: 1fr; gap: 36px; padding: 52px 24px 56px; }
+  .hp-page .hp-service-img { order: 0; max-width: 460px; width: 100%; }
+  .hp-page .hp-service-desc { margin-bottom: 40px; }
+  .hp-page .hp-service-desc br { display: none; }
+  .hp-science { padding: 56px 0 64px; }
+  .hp-science-head h2 { font-size: 30px; }
+  .hp-science-quote { font-size: 15px; margin: 36px 0; padding-left: 18px; border-left-width: 4px; }
+  .hp-page .hp-gallery-grid { grid-template-columns: repeat(2, 1fr); }
+  .hp-science-body { padding-top: 48px; }
+  .hp-page .hp-brand-body { white-space: normal; font-size: 15px; }
+  .hp-science-cta { margin-top: 44px; }
+  .hp-science-cta .hp-btn-light { font-size: 18px; padding: 13px 48px; }
+  .hp-articles-title { font-size: 26px; }
+  .hp-page .footer-inner { flex-direction: column; }
+  .hp-page .footer-link-groups { gap: 28px 34px; }
+}
+@media (max-width: 600px) {
+  .hp-page .hp-gallery-grid { grid-template-columns: repeat(2, 1fr); }
+  .hp-page .hp-hero-sub { font-size: 14px; line-height: 2.3; }
+  .hp-page .hp-section-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .hp-page #latestArticles { grid-template-columns: 1fr; }
+  .hp-page #latestArticles .article-card { min-height: 0; }
+  .hp-page .hp-service-actions .hp-btn-dark,
+  .hp-page .hp-service-actions .hp-btn-outline-dark { font-size: 15px; padding: 11px 24px; }
+}

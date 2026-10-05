@@ -134,12 +134,14 @@
       </div>
       <div class="hp-hero-overlay"></div>
       <div class="hp-hero-content">
-        <p class="hp-hero-kicker" id="heroKicker">自然・純淨・安心</p>
         <h1 id="heroTitle">把臺灣森林，帶進你的日常</h1>
         <p class="hp-hero-sub" id="heroSubtitle">
-          真正動人的香氣，不需要來自遙遠的國度，<br>
+          真正動人的香氣，<br>
+          不需要來自遙遠的國度，<br>
           它一直共存在這座島嶼。
         </p>
+      </div>
+      <div class="hp-hero-cta">
         <a class="hp-btn-outline" href="#featured" id="heroBtnPrimary">探索精選產品</a>
       </div>
     </section>
@@ -152,19 +154,19 @@
         <p class="hp-featured-desc" id="featuredDesc">
           小小多山的島嶼，<br>
           不只住著 2300 萬的人類，<br>
-          更庇護了上萬種的植物。<br><br>
+          更滋養了上萬種的植物。<br><br>
           我們把植物能量保留於瓶中，<br>
           陪伴您的每一個呼吸。
         </p>
-        <a class="hp-btn-dark" href="products.html">立即購買</a>
+        <a class="hp-btn-light" href="products.html">立即購買</a>
       </div>
 
       <div class="hp-featured-right">
         <div class="hp-cards-viewport">
           <div class="hp-cards-track" id="featuredGrid"></div>
         </div>
-        <button class="hp-arrow hp-arrow-next" id="featuredNext">→</button>
-        <button class="hp-arrow hp-arrow-prev" id="featuredPrev">←</button>
+        <button class="hp-arrow hp-arrow-next" id="featuredNext" aria-label="下一個">→</button>
+        <button class="hp-arrow hp-arrow-prev" id="featuredPrev" aria-label="上一個">←</button>
       </div>
     </section>
 
@@ -172,59 +174,61 @@
     <section class="hp-service" id="service">
       <div class="hp-service-inner">
         <div class="hp-service-text">
-          <p class="hp-kicker hp-kicker-light">客製化服務</p>
           <h2>為您的品牌<br>打造專屬香氣</h2>
-          <p class="hp-service-desc">
-            從原料選擇、配方設計到包裝建議，
-            我們提供全流程的精油客製化服務，
-            讓您的品牌擁有獨一無二的香氣識別。
-          </p>
+          <div class="hp-service-desc">
+            <p>一個品牌的性格、一間旅宿的風景、一座地方的記憶，<br>都可以成為氣味的起點。</p>
+            <p>那些傳達的故事，或尚未被具體說明的想像，<br>AROCHEMY 都能協助您轉化為可以被感受的氣味。</p>
+            <p>依據不同需求，香氣也能延伸至空間體驗、旅宿場域、<br>品牌贈禮、活動企劃與日常香氛產品。</p>
+            <p>讓看不見的靈感被聞見，讓稍縱即逝的感受留在永恆裡。</p>
+          </div>
           <div class="hp-service-actions">
             <a class="hp-btn-dark" href="service.html">了解服務內容</a>
             <a class="hp-btn-outline-dark" href="contact.html">直接詢問</a>
           </div>
         </div>
         <div class="hp-service-img">
-          <img src="images/img42.png" alt="客製化服務" loading="lazy">
+          <img src="images/home-service.jpg" alt="調香師正在調配香氣" loading="lazy">
         </div>
       </div>
     </section>
 
-    <!-- ══ 4. 氛圍照片橫排 ═════════════════════════════════ -->
-    <section class="hp-gallery">
+    <!-- ══ 4. 氣味與科學（品牌故事）═══════════════════════ -->
+    <section class="hp-science" id="story">
+      <div class="hp-science-head">
+        <h2>氣味與科學</h2>
+        <p class="hp-science-sub">AROMA <span>+</span> ALCHEMY</p>
+        <p class="hp-science-quote">
+          aroma 是植物留下的氣味；<br>
+          alchemy 是轉化、探索，以及對未知保持好奇。
+        </p>
+      </div>
+
       <div class="hp-gallery-grid">
-        <div class="hp-gallery-item">
-          <img src="images/atmosphere1.jpg" alt="" loading="lazy">
-        </div>
-        <div class="hp-gallery-item">
-          <img src="images/pine_macro.jpg" alt="" loading="lazy">
-        </div>
-        <div class="hp-gallery-item">
-          <img src="images/atmosphere2.jpg" alt="" loading="lazy">
-        </div>
+        <div class="hp-gallery-item"><img src="images/home-story-1.jpg" alt="掛著水珠的松針" loading="lazy"></div>
+        <div class="hp-gallery-item"><img src="images/home-story-2.jpg" alt="蒸餾用的玻璃冷凝管" loading="lazy"></div>
+        <div class="hp-gallery-item"><img src="images/home-story-3.jpg" alt="掛著水珠的針葉枝條" loading="lazy"></div>
+        <div class="hp-gallery-item"><img src="images/home-story-4.jpg" alt="玻璃器皿中的油水分離" loading="lazy"></div>
+      </div>
+
+      <div class="hp-science-body">
+        <h3 id="brandTitle">以植物香氣，認識臺灣</h3>
+        <p class="hp-brand-body" id="brandBody">AROCHEMY 希望讓臺灣的植物，不再只是圖鑑裡叫得出名字的物種，
+而是能被聞見、被理解，也被記得的存在。
+我們從氣味出發，重新靠近植物，也重新認識腳下的這座島嶼。</p>
+      </div>
+      <div class="hp-science-cta">
+        <a class="hp-btn-light" href="brand.html">了解更多</a>
       </div>
     </section>
 
-    <!-- ══ 5. 品牌故事 ══════════════════════════════════════ -->
-    <section class="hp-brand" id="story">
-      <div class="hp-brand-inner">
-        <div class="hp-brand-text">
-          <p class="hp-kicker">品牌故事</p>
-          <h2 id="brandTitle">採集・植物・微距・蒸餾・水霧・森林・實驗器材・玻璃 ....</h2>
-          <p class="hp-brand-body" id="brandBody">
-            Arochemy 誕生於對臺灣植物的深度好奇，
-            我們相信，每一種植物都有它獨特的氣息與療癒能量。
-          </p>
-          <a class="hp-btn-dark" href="brand.html">了解更多</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- ══ 6. 最新文章 ══════════════════════════════════════ -->
+    <!-- ══ 5. 最新文章 ══════════════════════════════════════ -->
     <section class="hp-articles" id="articles">
       <div class="container">
         <div class="hp-section-head">
-          <p class="hp-kicker">最新文章</p>
+          <div>
+            <p class="hp-kicker">最新文章</p>
+            <h2 class="hp-articles-title">AROCHEMY 芳香科學堂</h2>
+          </div>
           <a href="articles.html" class="hp-link-more">查看全部 →</a>
         </div>
         <div class="grid-2" id="latestArticles"></div>
@@ -237,8 +241,10 @@
     <div class="container footer-inner">
 
     <!-- 左側：品牌資訊 -->
-    <div>
-      <div class="footer-brand">Arochemy</div>
+    <div class="footer-info">
+      <div class="footer-brand">
+        <img src="./images/head-logo.png" alt="Arochemy Essential Oil" class="footer-logo">
+      </div>
 
       <div class="muted">
         櫟嶼國際有限公司<br>
@@ -246,7 +252,7 @@
       </div>
 
       <div class="muted" style="margin-top:8px;" id="footer-tel">
-        Tel：0911505015
+        Tel：+886 911 505 015
       </div>
 
       <div class="muted" id="footer-email">
@@ -254,7 +260,7 @@
       </div>
 
       <div class="muted" id="footer-address">
-        地址：台灣
+        地址：彰化縣員林市中山路二段556巷21號
       </div>
 
       <div class="muted" style="margin-top:10px;">
@@ -265,13 +271,21 @@
     <!-- 右側：連結群組 -->
     <div class="footer-link-groups">
       <div class="footer-link-col">
+        <div class="footer-link-title">追蹤我們</div>
+        <div class="footer-link-list">
+          <a id="footer-line-link" href="#" target="_blank" rel="noopener">LINE</a>
+          <a id="footer-ig-link" href="#" target="_blank" rel="noopener">Instagram</a>
+          <a id="social-fb-btn" href="#" target="_blank" rel="noopener">Facebook</a>
+        </div>
+      </div>
+      <div class="footer-link-col">
         <div class="footer-link-title">網站導覽</div>
         <div class="footer-link-list">
           <a href="brand.html">品牌故事</a>
           <a href="products.html">產品</a>
           <a href="service.html">服務</a>
           <a href="articles.html">文章</a>
-          <a href="contact.html">聯絡</a>
+          <a href="contact.html">聯絡我們</a>
           <a href="faq.html">FAQ</a>
         </div>
       </div>

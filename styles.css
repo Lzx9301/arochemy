@@ -3418,3 +3418,35 @@ body.sv-page:not(.hp-page) .header:not(.scrolled) {
   .sv-jump .sv-wrap { gap: 28px; }
   .sv-jump a span[aria-hidden] { margin-left: 4px; }
 }
+
+
+/* ══════════════════════════════════════════════════════════════
+   產品頁頂部主視覺 2026-10：改用森林照片當背景，文字疊在左側暗部
+   只作用在 products.html（body.pd-page）
+══════════════════════════════════════════════════════════════ */
+.pd-page .cat-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: clamp(320px, 34vw, 480px);
+  padding: 56px 0;
+  border-bottom: none;
+  background: #2f3a33 url("images/products-hero.jpg") center right / cover no-repeat;
+}
+/* 左側加一層淡淡的暗色漸層，確保白字在任何寬度下都清楚 */
+.pd-page .cat-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(20,24,20,0.55) 0%, rgba(20,24,20,0.30) 45%, rgba(20,24,20,0) 70%);
+}
+.pd-page .cat-hero-grid { position: relative; grid-template-columns: minmax(0, 560px); }
+.pd-page .cat-hero-media { display: none; }
+.pd-page .cat-hero .kicker { color: rgba(255,255,255,0.8); }
+.pd-page .cat-title { color: #fff; }
+.pd-page .cat-desc { color: rgba(255,255,255,0.88); line-height: 1.85; }
+
+@media (max-width: 900px) {
+  .pd-page .cat-hero { min-height: 360px; background-position: 70% center; }
+  .pd-page .cat-hero::before { background: rgba(20,24,20,0.45); }
+}

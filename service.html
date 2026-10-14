@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="./images/logo.png" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
-<body>
+<body class="sv-page">
 
   <header class="header" id="top">
     <div class="container header-inner">
@@ -126,75 +126,107 @@
   </div>
 
   <main>
-    <section class="hero">
-      <div class="container hero-grid">
+
+    <!-- ══ 1. 主視覺 ═══════════════════════════════════════ -->
+    <section class="sv-hero">
+      <div class="sv-hero-box">
+        <p class="sv-hero-eyebrow">SCENT COLLABORATION</p>
+        <h1>打造專屬香氣</h1>
+        <p class="sv-hero-sub">Your story.<br>Your vision.<br>Our scent craft.</p>
+      </div>
+    </section>
+
+    <!-- ══ 2. 區塊快速跳轉 ═════════════════════════════════ -->
+    <nav class="sv-jump" aria-label="服務項目">
+      <div class="sv-wrap">
+        <a href="#svc-custom"><span class="sv-mono">01</span>客製化方案<span aria-hidden="true">↓</span></a>
+        <a href="#svc-corporate"><span class="sv-mono">02</span>企業合作<span aria-hidden="true">↓</span></a>
+      </div>
+    </nav>
+
+    <!-- ══ 3. 客製化方案 ═══════════════════════════════════ -->
+    <section class="sv-section sv-section-sand" id="svc-custom">
+      <div class="sv-wrap">
+        <p class="sv-mono sv-kicker">01 / CUSTOM SCENT SOLUTIONS</p>
+        <h2>客製化方案</h2>
+        <div class="sv-grid">
+          <article class="sv-card">
+            <div class="sv-card-img"><img src="images/service-curated.jpg" alt="擺放在一起的精油與噴霧空瓶" loading="lazy"></div>
+            <p class="sv-mono sv-card-eyebrow">CURATED SCENT CUSTOMIZATION</p>
+            <h3>精選香氣客製</h3>
+            <p class="sv-card-tag">選一款喜歡的香氣，<br>換上屬於你的特色。</p>
+            <p class="sv-card-body">從 AROCHEMY 現有的複方香氣中選擇，搭配客製標籤、包裝或禮盒。把品牌識別與想傳達的心意，化成一份能被記住的香氣禮物。</p>
+            <dl class="sv-card-meta">
+              <div><dt>合作內容</dt><dd>現有複方選香 / 標籤、包裝或禮盒客製</dd></div>
+              <div><dt>適合需求</dt><dd>企業贈禮、活動紀念、品牌聯名等</dd></div>
+            </dl>
+            <a class="sv-btn-outline" href="#sv-contact">洽詢精選香氣客製<span aria-hidden="true">↓</span></a>
+          </article>
+          <article class="sv-card">
+            <div class="sv-card-img"><img src="images/service-bespoke.jpg" alt="繫著吊牌的牛皮紙禮盒" loading="lazy"></div>
+            <p class="sv-mono sv-card-eyebrow">BESPOKE SCENT DESIGN</p>
+            <h3>專屬香氣設計</h3>
+            <p class="sv-card-tag">把你的故事，<br>轉化為專屬的氣味。</p>
+            <p class="sv-card-body">以品牌個性、場域氛圍或地方記憶等作為起點，重新設計專屬香氣配方。分享你想傳遞的感受、香氣喜好與需求，同時討論適合的應用方式。</p>
+            <dl class="sv-card-meta">
+              <div><dt>合作內容</dt><dd>香氣概念討論 / 專屬配方設計</dd></div>
+              <div><dt>適合需求</dt><dd>品牌識別香氣、旅宿空間、地方文創商品等</dd></div>
+            </dl>
+            <a class="sv-btn-outline" href="#sv-contact">洽詢專屬香氣設計<span aria-hidden="true">↓</span></a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 4. 企業合作 ═════════════════════════════════════ -->
+    <section class="sv-section sv-section-taupe" id="svc-corporate">
+      <div class="sv-wrap">
+        <p class="sv-mono sv-kicker">02 / BUSINESS COLLABORATIONS</p>
+        <h2>企業合作</h2>
+        <div class="sv-grid">
+          <article class="sv-card" id="svc-course">
+            <div class="sv-card-img"><img src="images/service-experience.jpg" alt="窗邊桌上的蒸餾器材" loading="lazy"></div>
+            <p class="sv-mono sv-card-eyebrow">SCENT EXPERIENCES</p>
+            <h3>氣味體驗合作</h3>
+            <p class="sv-card-tag">認識臺灣原生植物，<br>萃取芳香成分與氣味體驗。</p>
+            <p class="sv-card-body">結合植物知識、聞香引導、精油應用與手作體驗，依參與對象與活動主題，討論適合的內容。讓企業課程、品牌活動或團體聚會，吸收新知的同時，也能親身感受大自然的療癒力。</p>
+            <dl class="sv-card-meta">
+              <div><dt>合作內容</dt><dd>企業課程 / 活動聞香 / 手作體驗</dd></div>
+              <div><dt>適合需求</dt><dd>員工活動、品牌體驗、團體課程</dd></div>
+            </dl>
+            <a class="sv-btn-outline" href="#sv-contact">洽詢氣味體驗合作<span aria-hidden="true">↓</span></a>
+          </article>
+          <article class="sv-card">
+            <div class="sv-card-img"><img src="images/service-retail.jpg" alt="陳列在架上的 AROCHEMY 產品盒" loading="lazy"></div>
+            <p class="sv-mono sv-card-eyebrow">RETAIL PARTNERSHIPS</p>
+            <h3>商品經銷合作</h3>
+            <p class="sv-card-tag">讓臺灣的植物香氣，<br>在更多地方被遇見。</p>
+            <p class="sv-card-body">邀請認同 AROCHEMY 理念的通路與選品夥伴，一起分享臺灣植物的香氣與故事。依通路定位與客群需求，討論合適的商品組合與經銷合作方式。</p>
+            <dl class="sv-card-meta">
+              <div><dt>合作內容</dt><dd>品牌商品經銷 / 商品組合與合作方式洽談</dd></div>
+              <div><dt>適合需求</dt><dd>選品店、生活風格通路、旅宿零售空間</dd></div>
+            </dl>
+            <a class="sv-btn-outline" href="#sv-contact">洽詢商品經銷合作<span aria-hidden="true">↓</span></a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 5. 聯絡我們 ═════════════════════════════════════ -->
+    <section class="sv-cta" id="sv-contact">
+      <div class="sv-wrap sv-cta-grid">
         <div>
-          <div class="kicker">Services</div>
-          <h1>把香氣帶進你的空間、品牌與日常生活。</h1>
-          <p class="lead">
-            Arochemy 提供從個人選香、送禮建議到空間香氛與合作提案等服務，
-            協助你找到適合自己或品牌的氣味表達方式。
-          </p>
+          <p class="sv-mono sv-cta-kicker">LET'S CREATE TOGETHER.</p>
+          <h2>跟我們聊聊，<br>你的想法！</h2>
         </div>
-
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="container">
-        <div class="section-head">
-          <h2>服務項目</h2>
-          <p class="muted">可依品牌實際內容再擴充或細分。</p>
-        </div>
-
-        <div class="grid-3">
-          <div class="card" id="svc-custom">
-            <h3>客製化</h3>
-            <p>依照品牌調性、使用情境或個人偏好，量身調配專屬香氣與產品組合。</p>
-          </div>
-
-          <div class="card" id="svc-corporate">
-            <h3>企業禮盒</h3>
-            <p>提供企業贈禮、節慶禮盒等客製化方案，兼顧氣味、預算與包裝風格。</p>
-          </div>
-
-          <div class="card" id="svc-course">
-            <h3>課程</h3>
-            <p>提供芳香療法與精油相關課程，適合有興趣深入了解香氣知識的您。</p>
-          </div>
+        <div class="sv-cta-side">
+          <p class="sv-cta-text">無論你已有明確的計畫，或只有一個初步的想法，<br>都歡迎與我們聊聊，一起找到合適的合作方式。</p>
+          <a class="sv-btn-light" href="contact.html">聯絡我們</a>
+          <p class="sv-cta-note">洽詢時可提供：合作類型、應用情境、預計數量或人數、時程等資訊。</p>
         </div>
       </div>
     </section>
 
-    <section class="section soft">
-      <div class="container">
-        <div class="section-head">
-          <h2>合作流程</h2>
-          <p class="muted">先了解需求，再提供更合適的內容與方向。</p>
-        </div>
-
-        <div class="grid-3">
-          <div class="card">
-            <h3>01｜需求溝通</h3>
-            <p>透過表單或訊息了解用途、預算、對象與預期風格。</p>
-          </div>
-
-          <div class="card">
-            <h3>02｜方案建議</h3>
-            <p>依照需求提供產品搭配、氣味方向或合作提案內容。</p>
-          </div>
-
-          <div class="card">
-            <h3>03｜確認執行</h3>
-            <p>確認細節後安排製作、包裝、交付或後續合作流程。</p>
-          </div>
-        </div>
-
-        <div class="section-actions">
-          <a class="btn primary" href="contact.html">立即詢問</a>
-        </div>
-      </div>
-    </section>
   </main>
 <footer class="footer">
   <div class="container footer-inner">

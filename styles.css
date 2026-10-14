@@ -3450,3 +3450,235 @@ body.sv-page:not(.hp-page) .header:not(.scrolled) {
   .pd-page .cat-hero { min-height: 360px; background-position: 70% center; }
   .pd-page .cat-hero::before { background: rgba(20,24,20,0.45); }
 }
+
+
+/* ══════════════════════════════════════════════════════════════
+   文章列表頁（芳香科學堂）排版 2026-10（依客戶示意圖）
+   只作用在 articles.html（body.ar-page）
+══════════════════════════════════════════════════════════════ */
+.ar-page {
+  --ar-sand:  #d5d1c8;
+  --ar-cream: #fbf7f4;
+  --ar-sage:  #788277;
+  --ar-umber: #706961;
+  --ar-ink:   #1f1c19;
+  --ar-brown: #7a6656;
+}
+.ar-page > main { background: var(--ar-sand); }
+
+/* 主視覺是深色照片：導覽列在頂端時透明＋白字，捲動後恢復原本白底 */
+body.ar-page:not(.hp-page) > main { padding-top: 0; }
+body.ar-page:not(.hp-page) .header:not(.scrolled) {
+  background: transparent !important;
+  border-bottom-color: transparent !important;
+  box-shadow: none !important;
+}
+body.ar-page:not(.hp-page) .header:not(.scrolled) .nav > a,
+body.ar-page:not(.hp-page) .header:not(.scrolled) .nav-item > a,
+body.ar-page:not(.hp-page) .header:not(.scrolled) .nav-user,
+body.ar-page:not(.hp-page) .header:not(.scrolled) .nav-cart,
+body.ar-page:not(.hp-page) .header:not(.scrolled) .burger { color: rgba(255,255,255,0.92) !important; }
+body.ar-page:not(.hp-page) .header:not(.scrolled) .brand-logo { filter: brightness(0) invert(1) !important; }
+body.ar-page:not(.hp-page) .header:not(.scrolled) .cart-count { background: rgba(255,255,255,0.2) !important; }
+body.ar-page:not(.hp-page) .header:not(.scrolled) .header-search { background: rgba(255,255,255,0.16) !important; border-color: rgba(255,255,255,0.45) !important; }
+body.ar-page:not(.hp-page) .header:not(.scrolled) .header-search svg { color: rgba(255,255,255,0.8) !important; }
+body.ar-page:not(.hp-page) .header:not(.scrolled) .header-search input { color: #fff !important; }
+body.ar-page:not(.hp-page) .header:not(.scrolled) .header-search input::placeholder { color: rgba(255,255,255,0.7) !important; }
+
+.ar-wrap { width: min(1100px, calc(100% - 48px)); margin: 0 auto; }
+.ar-mono {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Noto Sans Mono CJK TC", monospace;
+  letter-spacing: 0.06em;
+}
+.ar-kicker { margin: 0 0 16px; font-size: 12px; color: var(--ar-ink); }
+.ar-section h2 { margin: 0; font-size: clamp(28px, 3vw, 34px); font-weight: 600; letter-spacing: 0.04em; color: var(--ar-ink); }
+.ar-skel { background: rgba(0,0,0,0.06); border-radius: 6px; }
+.ar-empty { grid-column: 1 / -1; margin: 0; padding: 48px 0; color: #6d675f; }
+
+/* ── 1. 主視覺 ── */
+.ar-hero {
+  display: flex;
+  align-items: center;
+  min-height: clamp(460px, 50vw, 720px);
+  padding: 110px 0 60px;
+  background: #4a3f36 url("images/articles-hero.jpg") center / cover no-repeat;
+}
+.ar-hero-box {
+  width: min(500px, 100%);
+  padding: 42px 44px 40px;
+  background: rgba(72,70,67,0.62);
+  color: #fff;
+}
+.ar-hero-eyebrow { margin: 0 0 14px; font-size: 15px; letter-spacing: 0.03em; }
+.ar-hero-box h1 { margin: 0 0 16px; font-size: clamp(32px, 3.4vw, 44px); font-weight: 600; letter-spacing: 0.06em; line-height: 1.2; }
+.ar-hero-en { margin: 0 0 22px; font-size: 15px; letter-spacing: 0.02em; }
+.ar-hero-text { margin: 0; font-size: 13px; font-weight: 600; line-height: 1.75; }
+
+/* ── 2. 快速跳轉 ── */
+.ar-jump { padding: 22px 0; border-bottom: 1px solid rgba(0,0,0,0.12); background: var(--ar-sand); }
+.ar-jump .ar-wrap { display: flex; flex-wrap: wrap; gap: 14px clamp(28px, 7vw, 80px); }
+.ar-jump a { display: inline-flex; align-items: center; gap: 12px; font-size: 13px; color: var(--ar-ink); text-decoration: none; }
+.ar-jump a .ar-mono { font-size: 12px; }
+.ar-jump a span[aria-hidden] { margin-left: 18px; font-size: 16px; }
+.ar-jump a:hover { text-decoration: underline; }
+
+.ar-section { padding: clamp(60px, 8vw, 96px) 0; scroll-margin-top: 78px; }
+
+/* ── 3. 最新文章 ── */
+.ar-latest { background: var(--ar-sand); }
+.ar-feature { display: grid; grid-template-columns: minmax(0, 1.68fr) minmax(0, 1fr); gap: 32px; margin-top: 36px; align-items: stretch; }
+.ar-feature-img { display: block; aspect-ratio: 4 / 3; overflow: hidden; background: rgba(0,0,0,0.06); }
+.ar-feature-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ar-feature-body {
+  display: flex;
+  flex-direction: column;
+  padding: 18px 0 22px;
+  border-top: 1px solid rgba(0,0,0,0.35);
+  border-bottom: 1px solid rgba(0,0,0,0.35);
+}
+.ar-meta { display: flex; gap: 18px; margin: 0 0 22px; font-size: 12px; color: var(--ar-brown); }
+.ar-feature-body h3 { margin: 0 0 30px; font-size: clamp(22px, 2.3vw, 28px); font-weight: 500; line-height: 1.45; letter-spacing: 0.03em; }
+.ar-feature-body h3 a,
+.ar-card h3 a { color: var(--ar-ink); text-decoration: none; }
+.ar-feature-body h3 a:hover,
+.ar-card h3 a:hover { text-decoration: underline; }
+.ar-feature-excerpt { margin: 0 0 32px; font-size: 13.5px; line-height: 1.7; color: var(--ar-ink); flex: 1; }
+.ar-btn-outline {
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 8px 32px;
+  border: 1px solid var(--ar-ink);
+  border-radius: 999px;
+  font-size: 15px;
+  color: var(--ar-ink);
+  text-decoration: none;
+}
+.ar-btn-outline:hover { background: var(--ar-ink); color: #fff; }
+
+/* ── 4. 主題分類 ── */
+.ar-topics { background: var(--ar-cream); }
+.ar-topics-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: center; margin-bottom: 44px; }
+.ar-topics-head p { margin: 0; font-size: 13px; font-weight: 600; line-height: 1.75; color: var(--ar-ink); }
+.ar-topic-grid { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid rgba(0,0,0,0.35); border-bottom: 1px solid rgba(0,0,0,0.35); }
+.ar-topic {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 24px 20px 26px 0;
+  border: 0;
+  border-left: 1px solid rgba(0,0,0,0.35);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  color: var(--ar-ink);
+  cursor: pointer;
+}
+.ar-topic:first-child { border-left: 0; }
+.ar-topic:not(:first-child) { padding-left: 14px; }
+.ar-topic .ar-mono { font-size: 12px; color: #4a4540; }
+.ar-topic strong { font-size: 19px; font-weight: 500; letter-spacing: 0.04em; }
+.ar-topic-desc { font-size: 12.5px; line-height: 1.7; color: #4a4540; }
+.ar-topic:hover strong { text-decoration: underline; }
+
+/* ── 5. 全部文章 ── */
+.ar-all { background: var(--ar-sand); }
+.ar-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 36px 0 32px; }
+.ar-chip {
+  padding: 5px 14px;
+  border: 1px solid var(--ar-ink);
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ar-ink);
+  cursor: pointer;
+}
+.ar-chip.active { background: var(--ar-umber); border-color: var(--ar-umber); color: #fff; }
+.ar-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 48px 24px; }
+.ar-card { display: flex; flex-direction: column; }
+.ar-card-img {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 3 / 2;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #c7beb0;
+  color: #5a534b;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+.ar-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ar-card .ar-meta { margin: 26px 0 26px; font-size: 11.5px; gap: 12px; }
+.ar-card h3 { margin: 0 0 30px; font-size: 22px; font-weight: 500; line-height: 1.45; letter-spacing: 0.02em; }
+.ar-card-excerpt {
+  margin: 0 0 22px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ar-ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ar-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
+.ar-tags span { padding: 2px 12px; border-radius: 999px; background: rgba(0,0,0,0.08); font-size: 11px; color: #4a4540; }
+.ar-more { align-self: flex-start; margin-top: auto; padding-bottom: 2px; border-bottom: 1px solid var(--ar-ink); font-size: 13px; color: var(--ar-ink); text-decoration: none; }
+.ar-more:hover { color: var(--ar-umber); border-color: var(--ar-umber); }
+
+/* 分頁（只有超過 15 篇時才會出現） */
+.ar-pager { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 64px; }
+.ar-pager[hidden] { display: none; }
+.ar-page-arrow,
+.ar-page-num {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--ar-ink);
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ar-ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.ar-page-num { border-color: transparent; }
+.ar-page-num.active { background: var(--ar-umber); border-color: var(--ar-umber); color: #fff; }
+.ar-page-arrow:disabled { opacity: 0.35; cursor: default; }
+
+/* ── 6. 提問 ── */
+.ar-cta { background: var(--ar-sage); color: #fff; padding: clamp(56px, 7vw, 76px) 0; }
+.ar-cta-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 40px; align-items: center; }
+.ar-cta-kicker { margin: 0 0 40px; font-size: 13px; color: #e4e6e1; }
+.ar-cta h2 { margin: 0; font-size: clamp(26px, 2.8vw, 32px); font-weight: 500; line-height: 1.6; letter-spacing: 0.06em; }
+.ar-cta-side p { margin: 0 0 36px; font-size: 13px; font-weight: 600; line-height: 1.75; }
+.ar-btn-light { display: inline-block; padding: 10px 26px; border-radius: 999px; background: var(--ar-sand); color: var(--ar-ink); font-size: 18px; text-decoration: none; }
+.ar-btn-light:hover { background: #e6e2da; }
+
+/* ── 平板／手機 ── */
+@media (max-width: 900px) {
+  .ar-hero { min-height: 0; padding: 110px 0 48px; }
+  .ar-hero-box { padding: 30px 26px; }
+  .ar-hero-text br { display: none; }
+  .ar-feature { grid-template-columns: 1fr; gap: 24px; }
+  .ar-topics-head { grid-template-columns: 1fr; gap: 14px; }
+  .ar-topics-head p br { display: none; }
+  .ar-topic-grid { grid-template-columns: repeat(2, 1fr); }
+  .ar-topic { padding: 22px 14px 24px 0; }
+  .ar-topic:nth-child(3) { border-left: 0; padding-left: 0; }
+  .ar-topic:nth-child(n+3) { border-top: 1px solid rgba(0,0,0,0.35); }
+  .ar-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ar-cta-grid { grid-template-columns: 1fr; gap: 26px; }
+  .ar-cta-kicker { margin-bottom: 22px; }
+  .ar-cta-side p br { display: none; }
+}
+@media (max-width: 600px) {
+  .ar-grid { grid-template-columns: 1fr; gap: 44px; }
+  .ar-card h3 { margin-bottom: 18px; }
+  .ar-jump a span[aria-hidden] { margin-left: 2px; }
+}

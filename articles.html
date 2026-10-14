@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="./images/logo.png" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
-<body>
+<body class="ar-page">
 
   <header class="header" id="top">
     <div class="container header-inner">
@@ -126,66 +126,102 @@
   </div>
 
   <main>
-    <section class="hero">
-      <div class="container hero-grid">
+
+    <!-- ══ 1. 主視覺 ═══════════════════════════════════════ -->
+    <section class="ar-hero">
+      <div class="ar-wrap">
+        <div class="ar-hero-box">
+          <p class="ar-hero-eyebrow">AROCHEMY JOURNAL</p>
+          <h1>芳香科學堂</h1>
+          <p class="ar-hero-en">NOTES ON PLANTS, SCENT &amp; SCIENCE.</p>
+          <p class="ar-hero-text">從臺灣植物開始，整理我們對氣味分子的觀察。<br>我們將不定期在這裡分享，植物小故事、<br>氣味科學、調香應用與精油知識，<br>讓每一次選擇，都多一點理解。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 2. 區塊快速跳轉 ═════════════════════════════════ -->
+    <nav class="ar-jump" aria-label="文章區塊">
+      <div class="ar-wrap">
+        <a href="#ar-latest"><span class="ar-mono">01</span>最新文章<span aria-hidden="true">↓</span></a>
+        <a href="#ar-topics"><span class="ar-mono">02</span>主題分類<span aria-hidden="true">↓</span></a>
+        <a href="#ar-all"><span class="ar-mono">03</span>全部文章<span aria-hidden="true">↓</span></a>
+      </div>
+    </nav>
+
+    <!-- ══ 3. 最新文章（由 js/articles.js 帶入最新一篇）═════ -->
+    <section class="ar-section ar-latest" id="ar-latest">
+      <div class="ar-wrap">
+        <p class="ar-mono ar-kicker">01 / LATEST NOTES</p>
+        <h2>最新文章</h2>
+        <div class="ar-feature" id="arFeature">
+          <div class="ar-feature-img ar-skel"></div>
+          <div class="ar-feature-body">
+            <div class="ar-skel" style="height:14px;width:40%;margin-bottom:24px"></div>
+            <div class="ar-skel" style="height:28px;width:80%;margin-bottom:24px"></div>
+            <div class="ar-skel" style="height:14px;width:90%"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 4. 主題分類 ═════════════════════════════════════ -->
+    <section class="ar-section ar-topics" id="ar-topics">
+      <div class="ar-wrap">
+        <p class="ar-mono ar-kicker">02 / EXPLORE BY TOPIC</p>
+        <div class="ar-topics-head">
+          <h2>從哪裡開始閱讀？</h2>
+          <p>依照你感興趣的方向，<br>認識植物、氣味背後的科學，以及如何安心應用。</p>
+        </div>
+        <div class="ar-topic-grid">
+          <button type="button" class="ar-topic" data-cat="taiwan-plants">
+            <span class="ar-mono">01</span>
+            <strong>臺灣植物</strong>
+            <span class="ar-topic-desc">物種、產地、生長環境<br>與地方氣味故事</span>
+          </button>
+          <button type="button" class="ar-topic" data-cat="scent-science">
+            <span class="ar-mono">02</span>
+            <strong>氣味科學</strong>
+            <span class="ar-topic-desc">嗅覺、芳香分子<br>與研究知識</span>
+          </button>
+          <button type="button" class="ar-topic" data-cat="blending">
+            <span class="ar-mono">03</span>
+            <strong>調香與應用</strong>
+            <span class="ar-topic-desc">氣味結構、配方思考<br>與日常使用方式</span>
+          </button>
+          <button type="button" class="ar-topic" data-cat="knowledge">
+            <span class="ar-mono">04</span>
+            <strong>精油知識</strong>
+            <span class="ar-topic-desc">GC–MS、品質判讀<br>與精油安全資訊</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 5. 全部文章（篩選＋分頁由 js/articles.js 處理）══ -->
+    <section class="ar-section ar-all" id="ar-all">
+      <div class="ar-wrap">
+        <p class="ar-mono ar-kicker">03 / ALL ARTICLES</p>
+        <h2>全部文章</h2>
+        <div class="ar-chips" id="arChips" role="tablist" aria-label="文章分類"></div>
+        <div class="ar-grid" id="arGrid"></div>
+        <nav class="ar-pager" id="arPager" aria-label="文章分頁" hidden></nav>
+      </div>
+    </section>
+
+    <!-- ══ 6. 提問 ═════════════════════════════════════════ -->
+    <section class="ar-cta">
+      <div class="ar-wrap ar-cta-grid">
         <div>
-          <div class="kicker">Articles</div>
-          <h1>從基礎知識到生活靈感，慢慢找到屬於你的香氣方式。</h1>
-          <p class="lead">
-            這裡整理精油入門、香氛使用方式、空間搭配與日常保養等內容，
-            幫助你更安心地把香氣融入生活。
-          </p>
+          <p class="ar-mono ar-cta-kicker">FEEL FREE TO ASK.</p>
+          <h2>有精油相關疑惑，<br>歡迎提問。</h2>
         </div>
-
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="container">
-        <div class="section-head">
-          <h2>最新文章</h2>
-          <p class="muted">目前先用靜態文章卡片，之後可以再接 JSON 或後台。</p>
-        </div>
-
-        <div class="grid-3">
-          <article class="article-card">
-            <div class="article-title">精油入門：新手該怎麼開始選擇第一瓶精油？</div>
-            <div class="article-meta muted">2026 / 03 / 12｜入門指南</div>
-            <p class="article-excerpt">從用途、氣味接受度到日常使用場景，整理適合初學者的選香方向。</p>
-          </article>
-
-          <article class="article-card">
-            <div class="article-title">睡前放鬆香氣怎麼挑？常見搭配思路整理</div>
-            <div class="article-meta muted">2026 / 03 / 10｜睡眠香氛</div>
-            <p class="article-excerpt">想營造安定、柔和的夜晚氛圍，可以先從幾種常見調性開始理解。</p>
-          </article>
-
-          <article class="article-card">
-            <div class="article-title">空間香氛小技巧：客廳、書房與臥室可以怎麼分配？</div>
-            <div class="article-meta muted">2026 / 03 / 08｜空間香氣</div>
-            <p class="article-excerpt">不同生活空間適合不同濃度與氣味類型，搭配得好會更自然舒服。</p>
-          </article>
-
-          <article class="article-card">
-            <div class="article-title">精油使用前要知道的 5 個注意事項</div>
-            <div class="article-meta muted">2026 / 03 / 05｜使用須知</div>
-            <p class="article-excerpt">包含濃度、保存、接觸方式與特殊族群使用注意點的基本整理。</p>
-          </article>
-
-          <article class="article-card">
-            <div class="article-title">為什麼有些香氣一聞就放鬆？從生活經驗談氣味感受</div>
-            <div class="article-meta muted">2026 / 03 / 01｜香氛生活</div>
-            <p class="article-excerpt">香氣不只是成分問題，也和記憶、環境與個人習慣有很大關係。</p>
-          </article>
-
-          <article class="article-card">
-            <div class="article-title">送禮用香氛怎麼選？3 種不容易出錯的方向</div>
-            <div class="article-meta muted">2026 / 02 / 26｜送禮提案</div>
-            <p class="article-excerpt">如果你想送出有質感又實用的香氛禮物，可以先從這幾個方向思考。</p>
-          </article>
+        <div class="ar-cta-side">
+          <p>我們會持續整理臺灣植物、氣味與科學相關內容。<br>也歡迎告訴我們，你下一篇想看什麼主題。</p>
+          <a class="ar-btn-light" id="articles-follow-link" href="contact.html" target="_blank" rel="noopener">追蹤最新文章</a>
         </div>
       </div>
     </section>
+
   </main>
 <footer class="footer">
   <div class="container footer-inner">

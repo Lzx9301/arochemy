@@ -32,6 +32,9 @@ function toDate(ts) {
 }
 
 const CAT_LABELS = {
+  'taiwan-plants': '臺灣植物',
+  'scent-science': '氣味科學',
+  blending:     '調香與應用',
   knowledge:    '精油知識',
   lifestyle:    '生活應用',
   diy:          'DIY 教學',

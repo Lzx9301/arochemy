@@ -38,6 +38,8 @@ const db  = getFirestore(app);
     // 首頁頁尾「追蹤我們」文字連結（其他頁面沒有這兩個元素時不會有任何作用）
     setHref('footer-ig-link',   site.socialIG);
     setHref('footer-line-link', site.socialLine);
+    // 文章頁「追蹤最新文章」按鈕：有設定 Instagram 就連過去，沒設定維持連到聯絡頁
+    setHref('articles-follow-link', site.socialIG);
   } catch (e) {
     console.warn('[site-settings] 讀取網站設定失敗:', e.message);
   }

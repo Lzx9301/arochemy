@@ -1,6 +1,11 @@
 /**
  * Arochemy — js/articles.js
- * 文章列表頁：從 Firestore 讀取 published 文章，支援分類篩選
+ * 文章列表頁（芳香科學堂）：
+ *   1. 從 Firestore 讀取 published 文章（新到舊）
+ *   2. 「最新文章」區塊顯示最新一篇
+ *   3. 「全部文章」區塊：分類篩選 + 分頁（超過 15 篇才出現分頁）
+ *   4. 「從哪裡開始閱讀？」主題卡片點擊後，直接套用該分類並捲到全部文章
+ *   5. 支援網址參數 ?cat=分類代碼（例：articles.html?cat=taiwan-plants）
  */
 
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -20,8 +25,30 @@ const firebaseConfig = {
 const app = getApps().find(a => a.name === '[DEFAULT]') || initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
+/* ── 設定 ──────────────────────────────────────────────────── */
+const PAGE_SIZE = 15;                                   // 每頁篇數，超過才顯示分頁
+const PLACEHOLDER_IMG = 'images/articles-placeholder.jpg'; // 文章沒有封面時使用
+
+/* 文章頁的篩選按鈕（順序即顯示順序）。
+   代碼必須跟後台 admin.html「文章分類」下拉選單的 value 一致。 */
+const FILTER_CATS = {
+  'taiwan-plants': '臺灣植物',
+  'scent-science': '氣味科學',
+  blending:        '調香與應用',
+  knowledge:       '精油知識',
+  news:            '最新消息',
+};
+
+/* 舊分類：沒有篩選按鈕，但舊文章仍要能顯示正確的分類名稱 */
+const CAT_LABELS = {
+  ...FILTER_CATS,
+  lifestyle:     '生活應用',
+  diy:           'DIY 教學',
+  'brand-story': '品牌故事',
+};
+
 /* ── 工具 ──────────────────────────────────────────────────── */
-const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
 function toDate(ts) {
   if (!ts) return new Date(0);
@@ -30,36 +57,38 @@ function toDate(ts) {
   return new Date(ts);
 }
 
-const CAT_LABELS = {
-  knowledge:    '精油知識',
-  lifestyle:    '生活應用',
-  diy:          'DIY 教學',
-  'brand-story':'品牌故事',
-  news:         '最新消息',
-};
+/* 2026.10.12 這種格式 */
+function fmtDate(ts) {
+  const d = toDate(ts);
+  if (!d.getTime()) return '';
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())}`;
+}
 
-/* ── 全域資料 ──────────────────────────────────────────────── */
-let allArticles   = [];
-let currentCat    = 'all';
+const catLabel = key => CAT_LABELS[key] || key || '';
+
+/* ── 狀態 ──────────────────────────────────────────────────── */
+let allArticles = [];
+let currentCat  = 'all';
+let currentPage = 1;
 
 /* ── DOM ───────────────────────────────────────────────────── */
-const grid = document.querySelector('.grid-3');
+const featureEl = document.getElementById('arFeature');
+const chipsEl   = document.getElementById('arChips');
+const gridEl    = document.getElementById('arGrid');
+const pagerEl   = document.getElementById('arPager');
+const allSect   = document.getElementById('ar-all');
 
 /* ══════════════════════════════════════════════════════════════
    初始化
 ══════════════════════════════════════════════════════════════ */
 async function init() {
-  injectStyles();
-  buildFilterBar();
-  await loadArticles();
-}
+  const urlCat = new URLSearchParams(location.search).get('cat');
+  if (urlCat && FILTER_CATS[urlCat]) currentCat = urlCat;
 
-/* ══════════════════════════════════════════════════════════════
-   讀取文章
-══════════════════════════════════════════════════════════════ */
-async function loadArticles() {
-  if (!grid) return;
-  grid.innerHTML = skeletons(6);
+  buildChips();
+  bindTopics();
+  if (gridEl) gridEl.innerHTML = skeletons(3);
 
   try {
     const snap = await getDocs(collection(db, 'articles'));
@@ -68,101 +97,148 @@ async function loadArticles() {
       const a = d.data();
       if (a.status === 'published') allArticles.push({ id: d.id, ...a });
     });
-
-    // 前端排序：新到舊
     allArticles.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
-
-    renderArticles(allArticles);
   } catch (e) {
     console.warn('[articles] load error:', e.message);
-    // 若讀取失敗，保留靜態內容
-    grid.innerHTML = '';
+    allArticles = [];
   }
+
+  renderFeature();
+  renderList();
 }
 
 /* ══════════════════════════════════════════════════════════════
-   渲染文章列表
+   最新文章（最新一篇）
 ══════════════════════════════════════════════════════════════ */
-function renderArticles(list) {
-  if (!grid) return;
+function renderFeature() {
+  if (!featureEl) return;
+  const a = allArticles[0];
 
-  // 更新文章數量
-  const countEl = document.getElementById('articles-count');
-  if (countEl) countEl.textContent = list.length;
-
-  if (!list.length) {
-    grid.innerHTML = `
-      <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#999">
-        <div style="font-size:40px;margin-bottom:12px">📝</div>
-        <p>此分類目前沒有文章</p>
-      </div>`;
+  if (!a) {
+    featureEl.innerHTML = `<p class="ar-empty">文章即將上線，敬請期待。</p>`;
     return;
   }
 
-  grid.innerHTML = list.map(a => articleCard(a)).join('');
-}
-
-/* ── 文章卡片 ── */
-function articleCard(a) {
-  const date    = toDate(a.createdAt);
-  const dateStr = date.getTime() ? date.toLocaleDateString('zh-TW', { year:'numeric', month:'2-digit', day:'2-digit' }) : '';
-  const catStr  = CAT_LABELS[a.category] || a.category || '';
-  const tags    = (a.tags || []).slice(0, 3);
-
-  return `
-    <a class="article-card dyn-article-card" href="article.html?id=${a.id}">
-      ${a.coverImage ? `
-        <div class="article-cover">
-          <img src="${esc(a.coverImage)}" alt="${esc(a.title)}" loading="lazy">
-        </div>` : `
-        <div class="article-cover article-cover-placeholder">🌿</div>`}
-      <div class="article-body">
-        ${catStr ? `<div class="article-cat">${esc(catStr)}</div>` : ''}
-        <div class="article-title">${esc(a.title || '（無標題）')}</div>
-        <div class="article-meta muted">
-          ${dateStr}${catStr && dateStr ? '｜' : ''}${esc(catStr)}
-        </div>
-        ${a.excerpt ? `<p class="article-excerpt muted">${esc(a.excerpt).slice(0, 80)}${a.excerpt.length > 80 ? '…' : ''}</p>` : ''}
-        ${tags.length ? `
-          <div class="article-tags">
-            ${tags.map(t => `<span class="article-tag">${esc(t)}</span>`).join('')}
-          </div>` : ''}
-      </div>
+  const href = `article.html?id=${encodeURIComponent(a.id)}`;
+  featureEl.innerHTML = `
+    <a class="ar-feature-img" href="${href}" tabindex="-1" aria-hidden="true">
+      <img src="${esc(a.coverImage || PLACEHOLDER_IMG)}" alt="">
     </a>
-  `;
+    <div class="ar-feature-body">
+      <p class="ar-meta">
+        ${a.category ? `<span>${esc(catLabel(a.category))}</span>` : ''}
+        <span>${fmtDate(a.createdAt)}</span>
+      </p>
+      <h3><a href="${href}">${esc(a.title || '（無標題）')}</a></h3>
+      ${a.excerpt ? `<p class="ar-feature-excerpt">${esc(a.excerpt)}</p>` : ''}
+      <a class="ar-btn-outline" href="${href}">閱讀文章</a>
+    </div>`;
 }
 
 /* ══════════════════════════════════════════════════════════════
-   分類篩選列
+   分類按鈕
 ══════════════════════════════════════════════════════════════ */
-function buildFilterBar() {
-  const sectionHead = document.querySelector('.section .section-head');
-  if (!sectionHead) return;
+function buildChips() {
+  if (!chipsEl) return;
+  const entries = [['all', '全部文章'], ...Object.entries(FILTER_CATS)];
+  chipsEl.innerHTML = entries.map(([k, v]) => `
+    <button type="button" class="ar-chip${k === currentCat ? ' active' : ''}" data-cat="${k}"
+      role="tab" aria-selected="${k === currentCat}">${v}</button>`).join('');
 
-  // 建立篩選列 + 文章計數
-  const bar = document.createElement('div');
-  bar.className = 'articles-filter-bar';
-  bar.innerHTML = `
-    <div class="articles-filter-chips">
-      <button class="a-chip active" data-cat="all">全部 <span id="articles-count">—</span></button>
-      ${Object.entries(CAT_LABELS).map(([k,v]) => `
-        <button class="a-chip" data-cat="${k}">${v}</button>
-      `).join('')}
-    </div>
-  `;
+  chipsEl.querySelectorAll('.ar-chip').forEach(btn => {
+    btn.addEventListener('click', () => setCategory(btn.dataset.cat, false));
+  });
+}
 
-  sectionHead.after(bar);
+function setCategory(cat, scroll) {
+  currentCat  = cat;
+  currentPage = 1;
+  chipsEl?.querySelectorAll('.ar-chip').forEach(b => {
+    const on = b.dataset.cat === cat;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', String(on));
+  });
 
-  bar.querySelectorAll('.a-chip').forEach(btn => {
+  // 網址同步（方便分享、重新整理後維持同一分類），不會新增瀏覽紀錄
+  const url = new URL(location.href);
+  if (cat === 'all') url.searchParams.delete('cat'); else url.searchParams.set('cat', cat);
+  history.replaceState(null, '', url);
+
+  renderList();
+  if (scroll) allSect?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* 「從哪裡開始閱讀？」四個主題 → 套用分類並捲到全部文章 */
+function bindTopics() {
+  document.querySelectorAll('.ar-topic[data-cat]').forEach(btn => {
+    btn.addEventListener('click', () => setCategory(btn.dataset.cat, true));
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   全部文章：篩選 + 分頁
+══════════════════════════════════════════════════════════════ */
+function filtered() {
+  return currentCat === 'all' ? allArticles : allArticles.filter(a => a.category === currentCat);
+}
+
+function renderList() {
+  if (!gridEl) return;
+  const list  = filtered();
+  const pages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  currentPage = Math.min(Math.max(1, currentPage), pages);
+
+  if (!list.length) {
+    gridEl.innerHTML = `<p class="ar-empty">${allArticles.length ? '此分類目前沒有文章' : '文章即將上線，敬請期待。'}</p>`;
+    renderPager(0);
+    return;
+  }
+
+  const start = (currentPage - 1) * PAGE_SIZE;
+  gridEl.innerHTML = list.slice(start, start + PAGE_SIZE).map(articleCard).join('');
+  renderPager(pages);
+}
+
+function articleCard(a) {
+  const href = `article.html?id=${encodeURIComponent(a.id)}`;
+  const tags = (Array.isArray(a.tags) ? a.tags : []).slice(0, 3);
+  return `
+    <article class="ar-card">
+      <a class="ar-card-img" href="${href}" tabindex="-1" aria-hidden="true">
+        <img src="${esc(a.coverImage || PLACEHOLDER_IMG)}" alt="" loading="lazy">
+      </a>
+      <p class="ar-meta">
+        ${a.category ? `<span>${esc(catLabel(a.category))}</span>` : ''}
+        <span>${fmtDate(a.createdAt)}</span>
+      </p>
+      <h3><a href="${href}">${esc(a.title || '（無標題）')}</a></h3>
+      ${a.excerpt ? `<p class="ar-card-excerpt">${esc(a.excerpt)}</p>` : ''}
+      ${tags.length ? `<div class="ar-tags">${tags.map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}
+      <a class="ar-more" href="${href}">繼續閱讀</a>
+    </article>`;
+}
+
+/* 分頁：只有 1 頁時整個隱藏 */
+function renderPager(pages) {
+  if (!pagerEl) return;
+  if (pages <= 1) { pagerEl.hidden = true; pagerEl.innerHTML = ''; return; }
+
+  pagerEl.hidden = false;
+  const nums = Array.from({ length: pages }, (_, i) => i + 1);
+  pagerEl.innerHTML = `
+    <button type="button" class="ar-page-arrow" data-page="${currentPage - 1}" aria-label="上一頁" ${currentPage === 1 ? 'disabled' : ''}>←</button>
+    ${nums.map(n => `
+      <button type="button" class="ar-page-num${n === currentPage ? ' active' : ''}" data-page="${n}"
+        ${n === currentPage ? 'aria-current="page"' : ''}>${n}</button>`).join('')}
+    <button type="button" class="ar-page-arrow" data-page="${currentPage + 1}" aria-label="下一頁" ${currentPage === pages ? 'disabled' : ''}>→</button>`;
+
+  pagerEl.querySelectorAll('button[data-page]').forEach(btn => {
     btn.addEventListener('click', () => {
-      bar.querySelectorAll('.a-chip').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentCat = btn.dataset.cat;
-
-      const filtered = currentCat === 'all'
-        ? allArticles
-        : allArticles.filter(a => a.category === currentCat);
-      renderArticles(filtered);
+      const n = Number(btn.dataset.page);
+      if (!n || n === currentPage) return;
+      currentPage = n;
+      renderList();
+      allSect?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
 }
@@ -170,121 +246,12 @@ function buildFilterBar() {
 /* ── Skeleton ── */
 function skeletons(n) {
   return Array(n).fill(0).map(() => `
-    <div class="article-card" style="animation:pulse 1.4s infinite">
-      <div style="height:160px;background:#f0f0f0;border-radius:8px;margin-bottom:12px"></div>
-      <div style="height:14px;background:#f0f0f0;border-radius:4px;width:30%;margin-bottom:8px"></div>
-      <div style="height:18px;background:#f0f0f0;border-radius:4px;width:90%;margin-bottom:8px"></div>
-      <div style="height:14px;background:#f0f0f0;border-radius:4px;width:70%"></div>
-    </div>
-  `).join('');
-}
-
-/* ── 注入樣式 ── */
-function injectStyles() {
-  if (document.getElementById('articles-dyn-style')) return;
-  const s = document.createElement('style');
-  s.id = 'articles-dyn-style';
-  s.textContent = `
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.5; }
-    }
-
-    /* 篩選列 */
-    .articles-filter-bar {
-      margin-bottom: 28px;
-    }
-    .articles-filter-chips {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .a-chip {
-      padding: 6px 16px;
-      border-radius: 999px;
-      border: 1.5px solid #ddd;
-      background: #fff;
-      font-size: 13px;
-      font-weight: 500;
-      color: #555;
-      cursor: pointer;
-      transition: all 0.15s;
-      font-family: inherit;
-    }
-    .a-chip:hover { border-color: #b8975a; color: #b8975a; }
-    .a-chip.active {
-      background: #111;
-      border-color: #111;
-      color: #fff;
-    }
-
-    /* 動態文章卡片 */
-    .dyn-article-card {
-      display: flex;
-      flex-direction: column;
-      text-decoration: none;
-      color: inherit;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .dyn-article-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 28px rgba(0,0,0,0.09);
-      text-decoration: none;
-    }
-    .article-cover {
-      width: 100%;
-      aspect-ratio: 16/9;
-      border-radius: 10px;
-      overflow: hidden;
-      background: #f7f5f0;
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 36px;
-      color: #ccc;
-    }
-    .article-cover img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.3s;
-    }
-    .dyn-article-card:hover .article-cover img {
-      transform: scale(1.04);
-    }
-    .article-body { flex: 1; display: flex; flex-direction: column; gap: 5px; }
-    .article-cat {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: #b8975a;
-    }
-    .article-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-      margin-top: 6px;
-    }
-    .article-tag {
-      font-size: 11px;
-      padding: 2px 8px;
-      background: #f5f5f5;
-      border-radius: 999px;
-      color: #777;
-    }
-
-    /* 讓 section-head 的說明文字隱藏（改用動態內容） */
-    .section .section-head > p.muted:last-child {
-      display: none;
-    }
-
-    @media (max-width: 640px) {
-      .a-chip { font-size: 12px; padding: 5px 12px; }
-    }
-  `;
-  document.head.appendChild(s);
+    <div class="ar-card">
+      <div class="ar-card-img ar-skel"></div>
+      <div class="ar-skel" style="height:12px;width:40%;margin:20px 0 14px"></div>
+      <div class="ar-skel" style="height:22px;width:80%;margin-bottom:14px"></div>
+      <div class="ar-skel" style="height:12px;width:90%"></div>
+    </div>`).join('');
 }
 
 /* ── 啟動 ── */

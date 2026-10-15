@@ -371,10 +371,18 @@ function renderFaqEditor(faqs) {
   const container = $('#faq-editor-list');
   if (!container) return;
   container.innerHTML = '';
-  faqs.forEach(f => addFaqItem(f.q, f.a));
+  faqs.forEach(f => addFaqItem(f.q, f.a, f.cat));
 }
 
-function addFaqItem(q = '', a = '') {
+/* FAQ 分類：代碼要跟前台 js/faq.js 的 FAQ_CATS 一致 */
+const FAQ_CATS = {
+  products: '關於產品',
+  care:     '使用與保存',
+  custom:   '客製與合作',
+  shopping: '購物與配送',
+};
+
+function addFaqItem(q = '', a = '', cat = 'products') {
   const container = $('#faq-editor-list');
   if (!container) return;
   const div = document.createElement('div');
@@ -388,6 +396,9 @@ function addFaqItem(q = '', a = '') {
       </svg>
     </div>
     <div class="faq-fields">
+      <select class="faq-cat">
+        ${Object.entries(FAQ_CATS).map(([k, v]) => `<option value="${k}" ${k === (FAQ_CATS[cat] ? cat : 'products') ? 'selected' : ''}>${v}</option>`).join('')}
+      </select>
       <input type="text" placeholder="問題" value="${escHtml(q)}" class="faq-q">
       <textarea placeholder="回答" rows="2" class="faq-a">${escHtml(a)}</textarea>
     </div>
@@ -399,6 +410,7 @@ function addFaqItem(q = '', a = '') {
 
 function collectFaqs() {
   return $$('.faq-item').map(item => ({
+    cat: item.querySelector('.faq-cat')?.value || 'products',
     q: item.querySelector('.faq-q').value.trim(),
     a: item.querySelector('.faq-a').value.trim(),
   })).filter(f => f.q);
@@ -1811,6 +1823,7 @@ async function openMessageModal(id) {
   editingMessageStatus = d.status === 'read' ? 'read' : 'unread';
 
   setText('#msg-detail-name',    d.name    || '—');
+  setText('#msg-detail-phone',   d.phone   || '—');
   setText('#msg-detail-subject', d.subject || '—');
   setText('#msg-detail-message', d.message || '—');
   setText('#msg-detail-time',    formatDate(d.createdAt));

@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="./images/logo.png" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
-<body>
+<body class="ct-page">
 
   <header class="header" id="top">
     <div class="container header-inner">
@@ -126,73 +126,87 @@
   </div>
 
   <main>
-    <section class="hero">
-      <div class="container hero-grid">
-        <div>
-          <div class="kicker">Contact</div>
-          <h1>有任何問題、合作需求或選香想法，都歡迎聯絡我們。</h1>
-          <p class="lead">
-            無論是產品詢問、品牌合作、禮盒需求或空間香氛規劃，
-            都可以透過表單或社群方式與我們聯繫。
-          </p>
-        </div>
 
+    <!-- ══ 1. 主視覺 ═══════════════════════════════════════ -->
+    <section class="pg-hero">
+      <div class="pg-hero-text">
+        <p class="pg-eyebrow">CONTACT AROCHEMY</p>
+        <h1>聯絡我們</h1>
+        <p class="ct-hero-en">QUESTION, IDEAS, OR A PROJECT IN MIND?<br>LET'S TALK.</p>
+        <p class="pg-hero-desc">想詢問產品、討論合作，或只是一個還不確定的想法，<br>都可以透過以下方式與我們聯繫。</p>
+      </div>
+      <div class="pg-hero-deco" aria-hidden="true">
+        <span class="pg-deco-a"></span><span class="pg-deco-b"></span><span class="pg-deco-c"></span>
       </div>
     </section>
 
-    <section class="section">
-      <div class="container">
-        <div class="grid-2">
-          <div class="card">
-  <h3>聯絡資訊</h3>
-  <p><strong>品牌名稱：</strong> Arochemy</p>
-  <p><strong>公司名稱：</strong> 櫟嶼國際有限公司</p>
-  <p><strong>Company Name：</strong> Liyu International Co., Ltd.</p>
-  <p><strong>聯絡電話：</strong> 0911505015</p>
-  <p><strong>Email：</strong> lyu.aroma@gmail.com</p>
-  <p><strong>Instagram：</strong> @arochemy</p>
-  <p><strong>服務時間：</strong> 週一至週五 10:00–18:00</p>
-</div>
-
-          <div class="card">
-            <h3>合作類型</h3>
-            <p>產品詢問、客製禮盒、品牌聯名、空間香氛、活動合作等皆可來信討論。</p>
+    <!-- ══ 2. 聯絡資訊 ═════════════════════════════════════ -->
+    <section class="ct-info">
+      <div class="pg-wrap">
+        <p class="pg-mono pg-kicker">01 / CONTACT INFORMATION</p>
+        <h2>聯絡資訊</h2>
+        <div class="ct-info-grid">
+          <div class="ct-info-left">
+            <img class="ct-logo" src="images/head-logo.png" alt="Arochemy Essential Oil">
+            <div class="ct-block">
+              <p class="ct-label">公司名稱</p>
+              <p class="ct-value">櫟嶼國際有限公司</p>
+              <p class="ct-value-en">Liyu International Co., Ltd.</p>
+            </div>
+            <div class="ct-block">
+              <p class="ct-label">服務時間</p>
+              <p class="ct-value">週一至週五　10:00–18:00</p>
+            </div>
           </div>
-        </div>
-
-        <div class="card" style="margin-top:16px;">
-          <h3>聯絡表單</h3>
-          <div id="contactForm">
-            <div class="grid-2" style="margin-top:16px;">
-              <div>
-                <label for="name">姓名</label>
-                <input id="name" type="text" style="width:100%;padding:12px;margin-top:6px;border:1px solid rgba(0,0,0,.12);border-radius:12px;">
-              </div>
-
-              <div>
-                <label for="email">Email</label>
-                <input id="email" type="email" style="width:100%;padding:12px;margin-top:6px;border:1px solid rgba(0,0,0,.12);border-radius:12px;">
-              </div>
-            </div>
-
-            <div style="margin-top:16px;">
-              <label for="subject">主旨</label>
-              <input id="subject" type="text" style="width:100%;padding:12px;margin-top:6px;border:1px solid rgba(0,0,0,.12);border-radius:12px;">
-            </div>
-
-            <div style="margin-top:16px;">
-              <label for="message">訊息內容</label>
-              <textarea id="message" rows="6" style="width:100%;padding:12px;margin-top:6px;border:1px solid rgba(0,0,0,.12);border-radius:12px;resize:vertical;"></textarea>
-            </div>
-
-            <div style="margin-top:16px;">
-              <button type="button" class="btn primary" id="contactSubmitBtn">送出訊息</button>
-            <p id="contactMsg" class="muted" style="margin-top:12px"></p>
-            </div>
+          <div class="ct-info-right">
+          <div class="ct-row"><span class="pg-mono">TELEPHONE</span><a id="contact-tel" href="tel:0911505015">0911 505 015</a></div>
+          <div class="ct-row"><span class="pg-mono">EMAIL</span><a id="contact-email" href="mailto:lyu.aroma@gmail.com">lyu.aroma@gmail.com</a></div>
+          <div class="ct-row"><span class="pg-mono">INSTAGRAM</span><a id="contact-ig" href="#" target="_blank" rel="noopener">@arochemy</a></div>
           </div>
         </div>
       </div>
     </section>
+
+    <!-- ══ 3. 聯絡表單 ═════════════════════════════════════ -->
+    <section class="ct-form-sec" id="contact-form">
+      <div class="pg-wrap ct-form-grid">
+        <div class="ct-form-intro">
+          <p class="pg-mono pg-kicker">02 / CONTACT FORM</p>
+          <h2>寫封訊息<br>給我們</h2>
+          <p>請留下你的連絡方式與想討論的內容。<br>收到訊息後，我們會於服務時間內盡快回覆。</p>
+          <p class="ct-req-note">* 為必填欄位</p>
+        </div>
+        <div class="ct-form" id="contactForm">
+          <div class="ct-field-row">
+            <div class="ct-field">
+              <label for="name">姓名 *</label>
+              <input id="name" type="text" placeholder="請輸入姓名" autocomplete="name">
+            </div>
+            <div class="ct-field">
+              <label for="phone">電話</label>
+              <input id="phone" type="tel" placeholder="選填" autocomplete="tel">
+            </div>
+          </div>
+          <div class="ct-field">
+            <label for="email">Email *</label>
+            <input id="email" type="email" placeholder="name@example.com" autocomplete="email">
+          </div>
+          <div class="ct-field">
+            <label for="subject">主旨 *</label>
+            <input id="subject" type="text" placeholder="請簡述詢問或合作主題">
+          </div>
+          <div class="ct-field">
+            <label for="message">訊息內容 *</label>
+            <textarea id="message" rows="5" placeholder="請告訴我們你的需求，或任何想先了解的問題。"></textarea>
+          </div>
+          <div class="ct-submit-row">
+            <p id="contactMsg" class="ct-msg" role="status"></p>
+            <button type="button" class="ct-submit" id="contactSubmitBtn">送出訊息</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
 <footer class="footer">
@@ -291,12 +305,17 @@
       const btn = document.getElementById('contactSubmitBtn');
       const msg = document.getElementById('contactMsg');
       const name    = document.getElementById('name')?.value.trim();
+      const phone   = document.getElementById('phone')?.value.trim() || '';
       const email   = document.getElementById('email')?.value.trim();
       const subject = document.getElementById('subject')?.value.trim();
       const message = document.getElementById('message')?.value.trim();
-
-      if (!name || !email || !message) {
-        msg.textContent = '請填寫姓名、Email 與訊息內容。';
+      if (!name || !email || !subject || !message) {
+        msg.textContent = '請填寫姓名、Email、主旨與訊息內容。';
+        msg.style.color = '#b94a48';
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        msg.textContent = 'Email 格式不正確，請再確認一次。';
         msg.style.color = '#b94a48';
         return;
       }
@@ -307,11 +326,13 @@
       try {
         await addDoc(collection(db, 'b2b_inquiries'), {
           name, email, subject: subject || '（無主旨）', message,
+          // 電話是選填：沒填就不寫入這個欄位
+          ...(phone ? { phone } : {}),
           createdAt: serverTimestamp(), status: 'unread'
         });
         msg.textContent = '✓ 訊息已送出，我們會盡快回覆！';
         msg.style.color = '#456b55';
-        ['name','email','subject','message'].forEach(id => {
+        ['name','phone','email','subject','message'].forEach(id => {
           const el = document.getElementById(id);
           if(el) el.value = '';
         });

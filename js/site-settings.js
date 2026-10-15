@@ -40,6 +40,14 @@ const db  = getFirestore(app);
     setHref('footer-line-link', site.socialLine);
     // 文章頁「追蹤最新文章」按鈕：有設定 Instagram 就連過去，沒設定維持連到聯絡頁
     setHref('articles-follow-link', site.socialIG);
+    // FAQ 頁「Instagram」按鈕、聯絡頁 Instagram
+    setHref('faq-ig-link', site.socialIG);
+    setHref('contact-ig',  site.socialIG);
+    // 聯絡頁的電話／Email：同時更新顯示文字與點擊連結
+    const tel = document.getElementById('contact-tel');
+    if (tel && site.contactPhone) { tel.textContent = site.contactPhone; tel.href = 'tel:' + String(site.contactPhone).replace(/[^0-9+]/g, ''); }
+    const mail = document.getElementById('contact-email');
+    if (mail && site.contactEmail) { mail.textContent = site.contactEmail; mail.href = 'mailto:' + site.contactEmail; }
   } catch (e) {
     console.warn('[site-settings] 讀取網站設定失敗:', e.message);
   }

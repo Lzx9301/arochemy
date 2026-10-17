@@ -147,6 +147,15 @@
         <p id="cartMsg" class="muted"></p>
       </aside>
     </div>
+
+    <!-- 我的收藏：資料存在瀏覽器（與商品頁的「收藏」愛心同步），由 js/favorites.js 產生 -->
+    <section class="fav-section" id="favorites" aria-labelledby="favTitle">
+      <div class="fav-head">
+        <h2 id="favTitle">我的收藏</h2>
+        <span class="fav-count muted" id="favCount"></span>
+      </div>
+      <div class="fav-grid" id="favGrid"></div>
+    </section>
   </main>
 
   <footer class="footer">
@@ -234,6 +243,7 @@
   <script src="./main.js"></script>
   <script type="module" src="js/user.js"></script>
   <script type="module" src="js/cart.js"></script>
+  <script type="module" src="js/favorites.js"></script>
   <script type="module" src="js/site-settings.js"></script>
 </body>
 </html>

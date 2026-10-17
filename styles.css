@@ -4117,3 +4117,46 @@ body.ar-page:not(.hp-page) .header:not(.scrolled) .header-search input::placehol
 @media (max-width: 900px) {
   .fq-q { font-size: calc(18 * var(--u)); }
 }
+
+
+/* ══════════════════════════════════════════════════════════════
+   產品頁 Banner 滿版（2026-10-17 修正）
+   照片延伸到導覽列後方、佔滿整個第一個畫面；導覽列在頂端時透明＋白字，
+   往下捲動後恢復原本的白底，接著出現白底商品列表。
+══════════════════════════════════════════════════════════════ */
+body.pd-page:not(.hp-page) > main { padding-top: 0; }
+body.pd-page:not(.hp-page) .header:not(.scrolled) {
+  background: transparent !important;
+  border-bottom-color: transparent !important;
+  box-shadow: none !important;
+}
+body.pd-page:not(.hp-page) .header:not(.scrolled) .nav > a,
+body.pd-page:not(.hp-page) .header:not(.scrolled) .nav-item > a,
+body.pd-page:not(.hp-page) .header:not(.scrolled) .nav-user,
+body.pd-page:not(.hp-page) .header:not(.scrolled) .nav-cart,
+body.pd-page:not(.hp-page) .header:not(.scrolled) .burger { color: rgba(255,255,255,0.92) !important; }
+body.pd-page:not(.hp-page) .header:not(.scrolled) .brand-logo { filter: brightness(0) invert(1) !important; }
+body.pd-page:not(.hp-page) .header:not(.scrolled) .cart-count { background: rgba(255,255,255,0.2) !important; }
+body.pd-page:not(.hp-page) .header:not(.scrolled) .header-search { background: rgba(255,255,255,0.16) !important; border-color: rgba(255,255,255,0.45) !important; }
+body.pd-page:not(.hp-page) .header:not(.scrolled) .header-search svg { color: rgba(255,255,255,0.8) !important; }
+body.pd-page:not(.hp-page) .header:not(.scrolled) .header-search input { color: #fff !important; }
+body.pd-page:not(.hp-page) .header:not(.scrolled) .header-search input::placeholder { color: rgba(255,255,255,0.7) !important; }
+.pd-page .cat-hero {
+  height: 100vh;
+  height: 100dvh;
+  min-height: calc(560 * var(--u));
+  max-height: none;
+  padding: calc(78 * var(--u)) 0 0;   /* 文字避開導覽列 */
+}
+@media (max-width: 900px) {
+  .pd-page .cat-hero { height: 100svh; min-height: calc(480 * var(--u)); max-height: none; }
+}
+/* 頂端加一層淡淡的暗色漸層，讓疊在照片上的白色導覽列文字清楚 */
+.pd-page .cat-hero::before {
+  background:
+    linear-gradient(180deg, rgba(20,24,20,0.45) 0, rgba(20,24,20,0) calc(180 * var(--u))),
+    linear-gradient(90deg, rgba(20,24,20,0.55) 0%, rgba(20,24,20,0.30) 45%, rgba(20,24,20,0) 70%);
+}
+@media (max-width: 900px) {
+  .pd-page .cat-hero::before { background: rgba(20,24,20,0.45); }
+}

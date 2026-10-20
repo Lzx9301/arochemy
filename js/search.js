@@ -1,10 +1,8 @@
-/** Arochemy 站內搜尋：搜尋商品 + 常見問題(FAQ) */
 
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, collection, getDocs, doc, getDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-/* ── Firebase ──────────────────────────────────────────────── */
 const firebaseConfig = {
   apiKey:            'AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI',
   authDomain:        'trying-89dc6.firebaseapp.com',
@@ -17,7 +15,6 @@ const firebaseConfig = {
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
-/* ── 分類中文對照(用於卡片顯示) ────────────────────────────── */
 const CAT_LABEL = {
   single:    '單方精油',
   compound:  '複方精油',
@@ -28,7 +25,6 @@ const CAT_LABEL = {
 };
 const SPEC_SIZES = ['5ml', '10ml', '30ml', '50ml', '100ml'];
 
-/* ── DOM ───────────────────────────────────────────────────── */
 const titleEl        = document.getElementById('searchQueryTitle');
 const countEl         = document.getElementById('searchResultCount');
 const emptyEl          = document.getElementById('searchEmpty');
@@ -38,7 +34,6 @@ const faqSection        = document.getElementById('searchFaqSection');
 const faqList            = document.getElementById('searchFaqList');
 const searchInputEl      = document.getElementById('searchInput');
 
-/* ── 工具 ──────────────────────────────────────────────────── */
 function esc(str) {
   return String(str || '')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
@@ -49,7 +44,6 @@ function normalize(str) {
   return String(str || '').toLowerCase().trim();
 }
 
-/* ── 主流程 ────────────────────────────────────────────────── */
 async function runSearch() {
   const params = new URLSearchParams(window.location.search);
   const q = (params.get('q') || '').trim();
@@ -121,7 +115,6 @@ function showEmpty() {
   if (emptyEl) emptyEl.style.display = '';
 }
 
-/* ── 讀取商品(只搜上架中的) ────────────────────────────────── */
 async function fetchProducts() {
   try {
     const snap = await getDocs(collection(db, 'products'));
@@ -137,7 +130,6 @@ async function fetchProducts() {
   }
 }
 
-/* ── 讀取 FAQ ──────────────────────────────────────────────── */
 async function fetchFaqs() {
   try {
     const snap = await getDoc(doc(db, 'settings', 'homepage'));
@@ -149,7 +141,6 @@ async function fetchFaqs() {
   }
 }
 
-/* ── 商品卡片 HTML(精簡版，點擊直接連到商品頁選規格) ─────────── */
 function productCard(p) {
   const specs   = p.specs || {};
   const enabled = SPEC_SIZES.filter(s => specs[s]?.enabled && specs[s]?.stock > 0);
@@ -175,7 +166,6 @@ function productCard(p) {
   `;
 }
 
-/* ── 注入商品卡片樣式（跟商品列表頁一致，確保不依賴外部 CSS）── */
 (function injectProductStyles() {
   if (document.getElementById('arochemy-product-styles')) return;
   const style = document.createElement('style');

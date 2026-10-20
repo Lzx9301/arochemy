@@ -1,13 +1,8 @@
-/**
- * Arochemy — js/article-page.js
- * 單篇文章頁：從 Firestore 讀取文章內容、渲染、相關文章、分享功能
- */
 
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, getDoc, collection, getDocs }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-/* ── Firebase ──────────────────────────────────────────────── */
 const firebaseConfig = {
   apiKey:            'AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI',
   authDomain:        'trying-89dc6.firebaseapp.com',
@@ -20,7 +15,6 @@ const firebaseConfig = {
 const app = getApps().find(a => a.name === '[DEFAULT]') || initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
-/* ── 工具 ──────────────────────────────────────────────────── */
 const $   = id => document.getElementById(id);
 const esc = s  => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
@@ -42,9 +36,6 @@ const CAT_LABELS = {
   news:         '最新消息',
 };
 
-/* ══════════════════════════════════════════════════════════════
-   初始化
-══════════════════════════════════════════════════════════════ */
 async function init() {
   injectStyles();
 
@@ -64,29 +55,21 @@ async function init() {
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   渲染文章
-══════════════════════════════════════════════════════════════ */
 function renderArticle(a) {
-  /* ── 頁面標題 & SEO ── */
   document.title = `${a.title || '文章'}｜Arochemy`;
   const metaDesc = document.getElementById('metaDesc');
   if (metaDesc) metaDesc.content = a.excerpt || a.title || '';
 
-  /* ── 分類麵包屑 ── */
   const catLabel = CAT_LABELS[a.category] || a.category || '文章';
   const crumb    = $('art-cat-crumb');
   if (crumb) crumb.textContent = catLabel;
 
-  /* ── 分類標籤 ── */
   const catEl = $('art-category');
   if (catEl && catLabel) catEl.textContent = catLabel;
 
-  /* ── 標題 ── */
   const titleEl = $('art-title');
   if (titleEl) titleEl.textContent = a.title || '';
 
-  /* ── 日期 & 標籤 ── */
   const dateEl = $('art-date');
   if (dateEl) {
     const d = toDate(a.createdAt);
@@ -102,7 +85,6 @@ function renderArticle(a) {
     ).join('');
   }
 
-  /* ── 封面圖 ── */
   if (a.coverImage) {
     const wrap = $('art-cover-wrap');
     const img  = $('art-cover');
@@ -113,23 +95,17 @@ function renderArticle(a) {
     }
   }
 
-  /* ── 文章本文（富文字 HTML）── */
   const prose = $('art-prose');
   if (prose) {
     prose.innerHTML = a.content || '<p class="muted">（本文暫無內容）</p>';
   }
 
-  /* ── 分享按鈕 ── */
   initShareButtons(a.title);
 
-  /* ── 顯示內容，隱藏 skeleton ── */
   $('article-skeleton').style.display = 'none';
   $('article-content').style.display  = '';
 }
 
-/* ══════════════════════════════════════════════════════════════
-   相關文章（同分類，最多 3 篇）
-══════════════════════════════════════════════════════════════ */
 async function loadRelated(current) {
   try {
     const snap = await getDocs(collection(db, 'articles'));
@@ -139,11 +115,9 @@ async function loadRelated(current) {
       if (d.id === current.id) return;
       const a = d.data();
       if (a.status !== 'published') return;
-      // 優先同分類
       if (a.category === current.category) related.push({ id: d.id, ...a });
     });
 
-    // 若同分類不夠，補其他文章
     if (related.length < 3) {
       snap.forEach(d => {
         if (d.id === current.id) return;
@@ -188,9 +162,6 @@ async function loadRelated(current) {
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   分享按鈕
-══════════════════════════════════════════════════════════════ */
 function initShareButtons(title) {
   const url      = encodeURIComponent(location.href);
   const text     = encodeURIComponent(title || 'Arochemy 文章');
@@ -218,9 +189,6 @@ function initShareButtons(title) {
   });
 }
 
-/* ══════════════════════════════════════════════════════════════
-   錯誤狀態
-══════════════════════════════════════════════════════════════ */
 function showError(msg) {
   $('article-skeleton').style.display = 'none';
   $('article-content').style.display  = 'none';
@@ -230,15 +198,11 @@ function showError(msg) {
   if (msgEl) msgEl.textContent   = msg;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   注入樣式
-══════════════════════════════════════════════════════════════ */
 function injectStyles() {
   if (document.getElementById('article-page-style')) return;
   const s = document.createElement('style');
   s.id = 'article-page-style';
   s.textContent = `
-    /* ── Skeleton ── */
     .skel-line {
       background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
       background-size: 200% 100%;
@@ -251,7 +215,6 @@ function injectStyles() {
       100% { background-position:  200% 0; }
     }
 
-    /* ── Breadcrumb ── */
     .art-breadcrumb {
       display: flex;
       align-items: center;
@@ -264,7 +227,6 @@ function injectStyles() {
     .art-breadcrumb a:hover { text-decoration: underline; }
     .art-sep { color: #ccc; }
 
-    /* ── 文章頭部 ── */
     .art-header {
       padding-top: 8px;
       padding-bottom: 32px;
@@ -307,7 +269,6 @@ function injectStyles() {
       color: #666;
     }
 
-    /* ── 封面圖 ── */
     .art-cover-wrap {
       max-width: 900px;
       margin-bottom: 48px;
@@ -320,7 +281,6 @@ function injectStyles() {
       display: block;
     }
 
-    /* ── 文章本文 ── */
     .art-body { max-width: 720px; margin-bottom: 48px; }
 
     .art-prose {
@@ -377,7 +337,6 @@ function injectStyles() {
       font-size: 14px;
     }
 
-    /* ── 分享列 ── */
     .art-share {
       display: flex;
       align-items: center;
@@ -403,7 +362,6 @@ function injectStyles() {
       color: #b8975a;
     }
 
-    /* ── 手機版 ── */
     @media (max-width: 640px) {
       .art-title { font-size: 24px; }
       .art-prose { font-size: 16px; }
@@ -413,5 +371,4 @@ function injectStyles() {
   document.head.appendChild(s);
 }
 
-/* ── 啟動 ── */
 init();

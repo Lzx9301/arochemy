@@ -1,18 +1,8 @@
-/**
- * Arochemy — js/articles.js
- * 文章列表頁（芳香科學堂）：
- *   1. 從 Firestore 讀取 published 文章（新到舊）
- *   2. 「最新文章」區塊顯示最新一篇
- *   3. 「全部文章」區塊：分類篩選 + 分頁（超過 15 篇才出現分頁）
- *   4. 「從哪裡開始閱讀？」主題卡片點擊後，直接套用該分類並捲到全部文章
- *   5. 支援網址參數 ?cat=分類代碼（例：articles.html?cat=taiwan-plants）
- */
 
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, collection, getDocs }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-/* ── Firebase ──────────────────────────────────────────────── */
 const firebaseConfig = {
   apiKey:            'AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI',
   authDomain:        'trying-89dc6.firebaseapp.com',
@@ -25,12 +15,9 @@ const firebaseConfig = {
 const app = getApps().find(a => a.name === '[DEFAULT]') || initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
-/* ── 設定 ──────────────────────────────────────────────────── */
-const PAGE_SIZE = 15;                                   // 每頁篇數，超過才顯示分頁
-const PLACEHOLDER_IMG = 'images/articles-placeholder.jpg'; // 文章沒有封面時使用
+const PAGE_SIZE = 15;
+const PLACEHOLDER_IMG = 'images/articles-placeholder.jpg';
 
-/* 文章頁的篩選按鈕（順序即顯示順序）。
-   代碼必須跟後台 admin.html「文章分類」下拉選單的 value 一致。 */
 const FILTER_CATS = {
   'taiwan-plants': '臺灣植物',
   'scent-science': '氣味科學',
@@ -39,7 +26,6 @@ const FILTER_CATS = {
   news:            '最新消息',
 };
 
-/* 舊分類：沒有篩選按鈕，但舊文章仍要能顯示正確的分類名稱 */
 const CAT_LABELS = {
   ...FILTER_CATS,
   lifestyle:     '生活應用',
@@ -47,7 +33,6 @@ const CAT_LABELS = {
   'brand-story': '品牌故事',
 };
 
-/* ── 工具 ──────────────────────────────────────────────────── */
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
 function toDate(ts) {
@@ -57,7 +42,6 @@ function toDate(ts) {
   return new Date(ts);
 }
 
-/* 2026.10.12 這種格式 */
 function fmtDate(ts) {
   const d = toDate(ts);
   if (!d.getTime()) return '';
@@ -67,21 +51,16 @@ function fmtDate(ts) {
 
 const catLabel = key => CAT_LABELS[key] || key || '';
 
-/* ── 狀態 ──────────────────────────────────────────────────── */
 let allArticles = [];
 let currentCat  = 'all';
 let currentPage = 1;
 
-/* ── DOM ───────────────────────────────────────────────────── */
 const featureEl = document.getElementById('arFeature');
 const chipsEl   = document.getElementById('arChips');
 const gridEl    = document.getElementById('arGrid');
 const pagerEl   = document.getElementById('arPager');
 const allSect   = document.getElementById('ar-all');
 
-/* ══════════════════════════════════════════════════════════════
-   初始化
-══════════════════════════════════════════════════════════════ */
 async function init() {
   const urlCat = new URLSearchParams(location.search).get('cat');
   if (urlCat && FILTER_CATS[urlCat]) currentCat = urlCat;
@@ -107,9 +86,6 @@ async function init() {
   renderList();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   最新文章（最新一篇）
-══════════════════════════════════════════════════════════════ */
 function renderFeature() {
   if (!featureEl) return;
   const a = allArticles[0];
@@ -135,9 +111,6 @@ function renderFeature() {
     </div>`;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   分類按鈕
-══════════════════════════════════════════════════════════════ */
 function buildChips() {
   if (!chipsEl) return;
   const entries = [['all', '全部文章'], ...Object.entries(FILTER_CATS)];
@@ -159,7 +132,6 @@ function setCategory(cat, scroll) {
     b.setAttribute('aria-selected', String(on));
   });
 
-  // 網址同步（方便分享、重新整理後維持同一分類），不會新增瀏覽紀錄
   const url = new URL(location.href);
   if (cat === 'all') url.searchParams.delete('cat'); else url.searchParams.set('cat', cat);
   history.replaceState(null, '', url);
@@ -168,16 +140,12 @@ function setCategory(cat, scroll) {
   if (scroll) allSect?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-/* 「從哪裡開始閱讀？」四個主題 → 套用分類並捲到全部文章 */
 function bindTopics() {
   document.querySelectorAll('.ar-topic[data-cat]').forEach(btn => {
     btn.addEventListener('click', () => setCategory(btn.dataset.cat, true));
   });
 }
 
-/* ══════════════════════════════════════════════════════════════
-   全部文章：篩選 + 分頁
-══════════════════════════════════════════════════════════════ */
 function filtered() {
   return currentCat === 'all' ? allArticles : allArticles.filter(a => a.category === currentCat);
 }
@@ -218,7 +186,6 @@ function articleCard(a) {
     </article>`;
 }
 
-/* 分頁：只有 1 頁時整個隱藏 */
 function renderPager(pages) {
   if (!pagerEl) return;
   if (pages <= 1) { pagerEl.hidden = true; pagerEl.innerHTML = ''; return; }
@@ -243,7 +210,6 @@ function renderPager(pages) {
   });
 }
 
-/* ── Skeleton ── */
 function skeletons(n) {
   return Array(n).fill(0).map(() => `
     <div class="ar-card">
@@ -254,5 +220,4 @@ function skeletons(n) {
     </div>`).join('');
 }
 
-/* ── 啟動 ── */
 init();

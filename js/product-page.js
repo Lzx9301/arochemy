@@ -1,13 +1,7 @@
-/**
- * Arochemy — js/product-page.js
- * 單一商品詳細頁：從 URL ?id= 讀取 Firestore 產品資料
- * 對應 product.html 的所有 DOM 元素
- */
 
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-/* ── Firebase ──────────────────────────────────────────────── */
 const firebaseConfig = {
   apiKey:            'AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI',
   authDomain:        'trying-89dc6.firebaseapp.com',
@@ -20,24 +14,17 @@ const firebaseConfig = {
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
-/* ── 規格尺寸 ──────────────────────────────────────────────── */
 const SPEC_SIZES = ['5ml', '10ml', '30ml', '50ml', '100ml'];
 
-/* ── 狀態 ──────────────────────────────────────────────────── */
 let currentSize  = null;
 let currentPrice = 0;
 let product      = null;
 
-/* ── DOM 快捷 ──────────────────────────────────────────────── */
 const $  = id => document.getElementById(id);
 const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-/* ══════════════════════════════════════════════════════════════
-   初始化
-══════════════════════════════════════════════════════════════ */
 async function init() {
   const params = new URLSearchParams(location.search);
-  // 優先用 ?id=（Firestore document ID），其次支援舊版 ?slug=
   const id   = params.get('id')   || null;
   const slug = params.get('slug') || null;
 
@@ -50,13 +37,11 @@ async function init() {
     let snap = null;
 
     if (id) {
-      // 直接用 document ID 查詢（最快）
       snap = await getDoc(doc(db, 'products', id));
       if (!snap.exists()) snap = null;
     }
 
     if (!snap && slug) {
-      // 用 slug 欄位查詢（舊連結相容）
       const { getDocs, collection, query, where } = await import(
         'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js'
       );
@@ -78,51 +63,36 @@ async function init() {
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   渲染全頁
-══════════════════════════════════════════════════════════════ */
 function render(p) {
-  /* ── 頁面標題 & breadcrumb ── */
   document.title = `${p.name}｜Arochemy`;
   setText('bcName', p.name);
   setText('pName',  p.name);
 
-  /* ── 英文名 / 學名（若有存） ── */
   setText('pEn',    p.nameEn    || '');
   setText('pLatin', p.nameLatin || '');
   if (!p.nameEn)    $('pEn')?.closest?.('.p-sub')    && ($('pEn').style.display    = 'none');
   if (!p.nameLatin) $('pLatin')?.closest?.('.p-latin') && ($('pLatin').style.display = 'none');
 
-  /* ── 圖片 ── */
   renderGallery(p.images || []);
 
-  /* ── 規格藥丸 ── */
   renderVariantPills(p);
 
-  /* ── 數量控制 ── */
   initQty();
 
-  /* ── 按鈕 ── */
   $('btnCart')?.addEventListener('click', () => addToCart(false));
   $('btnBuy')?.addEventListener('click',  () => addToCart(true));
   $('btnFav')?.addEventListener('click',  toggleFav);
 
-  /* ── 收藏狀態初始化 ── */
   updateFavUI(isFaved(p.id));
 
-  /* ── 產品概述 kv ── */
   renderOverview(p);
 
-  /* ── 成分條狀圖 ── */
   renderComposition(p.composition || []);
 
-  /* ── 文件下載 ── */
   renderDocs(p);
 
-  /* ── 長文說明 ── */
   setHTML('descText',   p.description || '<p class="muted">暫無說明</p>');
 
-  // 產品描述圖片(電商情境圖，依上傳順序顯示在文字說明下方)
   document.querySelector('.p-desc-images')?.remove();
   const descImgs = (p.descriptionImages || []).filter(Boolean);
   if (descImgs.length) {
@@ -136,14 +106,10 @@ function render(p) {
   renderList('usageList',   p.usage   || []);
   renderList('cautionList', p.caution || []);
 
-  /* ── 備注 ── */
   const noteEl = document.querySelector('.p-note');
-  if (noteEl) noteEl.style.display = 'none'; // 隱藏測試備注
+  if (noteEl) noteEl.style.display = 'none';
 }
 
-/* ──────────────────────────────────────────────────────────────
-   圖片 Gallery
-────────────────────────────────────────────────────────────── */
 function renderGallery(images) {
   const mainEl  = $('mainImg');
   const thumbEl = $('thumbs');
@@ -156,13 +122,11 @@ function renderGallery(images) {
     return;
   }
 
-  // 主圖
   const setMain = src => {
     mainEl.innerHTML = `<img src="${esc(src)}" alt="product" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`;
   };
   setMain(imgs[0]);
 
-  // 縮圖列
   if (thumbEl && imgs.length > 1) {
     thumbEl.innerHTML = imgs.map((src, i) => `
       <div class="p-thumb ${i===0?'active':''}" data-i="${i}">
@@ -180,9 +144,6 @@ function renderGallery(images) {
   }
 }
 
-/* ──────────────────────────────────────────────────────────────
-   規格藥丸
-────────────────────────────────────────────────────────────── */
 function renderVariantPills(p) {
   const pills  = $('variantPills');
   const priceEl = $('pPrice');
@@ -197,7 +158,6 @@ function renderVariantPills(p) {
     return;
   }
 
-  // 預設選第一個有庫存的，若都無庫存則選第一個
   const firstInStock = enabled.find(s => (specs[s]?.stock || 0) > 0) || enabled[0];
   currentSize  = firstInStock;
   currentPrice = specs[firstInStock]?.price || 0;
@@ -230,9 +190,6 @@ function renderVariantPills(p) {
   });
 }
 
-/* ──────────────────────────────────────────────────────────────
-   數量
-────────────────────────────────────────────────────────────── */
 function initQty() {
   const input  = $('qtyInput');
   const minus  = $('qtyMinus');
@@ -251,9 +208,6 @@ function initQty() {
   });
 }
 
-/* ──────────────────────────────────────────────────────────────
-   加入購物車 / 立即購買
-────────────────────────────────────────────────────────────── */
 function addToCart(buyNow = false) {
   if (!currentSize) { showToast('請先選擇規格'); return; }
 
@@ -267,7 +221,6 @@ function addToCart(buyNow = false) {
     qty,
   };
 
-  // 寫入 localStorage
   const cart = getCart();
   const key  = `${item.id}_${item.size}`;
   const exist = cart.find(c => `${c.id}_${c.size}` === key);
@@ -275,7 +228,6 @@ function addToCart(buyNow = false) {
   else cart.push(item);
   saveCart(cart);
 
-  // 更新購物車數量徽章
   updateCartBadge(cart);
 
   if (buyNow) {
@@ -285,9 +237,6 @@ function addToCart(buyNow = false) {
   }
 }
 
-/* ──────────────────────────────────────────────────────────────
-   Toast 提示
-────────────────────────────────────────────────────────────── */
 function showToast(msg) {
   const toast   = $('cartToast');
   const textEl  = $('cartToastText');
@@ -297,9 +246,6 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove('show'), 2800);
 }
 
-/* ──────────────────────────────────────────────────────────────
-   收藏（localStorage）
-────────────────────────────────────────────────────────────── */
 function getFavs()     { try { return JSON.parse(localStorage.getItem('arochemy_favs')||'[]'); } catch { return []; } }
 function isFaved(id)   { return getFavs().includes(id); }
 
@@ -322,9 +268,6 @@ function updateFavUI(faved) {
   btn.classList.toggle('faved', faved);
 }
 
-/* ──────────────────────────────────────────────────────────────
-   產品概述 key-value
-────────────────────────────────────────────────────────────── */
 function renderOverview(p) {
   const el = $('overviewKV');
   if (!el) return;
@@ -344,7 +287,6 @@ function renderOverview(p) {
 
   if (!rows.length) { el.innerHTML = '<div class="muted">暫無資料</div>'; return; }
 
-  // 兩字標籤補全形空格，讓所有標籤視覺寬度對齊四字標籤(例:科屬 → 科　　屬)
   const padLabel = (label) => label.length === 2 ? `${label[0]}　　${label[1]}` : label;
 
   el.innerHTML = rows.map(([k, v]) => `
@@ -355,10 +297,6 @@ function renderOverview(p) {
   `).join('');
 }
 
-/* ──────────────────────────────────────────────────────────────
-   成分條狀圖
-   composition 格式：[{ name: '沉香醇', pct: 42 }, ...]
-────────────────────────────────────────────────────────────── */
 function renderComposition(comp) {
   const el = $('compBars');
   if (!el) return;
@@ -368,7 +306,6 @@ function renderComposition(comp) {
     return;
   }
 
-  // 相容多種格式：pct / percent / percentage
   const normalized = comp.map(c => ({
     name: c.name || c.ingredient || '—',
     pct:  Number(c.pct ?? c.percent ?? c.percentage ?? 0),
@@ -392,9 +329,6 @@ function renderComposition(comp) {
   `).join('');
 }
 
-/* ──────────────────────────────────────────────────────────────
-   文件下載
-────────────────────────────────────────────────────────────── */
 function renderDocs(p) {
   const setDoc = (id, url) => {
     const el = $(id);
@@ -407,9 +341,6 @@ function renderDocs(p) {
   setDoc('btnEU',  p.docEU);
 }
 
-/* ──────────────────────────────────────────────────────────────
-   清單渲染
-────────────────────────────────────────────────────────────── */
 function renderList(elId, items) {
   const el = $(elId);
   if (!el) return;
@@ -417,9 +348,6 @@ function renderList(elId, items) {
   el.innerHTML = items.map(t => `<li>${esc(t)}</li>`).join('');
 }
 
-/* ──────────────────────────────────────────────────────────────
-   錯誤頁
-────────────────────────────────────────────────────────────── */
 function showError(msg) {
   const main = document.querySelector('main');
   if (main) main.innerHTML = `
@@ -431,9 +359,6 @@ function showError(msg) {
   `;
 }
 
-/* ──────────────────────────────────────────────────────────────
-   購物車 localStorage 工具
-────────────────────────────────────────────────────────────── */
 function getCart()      { try { return JSON.parse(localStorage.getItem('arochemy_cart')||'[]'); } catch { return []; } }
 function saveCart(cart) { localStorage.setItem('arochemy_cart', JSON.stringify(cart)); }
 function updateCartBadge(cart) {
@@ -442,14 +367,9 @@ function updateCartBadge(cart) {
   if (badge) badge.textContent = total;
 }
 
-/* ──────────────────────────────────────────────────────────────
-   DOM 工具
-────────────────────────────────────────────────────────────── */
 function setText(id, val) { const el = $(id); if (el) el.textContent = val; }
 function setHTML(id, val) { const el = $(id); if (el) el.innerHTML  = val;  }
 
-/* ── 初始化購物車數量 ── */
 updateCartBadge(getCart());
 
-/* ── 啟動 ── */
 init();

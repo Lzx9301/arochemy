@@ -1,13 +1,3 @@
-/**
- * Arochemy — js/favorites.js
- * 購物車頁的「我的收藏」區塊。
- *
- * 收藏資料沿用商品頁既有的機制：瀏覽器 localStorage 的 'arochemy_favs'（商品 ID 陣列）。
- * - 商品頁按愛心 → 寫入／移除 ID（js/product-page.js，未修改）
- * - 這裡讀取同一份 ID，從 Firestore 取得商品圖片、名稱、價格後顯示
- * - 在這裡取消收藏 → 從同一份資料移除，回到商品頁時愛心狀態會一致
- * 注意：資料存在使用者自己的瀏覽器，重新整理不會消失，但換裝置或清除瀏覽資料後不會保留。
- */
 
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -23,7 +13,7 @@ const firebaseConfig = {
 const app = getApps().find(a => a.name === '[DEFAULT]') || initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
-const FAV_KEY    = 'arochemy_favs';           // 與 js/product-page.js 相同
+const FAV_KEY    = 'arochemy_favs';
 const SPEC_SIZES = ['5ml', '10ml', '30ml', '50ml', '100ml'];
 
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -36,7 +26,6 @@ function saveFavs(ids) {
   try { localStorage.setItem(FAV_KEY, JSON.stringify(ids)); } catch {}
 }
 
-/* 價格：取已啟用規格的價格；有多種價格時顯示最低價「起」 */
 function priceText(p) {
   const specs  = p.specs || {};
   const prices = SPEC_SIZES
@@ -50,7 +39,7 @@ function priceText(p) {
 
 const gridEl  = document.getElementById('favGrid');
 const countEl = document.getElementById('favCount');
-const cache   = new Map();   // 商品資料快取，取消收藏時不用重新讀取
+const cache   = new Map();
 
 async function loadProduct(id) {
   if (cache.has(id)) return cache.get(id);
@@ -60,7 +49,7 @@ async function loadProduct(id) {
     data = snap.exists() ? { id: snap.id, ...snap.data() } : null;
   } catch (e) {
     console.warn('[favorites] 讀取商品失敗：', id, e.message);
-    data = undefined; // 讀取失敗（不是商品不存在），不要從收藏移除
+    data = undefined;
   }
   cache.set(id, data);
   return data;
@@ -84,7 +73,6 @@ async function render() {
   gridEl.innerHTML = `<p class="muted fav-loading">收藏商品載入中…</p>`;
   const list = await Promise.all(ids.map(loadProduct));
 
-  // 已經被刪除的商品自動從收藏移除
   const missing = ids.filter((id, i) => list[i] === null);
   if (missing.length) saveFavs(ids.filter(id => !missing.includes(id)));
 
@@ -130,7 +118,6 @@ async function render() {
   });
 }
 
-// 其他分頁（例如另開的商品頁）改了收藏，這裡同步更新
 window.addEventListener('storage', e => { if (e.key === FAV_KEY) render(); });
 
 render();

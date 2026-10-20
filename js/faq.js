@@ -1,11 +1,3 @@
-/**
- * Arochemy — js/faq.js
- * 常見問題頁：
- *   1. 依分類分成四個區塊（關於產品／使用與保存／客製與合作／購物與配送）
- *   2. 每題可展開（＋）與收合（×）—— 使用原生 <details>，鍵盤與螢幕閱讀器都能操作
- *   3. 上方搜尋框即時篩選問題與回答內容
- *   4. 題目來源：全部由後台「首頁設定 → FAQ」新增；後台還沒有題目時，各分類顯示「問題整理中」
- */
 
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -23,7 +15,6 @@ const db  = getFirestore(app);
 
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-/* 分類：代碼要跟後台 admin.js 的 FAQ_CATS 一致 */
 const FAQ_CATS = [
   { key: 'products', no: '01', en: 'ABOUT PRODUCTS', title: '關於產品', bg: 'cream',
     desc: '從一株植物到一瓶精油，中間包含產地、部位、蒸餾與成分等許多細節。<br>先理解差異，再選擇真正適合自己的氣味。' },
@@ -35,21 +26,18 @@ const FAQ_CATS = [
     desc: '從完成下單到收到商品，整理付款、出貨與退換貨的常見問題。<br>若訂單有特殊需求，請在商品出貨前與我們聯絡。' },
 ];
 
-/* 題目全部由後台「首頁設定 → FAQ」新增，這裡不放預設題目 */
 const DEFAULT_FAQS = [];
 
 const sectionsEl = document.getElementById('faqSections');
 const noResultEl = document.getElementById('faqNoResult');
 const searchEl   = document.getElementById('faqSearch');
 
-/* ══ 產生四個區塊 ══ */
 function render(faqs) {
   if (!sectionsEl) return;
   const validKeys = new Set(FAQ_CATS.map(c => c.key));
   let n = 0;
 
   sectionsEl.innerHTML = FAQ_CATS.map(cat => {
-    // 後台舊資料沒有分類時，放在「關於產品」
     const items = faqs.filter(f => (validKeys.has(f.cat) ? f.cat : 'products') === cat.key);
     const list = items.map((f, i) => {
       n += 1;
@@ -81,7 +69,6 @@ function render(faqs) {
   }).join('');
 }
 
-/* ══ 搜尋 ══ */
 function applySearch() {
   const kw = (searchEl?.value || '').trim().toLowerCase();
   let total = 0;
@@ -92,10 +79,8 @@ function applySearch() {
       const hit = !kw || item.textContent.toLowerCase().includes(kw);
       item.hidden = !hit;
       if (hit) shown += 1;
-      // 有搜尋時把符合的題目展開，方便直接看到答案
       if (kw && hit) item.open = true;
     });
-    // 有搜尋字時，沒有符合題目的區塊整個隱藏
     sec.hidden = !!kw && shown === 0;
     total += shown;
   });
@@ -103,13 +88,12 @@ function applySearch() {
   if (noResultEl) noResultEl.hidden = !kw || total > 0;
 }
 
-/* ══ 啟動 ══ */
 render(DEFAULT_FAQS);
 searchEl?.addEventListener('input', applySearch);
 
 getDoc(doc(db, 'settings', 'homepage')).then(snap => {
   const faqs = snap.exists() ? (snap.data().faqs || []).filter(f => f && f.q) : [];
-  if (!faqs.length) return;          // 後台沒有資料 → 維持各分類「問題整理中」
+  if (!faqs.length) return;
   render(faqs);
   applySearch();
-}).catch(() => {});                  // 讀取失敗 → 維持各分類「問題整理中」
+}).catch(() => {});

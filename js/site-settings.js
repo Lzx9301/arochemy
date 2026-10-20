@@ -1,8 +1,3 @@
-/**
- * Arochemy — 網站設定同步(頁尾聯絡資訊、社群連結)
- * 讀取 Firestore settings/site，套用到所有頁面共用的頁尾與社群按鈕元素。
- * 這支檔案在每一頁都會載入，確保後台改了聯絡資訊/社群連結後，全站畫面都會同步更新。
- */
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, getDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -35,15 +30,11 @@ const db  = getFirestore(app);
     setHref('social-ig-btn',   site.socialIG);
     setHref('social-line-btn', site.socialLine);
     setHref('social-fb-btn',   site.socialFB);
-    // 首頁頁尾「追蹤我們」文字連結（其他頁面沒有這兩個元素時不會有任何作用）
     setHref('footer-ig-link',   site.socialIG);
     setHref('footer-line-link', site.socialLine);
-    // 文章頁「追蹤最新文章」按鈕：有設定 Instagram 就連過去，沒設定維持連到聯絡頁
     setHref('articles-follow-link', site.socialIG);
-    // FAQ 頁「Instagram」按鈕、聯絡頁 Instagram
     setHref('faq-ig-link', site.socialIG);
     setHref('contact-ig',  site.socialIG);
-    // 聯絡頁的電話／Email：同時更新顯示文字與點擊連結
     const tel = document.getElementById('contact-tel');
     if (tel && site.contactPhone) { tel.textContent = site.contactPhone; tel.href = 'tel:' + String(site.contactPhone).replace(/[^0-9+]/g, ''); }
     const mail = document.getElementById('contact-email');

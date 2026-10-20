@@ -1,7 +1,3 @@
-/**
- * Arochemy — js/auth.js v2
- * 登入、註冊、登出、會員中心（個人資料 + 電子報訂閱設定）
- */
 
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth,
@@ -13,7 +9,6 @@ import { getFirestore,
          doc, getDoc, setDoc, updateDoc,
          serverTimestamp }       from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-/* ── Firebase ──────────────────────────────────────────────── */
 const firebaseConfig = {
   apiKey:            'AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI',
   authDomain:        'trying-89dc6.firebaseapp.com',
@@ -27,10 +22,8 @@ const app  = getApps().find(a => a.name === '[DEFAULT]') || initializeApp(fireba
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-/* ── DOM 快捷 ──────────────────────────────────────────────── */
 const $ = id => document.getElementById(id);
 
-/* ── 顯示訊息 ──────────────────────────────────────────────── */
 function showMsg(elId, text, isError = false) {
   const el = $(elId);
   if (!el) return;
@@ -38,7 +31,6 @@ function showMsg(elId, text, isError = false) {
   el.style.color = isError ? '#b94a48' : '#456b55';
 }
 
-/* ── 錯誤碼翻譯 ────────────────────────────────────────────── */
 function friendlyError(code) {
   const map = {
     'auth/user-not-found':      '找不到此帳號，請先註冊。',
@@ -52,7 +44,6 @@ function friendlyError(code) {
   return map[code] || '發生錯誤，請稍後再試。';
 }
 
-/* ── 切換登入 / 註冊模式 ───────────────────────────────────── */
 $('showRegisterBtn')?.addEventListener('click', () => {
   $('loginMode').style.display    = 'none';
   $('registerMode').style.display = '';
@@ -65,9 +56,6 @@ $('showLoginBtn')?.addEventListener('click', () => {
   showMsg('authMsg', '');
 });
 
-/* ══════════════════════════════════════════════════════════════
-   登入
-══════════════════════════════════════════════════════════════ */
 $('loginBtn')?.addEventListener('click', async () => {
   const email    = $('loginEmail')?.value.trim();
   const password = $('loginPassword')?.value;
@@ -79,7 +67,6 @@ $('loginBtn')?.addEventListener('click', async () => {
 
   try {
     await signInWithEmailAndPassword(auth, email, password);
-    // onAuthStateChanged 接手後續
   } catch (e) {
     showMsg('authMsg', friendlyError(e.code), true);
   } finally {
@@ -87,9 +74,6 @@ $('loginBtn')?.addEventListener('click', async () => {
   }
 });
 
-/* ══════════════════════════════════════════════════════════════
-   註冊
-══════════════════════════════════════════════════════════════ */
 $('registerBtn')?.addEventListener('click', async () => {
   const name       = $('regName')?.value.trim();
   const phone      = $('regPhone')?.value.trim();
@@ -124,17 +108,11 @@ $('registerBtn')?.addEventListener('click', async () => {
   }
 });
 
-/* ══════════════════════════════════════════════════════════════
-   登出
-══════════════════════════════════════════════════════════════ */
 $('logoutBtn')?.addEventListener('click', async () => {
   await signOut(auth);
   localStorage.removeItem('arochemy_subscribed');
 });
 
-/* ══════════════════════════════════════════════════════════════
-   儲存個人資料
-══════════════════════════════════════════════════════════════ */
 $('saveProfileBtn')?.addEventListener('click', async () => {
   const user = auth.currentUser;
   if (!user) return;
@@ -153,7 +131,6 @@ $('saveProfileBtn')?.addEventListener('click', async () => {
       updatedAt: serverTimestamp(),
     });
 
-    // 更新頁面顯示
     if ($('memberName')) $('memberName').textContent = name || '會員';
     if ($('memberInitial')) $('memberInitial').textContent = (name || user.email)[0].toUpperCase();
 
@@ -165,9 +142,6 @@ $('saveProfileBtn')?.addEventListener('click', async () => {
   }
 });
 
-/* ══════════════════════════════════════════════════════════════
-   更新訂閱設定
-══════════════════════════════════════════════════════════════ */
 $('saveSubBtn')?.addEventListener('click', async () => {
   const user = auth.currentUser;
   if (!user) return;
@@ -190,32 +164,24 @@ $('saveSubBtn')?.addEventListener('click', async () => {
   }
 });
 
-/* ══════════════════════════════════════════════════════════════
-   監聽登入狀態 → 切換面板
-══════════════════════════════════════════════════════════════ */
 onAuthStateChanged(auth, async user => {
   const authPanel   = $('authPanel');
   const memberPanel = $('memberPanel');
 
   if (user) {
-    // 顯示會員中心
     if (authPanel)   authPanel.style.display   = 'none';
     if (memberPanel) memberPanel.style.display  = '';
 
-    // 更新 header
     const userEmailEl = $('userEmail');
     if (userEmailEl) userEmailEl.textContent = user.email;
 
-    // 填入 email（固定，不可改）
     if ($('editEmail')) $('editEmail').value = user.email;
     if ($('memberEmailDisplay')) $('memberEmailDisplay').textContent = user.email;
 
-    // 更新 lastLoginAt
     try {
       await updateDoc(doc(db, 'members', user.uid), { lastLoginAt: serverTimestamp() });
     } catch(_) {}
 
-    // 讀取會員資料
     try {
       const snap = await getDoc(doc(db, 'members', user.uid));
       if (snap.exists()) {
@@ -230,7 +196,6 @@ onAuthStateChanged(auth, async user => {
       console.warn('讀取會員資料失敗：', e.message);
     }
 
-    // 登入後跳轉
     const redirect = sessionStorage.getItem('loginRedirect');
     if (redirect) {
       sessionStorage.removeItem('loginRedirect');
@@ -238,13 +203,11 @@ onAuthStateChanged(auth, async user => {
     }
 
   } else {
-    // 顯示登入/註冊面板
     if (authPanel)   authPanel.style.display   = '';
     if (memberPanel) memberPanel.style.display  = 'none';
   }
 });
 
-/* ── 提供給其他頁面的輔助函式 ─────────────────────────────── */
 export function getCurrentUser() {
   return new Promise(resolve => {
     const unsub = onAuthStateChanged(auth, user => { unsub(); resolve(user); });

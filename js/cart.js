@@ -1,15 +1,9 @@
-/**
- * Arochemy — js/cart.js
- * 購物車頁面：讀取 localStorage → 顯示商品 → 調整數量 → 前往結帳
- * 結帳時需要登入，訂單寫入 Firestore orders collection
- */
 
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, getDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-/* ── Firebase ──────────────────────────────────────────────── */
 const firebaseConfig = {
   apiKey:            'AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI',
   authDomain:        'trying-89dc6.firebaseapp.com',
@@ -23,42 +17,41 @@ const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-/* ── DOM ───────────────────────────────────────────────────── */
 const cartListEl   = document.getElementById('cartList');
 const cartTotalEl  = document.getElementById('cartTotal');
 const checkoutBtn  = document.getElementById('checkoutBtn');
 const cartMsgEl    = document.getElementById('cartMsg');
 
-/* ── 從藍新付款失敗/取消導回時，顯示提示訊息 ──────────────── */
 if (new URLSearchParams(window.location.search).get('paymentFailed') === '1') {
   if (cartMsgEl) {
     cartMsgEl.textContent = '付款未完成或失敗，訂單尚未成立，請重新結帳';
     cartMsgEl.style.color = '#b94a48';
   }
-  // 清掉網址上的參數，避免重新整理時又看到同一則訊息
   window.history.replaceState({}, '', window.location.pathname);
 }
 
-/* ── 優惠券狀態(結帳彈窗內設定，套用時會更新這兩個值) ────────── */
 let appliedCoupon   = null;
 let couponDiscount  = 0;
 
-/* ── 當前登入使用者 ────────────────────────────────────────── */
+const SHIPPING_FREE_THRESHOLD = 3000;
+const SHIPPING_FEE = { home: 100, store: 70 };
+
+function getSelectedShip() {
+  return document.querySelector('input[name="ship"]:checked')?.value || '宅配到府';
+}
+
+function calcShippingFee(ship, amountAfterDiscount) {
+  if (amountAfterDiscount >= SHIPPING_FREE_THRESHOLD) return 0;
+  return ship.includes('超商') ? SHIPPING_FEE.store : SHIPPING_FEE.home;
+}
+
 let currentUser = null;
 onAuthStateChanged(auth, user => {
   currentUser = user;
-  // 更新 header 登入狀態：只有已驗證的會員才顯示 Email，
-  // 未驗證的帳號不能被當成正常已登入會員顯示(跟 js/user.js 是同一個修正邏輯)
   const userEmailEl = document.getElementById('userEmail');
   if (userEmailEl) userEmailEl.textContent = (user && user.emailVerified) ? user.email : '';
 });
 
-/* ── 取得目前登入者的 Firebase ID Token（僅限已驗證會員）─────
-   只有「已登入 + Email 已驗證」才會帶上 Authorization header，
-   讓後端可以用 Firebase Admin 驗證出真正可信的會員身分。
-   未驗證會員或訪客都不帶 Token，後端會自然把這種請求當成訪客處理，
-   不會誤把未驗證帳號當成已驗證會員使用會員優惠。
-   Token 每次都直接跟 Firebase 現拿現用，不存進 localStorage/Firestore。 */
 async function getAuthHeader() {
   if (currentUser && currentUser.emailVerified) {
     try {
@@ -71,9 +64,6 @@ async function getAuthHeader() {
   return {};
 }
 
-/* ══════════════════════════════════════════════════════════════
-   購物車資料（localStorage）
-══════════════════════════════════════════════════════════════ */
 function getCart()      { try { return JSON.parse(localStorage.getItem('arochemy_cart') || '[]'); } catch { return []; } }
 function saveCart(c)    { localStorage.setItem('arochemy_cart', JSON.stringify(c)); }
 
@@ -83,9 +73,6 @@ function updateCartBadge(cart) {
   if (badge) badge.textContent = total;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   渲染購物車列表
-══════════════════════════════════════════════════════════════ */
 function renderCart() {
   const cart = getCart();
   updateCartBadge(cart);
@@ -104,11 +91,9 @@ function renderCart() {
 
   if (checkoutBtn) checkoutBtn.disabled = false;
 
-  // 計算總計
   const total = cart.reduce((s, item) => s + item.price * item.qty, 0);
   if (cartTotalEl) cartTotalEl.textContent = `NT$ ${total.toLocaleString()}`;
 
-  // 渲染列表
   cartListEl.innerHTML = cart.map((item, i) => `
     <div class="cart-item" data-i="${i}">
       <div class="cart-item-img">
@@ -141,7 +126,6 @@ function renderCart() {
     </div>
   `).join('');
 
-  // 綁定數量和刪除事件
   cartListEl.querySelectorAll('.qty-minus').forEach(btn =>
     btn.addEventListener('click', () => changeQty(Number(btn.dataset.i), -1))
   );
@@ -168,11 +152,7 @@ function removeItem(i) {
   renderCart();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   結帳 Modal（收集配送資訊）
-══════════════════════════════════════════════════════════════ */
 function openCheckoutModal() {
-  // 若已有 modal 就移除重建
   document.getElementById('checkout-modal')?.remove();
 
   const modal = document.createElement('div');
@@ -186,7 +166,6 @@ function openCheckoutModal() {
       </div>
 
       <div class="checkout-modal-body">
-        <!-- 客戶資訊（若已登入自動帶入） -->
         <div class="co-section-label">收件人資訊</div>
         <div class="co-field">
           <label>姓名 <span class="req">*</span></label>
@@ -201,7 +180,6 @@ function openCheckoutModal() {
           <input id="co-email" type="email" placeholder="用於訂單通知">
         </div>
 
-        <!-- 配送方式 -->
         <div class="co-section-label">配送方式</div>
         <div class="co-ship-options">
           <label class="co-radio">
@@ -215,7 +193,6 @@ function openCheckoutModal() {
           </label>
         </div>
 
-        <!-- 地址 / 門市 -->
         <div class="co-field" id="co-addr-field">
           <label>收件地址 <span class="req">*</span></label>
           <input id="co-address" type="text" placeholder="縣市、鄉鎮市區、路段門號">
@@ -225,7 +202,6 @@ function openCheckoutModal() {
           <input id="co-store" type="text" placeholder="e.g. 台中文心門市 123456">
         </div>
 
-        <!-- 優惠券 -->
         <div class="co-section-label">優惠券</div>
         <div class="co-coupon-row">
           <input id="co-coupon-code" type="text" placeholder="輸入優惠碼" style="text-transform:uppercase">
@@ -238,7 +214,6 @@ function openCheckoutModal() {
           <div class="co-coupon-list-loading">載入中…</div>
         </div>
 
-        <!-- 訂單金額摘要 -->
         <div class="co-summary">
           <div class="co-summary-row">
             <span>商品小計</span>
@@ -248,19 +223,21 @@ function openCheckoutModal() {
             <span>優惠折抵</span>
             <span id="co-summary-discount" class="co-summary-discount-val">-NT$ 0</span>
           </div>
+          <div class="co-summary-row">
+            <span>運費</span>
+            <span id="co-summary-shipping">NT$ 0</span>
+          </div>
           <div class="co-summary-row co-summary-total">
             <span>應付總額</span>
             <span id="co-summary-total">NT$ 0</span>
           </div>
         </div>
 
-        <!-- 訂單備註 -->
         <div class="co-field">
           <label>訂單備註</label>
           <textarea id="co-note" rows="2" placeholder="特殊需求、禮盒包裝等…"></textarea>
         </div>
 
-        <!-- 政策同意 -->
         <div class="co-field">
           <label class="co-agree-label">
             <input type="checkbox" id="co-agree-policy">
@@ -281,12 +258,10 @@ function openCheckoutModal() {
   document.body.appendChild(modal);
   document.body.style.overflow = 'hidden';
 
-  // 若已登入，帶入 email
   if (currentUser) {
     const emailEl = document.getElementById('co-email');
     if (emailEl) emailEl.value = currentUser.email;
 
-    // 嘗試從 members 帶入姓名電話
     getDoc(doc(db, 'members', currentUser.uid)).then(snap => {
       if (!snap.exists()) return;
       const d = snap.data();
@@ -297,34 +272,28 @@ function openCheckoutModal() {
     }).catch(() => {});
   }
 
-  // 配送方式切換
   modal.querySelectorAll('input[name="ship"]').forEach(radio => {
     radio.addEventListener('change', () => {
       const isConvStore = radio.value.includes('超商');
       document.getElementById('co-addr-field').style.display  = isConvStore ? 'none' : '';
       document.getElementById('co-store-field').style.display = isConvStore ? ''     : 'none';
+      renderCouponSummary();
     });
   });
 
-  // 每次開啟結帳彈窗都重置優惠券狀態，避免帶到上次殘留的折扣
   appliedCoupon  = null;
   couponDiscount = 0;
   renderCouponSummary();
   initCouponUI();
 
-  // 關閉
   const closeModal = () => { modal.remove(); document.body.style.overflow = ''; };
   modal.querySelector('.checkout-close')?.addEventListener('click', closeModal);
   document.getElementById('co-cancel')?.addEventListener('click', closeModal);
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 
-  // 送出
   document.getElementById('co-submit')?.addEventListener('click', submitOrder);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   優惠券：套用、清單、金額摘要
-══════════════════════════════════════════════════════════════ */
 const COUPON_API = 'https://arochemy-backend-production.up.railway.app/api/coupons';
 
 function getCartTotal() {
@@ -348,10 +317,14 @@ function renderCouponSummary() {
     discountRow.style.display = 'none';
   }
 
-  const finalTotal = Math.max(0, subtotal - couponDiscount);
-  totalEl.textContent = `NT$ ${finalTotal.toLocaleString()}`;
+  const afterDiscount = Math.max(0, subtotal - couponDiscount);
+  const shippingFee   = calcShippingFee(getSelectedShip(), afterDiscount);
+  const shippingEl    = document.getElementById('co-summary-shipping');
+  if (shippingEl) {
+    shippingEl.textContent = shippingFee > 0 ? `NT$ ${shippingFee.toLocaleString()}` : '免運';
+  }
+  totalEl.textContent = `NT$ ${(afterDiscount + shippingFee).toLocaleString()}`;
 
-  // 已套用的優惠券顯示區
   const appliedEl = document.getElementById('co-coupon-applied');
   if (appliedCoupon) {
     const discountText = appliedCoupon.type === 'percent'
@@ -486,9 +459,6 @@ function initCouponUI() {
   });
 }
 
-/* ══════════════════════════════════════════════════════════════
-   送出訂單 → 寫入 Firestore orders collection
-══════════════════════════════════════════════════════════════ */
 async function submitOrder() {
   const submitBtn = document.getElementById('co-submit');
   const errorEl  = document.getElementById('co-error');
@@ -496,20 +466,17 @@ async function submitOrder() {
   const name    = document.getElementById('co-name')?.value.trim();
   const phone   = document.getElementById('co-phone')?.value.trim();
   const email   = document.getElementById('co-email')?.value.trim();
-  const ship    = document.querySelector('input[name="ship"]:checked')?.value || '宅配到府';
+  const ship    = getSelectedShip();
   const isStore = ship.includes('超商');
   const address = isStore
     ? document.getElementById('co-store')?.value.trim()
     : document.getElementById('co-address')?.value.trim();
   const note    = document.getElementById('co-note')?.value.trim();
 
-  // 驗證
   const errors = [];
   if (!name)    errors.push('請填寫姓名');
   if (!phone)   errors.push('請填寫電話');
   if (!address) errors.push(isStore ? '請填寫門市資訊' : '請填寫收件地址');
-  // 未勾選同意購物與網站政策：直接擋在這裡，不會往下建立訂單、也不會呼叫任何 API，
-  // 不能只靠前端「視覺上」畫一個 checkbox，這裡是真正阻止流程繼續的地方
   if (!document.getElementById('co-agree-policy')?.checked) {
     errors.push('請先閱讀並同意購物與網站政策');
   }
@@ -526,11 +493,10 @@ async function submitOrder() {
 
   const cart  = getCart();
   const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
-  const finalTotal = Math.max(0, total - couponDiscount);
+  const afterDiscount = Math.max(0, total - couponDiscount);
+  const finalTotal = afterDiscount + calcShippingFee(ship, afterDiscount);
 
   try {
-    // 寫入 orders collection
-    // 呼叫後端 API 建立訂單（自動寄確認信 + 扣庫存）
     const authHeader = await getAuthHeader();
     const res = await fetch('https://arochemy-backend-production.up.railway.app/api/orders', {
       method:  'POST',
@@ -581,14 +547,10 @@ async function submitOrder() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '送出失敗');
 
-    // 注意：這裡先不清空購物車！要等真的付款成功、抵達「訂單完成」頁
-    // (order-success.html) 才清空，避免付款失敗被導回購物車時商品也不見了
 
-    // 導向藍新收銀台付款（真正的 POST 導頁，不是 fetch，
-    // 因為後端回傳的是一整頁會自動送出去藍新的 HTML）
     redirectToPayment({
       orderId: data.orderId,
-      total,
+      total: data.total ?? finalTotal,
       items: cart,
       customerEmail: email || (currentUser?.email || ''),
     });
@@ -601,11 +563,6 @@ async function submitOrder() {
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   導向藍新金流付款頁：用真正的表單 POST 導頁（不是 fetch），
-   因為 /api/payment/create 回傳的是一整頁「自動送出去藍新」的 HTML，
-   瀏覽器要整頁導過去才能繼續往下跑那段自動送出的 script
-══════════════════════════════════════════════════════════════ */
 function redirectToPayment({ orderId, total, items, customerEmail }) {
   const form = document.createElement('form');
   form.method = 'POST';
@@ -630,9 +587,6 @@ function redirectToPayment({ orderId, total, items, customerEmail }) {
   form.submit();
 }
 
-/* ──────────────────────────────────────────────────────────────
-   訂單成功頁
-────────────────────────────────────────────────────────────── */
 function showSuccess(orderId) {
   const shortId = orderId.slice(-6).toUpperCase();
   const main    = document.querySelector('main');
@@ -653,12 +607,8 @@ function showSuccess(orderId) {
   `;
 }
 
-/* ──────────────────────────────────────────────────────────────
-   結帳按鈕事件
-────────────────────────────────────────────────────────────── */
 checkoutBtn?.addEventListener('click', () => {
   if (!currentUser) {
-    // 未登入 → 記住目標頁，跳轉登入
     sessionStorage.setItem('loginRedirect', 'cart.html');
     if (cartMsgEl) {
       cartMsgEl.textContent = '請先登入會員再結帳';
@@ -670,14 +620,10 @@ checkoutBtn?.addEventListener('click', () => {
   openCheckoutModal();
 });
 
-/* ──────────────────────────────────────────────────────────────
-   工具
-────────────────────────────────────────────────────────────── */
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-/* ── CSS：結帳 Modal 樣式（注入到 <head>） ── */
 const style = document.createElement('style');
 style.textContent = `
   .checkout-modal-overlay {
@@ -749,7 +695,6 @@ style.textContent = `
   .co-radio input { accent-color: #111; }
   .req { color: #e55; }
 
-  /* 優惠券 */
   .co-coupon-row { display: flex; gap: 8px; }
   .co-coupon-row input {
     flex: 1;
@@ -796,7 +741,6 @@ style.textContent = `
   .co-coupon-chip-code { font-size: 13px; font-weight: 800; letter-spacing: 0.04em; }
   .co-coupon-chip-desc { font-size: 12px; color: #777; }
 
-  /* 訂單金額摘要 */
   .co-summary {
     display: flex; flex-direction: column; gap: 6px;
     background: #fafafa; border-radius: 10px;
@@ -820,7 +764,6 @@ style.textContent = `
     border-top: 1px solid #eee;
   }
 
-  /* 購物車頁樣式補充 */
   .cart-empty { text-align: center; padding: 60px 20px; }
   .cart-item {
     display: flex; align-items: center; gap: 14px;
@@ -856,5 +799,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-/* ── 啟動 ── */
 renderCart();

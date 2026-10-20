@@ -1,11 +1,9 @@
-/** v1782197764 */
 
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore,
          collection,
          getDocs }         from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-/* ── Firebase ──────────────────────────────────────────────── */
 const firebaseConfig = {
   apiKey:            'AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI',
   authDomain:        'trying-89dc6.firebaseapp.com',
@@ -18,15 +16,14 @@ const firebaseConfig = {
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
-/* ── 分類對照表（前台 data-cat ↔ Firestore category 值）────── */
 const CAT_MAP = {
-  'all':        null,          // 全部
-  'single-oil': 'single',      // 單方精油
-  'blend-oil':  'compound',    // 複方精油
-  'spray':      'spray',       // 噴霧
-  'massage':    'massage',     // 按摩油
-  'eyemask':    'eye-mask',    // 眼罩
-  'diffuser':   'diffuser',    // 擴香瓶
+  'all':        null,
+  'single-oil': 'single',
+  'blend-oil':  'compound',
+  'spray':      'spray',
+  'massage':    'massage',
+  'eyemask':    'eye-mask',
+  'diffuser':   'diffuser',
 };
 
 const CAT_LABEL = {
@@ -40,12 +37,10 @@ const CAT_LABEL = {
 
 const SPEC_SIZES = ['5ml', '10ml', '30ml', '50ml', '100ml'];
 
-/* ── 全域暫存 ──────────────────────────────────────────────── */
 let allProducts     = [];
 let currentCatKey   = 'all';
 let currentSortKey  = 'default';
 
-/* ── DOM ───────────────────────────────────────────────────── */
 const grid         = document.getElementById('productGrid');
 const totalCount   = document.getElementById('totalCount');
 const currentCat   = document.getElementById('currentCat');
@@ -57,7 +52,6 @@ const sortToggle   = document.getElementById('sortToggle');
 const sortMenu     = document.getElementById('sortMenu');
 const sortDropdown = document.getElementById('sortDropdown');
 
-/* ── 初始化 ────────────────────────────────────────────────── */
 async function init() {
   await loadProducts();
   initCategoryFilter();
@@ -66,7 +60,6 @@ async function init() {
   applyCatFromURL();
 }
 
-/* ── 從網址參數(?cat=xxx)套用分類篩選，供導覽列下拉選單連結使用 ── */
 function applyCatFromURL() {
   const params = new URLSearchParams(window.location.search);
   const catKey = params.get('cat');
@@ -81,7 +74,6 @@ function applyCatFromURL() {
   renderProducts(getFilteredSortedList());
 }
 
-/* ── 商品代表價格(用第一個有庫存的規格，跟卡片上顯示的價格一致) ──── */
 function getRepresentativePrice(p) {
   const specs   = p.specs || {};
   const enabled = SPEC_SIZES.filter(s => specs[s]?.enabled && specs[s]?.stock > 0);
@@ -89,7 +81,6 @@ function getRepresentativePrice(p) {
   return first ? Number(specs[first].price) || 0 : 0;
 }
 
-/* ── 排序 ──────────────────────────────────────────────────── */
 function applySort(list, sortKey) {
   const sorted = list.slice();
   switch (sortKey) {
@@ -106,12 +97,11 @@ function applySort(list, sortKey) {
       sorted.sort((a, b) => (Number(b.salesCount) || 0) - (Number(a.salesCount) || 0));
       break;
     default:
-      break; // 預設：維持 loadProducts() 已經排好的「新到舊」順序
+      break;
   }
   return sorted;
 }
 
-/* ── 依目前分類 + 排序條件，算出要顯示的清單 ─────────────────── */
 function getFilteredSortedList() {
   const firestoreCat = CAT_MAP[currentCatKey];
   const filtered = firestoreCat
@@ -120,7 +110,6 @@ function getFilteredSortedList() {
   return applySort(filtered, currentSortKey);
 }
 
-/* ── 排序下拉選單 ──────────────────────────────────────────── */
 function initSortFilter() {
   sortToggle?.addEventListener('click', () => {
     const open = sortToggle.getAttribute('aria-expanded') === 'true';
@@ -139,7 +128,6 @@ function initSortFilter() {
   });
 }
 
-/* ── 讀取產品 ──────────────────────────────────────────────── */
 async function loadProducts() {
   grid.innerHTML = renderSkeletons(6);
 
@@ -148,11 +136,9 @@ async function loadProducts() {
     allProducts = [];
     snap.forEach(d => {
       const p = { id: d.id, ...d.data() };
-      // 只顯示上架中的商品
       if (p.status === 'active') allProducts.push(p);
     });
 
-    // 前端排序：createdAt 新到舊
     allProducts.sort((a, b) => {
       const ta = a.createdAt?.seconds || 0;
       const tb = b.createdAt?.seconds || 0;
@@ -166,7 +152,6 @@ async function loadProducts() {
   }
 }
 
-/* ── 渲染商品列表 ──────────────────────────────────────────── */
 function renderProducts(list) {
   totalCount.textContent = list.length;
 
@@ -181,11 +166,9 @@ function renderProducts(list) {
 
   grid.innerHTML = list.map(p => productCard(p)).join('');
 
-  // 綁定每張卡片的規格切換 & 加入購物車
   list.forEach(p => bindCardEvents(p));
 }
 
-/* ── 商品卡片 HTML ─────────────────────────────────────────── */
 function productCard(p) {
   const specs   = p.specs || {};
   const enabled = SPEC_SIZES.filter(s => specs[s]?.enabled && specs[s]?.stock > 0);
@@ -213,7 +196,6 @@ function productCard(p) {
           ? `<p class="product-desc muted">${esc(p.description).slice(0, 60)}${p.description.length > 60 ? '…' : ''}</p>`
           : ''}
 
-        <!-- 規格選擇 -->
         ${enabled.length > 1 ? `
         <div class="spec-selector" data-id="${p.id}">
           ${enabled.map(s => `
@@ -250,14 +232,12 @@ function productCard(p) {
   `;
 }
 
-/* ── 綁定卡片互動 ──────────────────────────────────────────── */
 function bindCardEvents(p) {
   const card    = document.querySelector(`.product-card[data-id="${p.id}"]`);
   if (!card) return;
   const specs   = p.specs || {};
   const cartBtn = card.querySelector('.add-cart-btn');
 
-  // 規格按鈕切換
   card.querySelectorAll('.spec-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       card.querySelectorAll('.spec-btn').forEach(b => b.classList.remove('active'));
@@ -266,11 +246,9 @@ function bindCardEvents(p) {
       const size  = btn.dataset.size;
       const price = btn.dataset.price;
 
-      // 更新價格顯示
       const priceEl = card.querySelector('.product-price');
       if (priceEl) priceEl.textContent = `NT$ ${Number(price).toLocaleString()}`;
 
-      // 更新購物車按鈕 data 屬性
       if (cartBtn) {
         cartBtn.dataset.size  = size;
         cartBtn.dataset.price = price;
@@ -278,7 +256,6 @@ function bindCardEvents(p) {
     });
   });
 
-  // 加入購物車
   cartBtn?.addEventListener('click', () => {
     const size  = cartBtn.dataset.size;
     const price = Number(cartBtn.dataset.price);
@@ -288,10 +265,8 @@ function bindCardEvents(p) {
 
     addToCart({ id, name, size, price, img, qty: 1 });
 
-    // Toast 提示
     showCartToast(name, size);
 
-    // 按鈕視覺回饋
     const orig = cartBtn.textContent;
     cartBtn.textContent = '✓ 已加入';
     cartBtn.disabled = true;
@@ -302,10 +277,8 @@ function bindCardEvents(p) {
   });
 }
 
-/* ── 購物車（localStorage）─────────────────────────────────── */
 function addToCart(item) {
   const cart = getCart();
-  // 同商品同規格 → 數量 +1
   const key   = `${item.id}_${item.size}`;
   const exist = cart.find(c => `${c.id}_${c.size}` === key);
   if (exist) {
@@ -327,18 +300,15 @@ function saveCart(cart) {
 }
 
 function updateCartBadge(cart) {
-  // 優先使用 cart-badge.js 提供的全域函式（確保所有頁面同步）
   if (typeof window.updateCartBadge === 'function') {
     window.updateCartBadge();
     return;
   }
-  // fallback：直接更新徽章
   const total = cart.reduce((s, c) => s + c.qty, 0);
   const badge = document.getElementById('cartCount');
   if (badge) badge.textContent = total;
 }
 
-/* ── Toast 加入購物車提示 ──────────────────────────────────── */
 function showCartToast(name, size) {
   let toast = document.getElementById('products-cart-toast');
   if (!toast) {
@@ -380,7 +350,6 @@ function showCartToast(name, size) {
   }, 2800);
 }
 
-/* ── 分類篩選 ──────────────────────────────────────────────── */
 function initCategoryFilter() {
   catToggle?.addEventListener('click', () => {
     const open = catToggle.getAttribute('aria-expanded') === 'true';
@@ -395,13 +364,11 @@ function initCategoryFilter() {
       catToggle?.setAttribute('aria-expanded', 'false');
       catMenu?.classList.remove('open');
 
-      // 篩選（維持目前的排序條件）
       renderProducts(getFilteredSortedList());
     });
   });
 }
 
-/* ── 點外側關閉下拉 ────────────────────────────────────────── */
 function initDropdownClose() {
   document.addEventListener('click', e => {
     if (catDropdown && !catDropdown.contains(e.target)) {
@@ -415,7 +382,6 @@ function initDropdownClose() {
   });
 }
 
-/* ── Skeleton 骨架 ─────────────────────────────────────────── */
 function renderSkeletons(n) {
   return Array(n).fill(0).map(() => `
     <div class="product-card skeleton-card">
@@ -428,17 +394,14 @@ function renderSkeletons(n) {
   `).join('');
 }
 
-/* ── 工具 ──────────────────────────────────────────────────── */
 function esc(str) {
   return String(str || '')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-/* ── 初始化購物車數量 ──────────────────────────────────────── */
 updateCartBadge(getCart());
 
-/* ── 注入商品卡片樣式（確保不依賴外部 CSS）───────────────── */
 (function injectProductStyles() {
   if (document.getElementById('arochemy-product-styles')) return;
   const style = document.createElement('style');
@@ -604,5 +567,4 @@ updateCartBadge(getCart());
   document.head.appendChild(style);
 })();
 
-/* ── 啟動 ──────────────────────────────────────────────────── */
 init();

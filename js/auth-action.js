@@ -1,8 +1,3 @@
-/* ── Arochemy 自訂 Firebase Email Action Handler 邏輯 ──────────
-   沿用跟 login.html 完全相同的 Firebase config / SDK 版本，
-   避免重複初始化造成衝突(用 getApps().length 防衛，這個頁面
-   是獨立載入，本來就不會跟 login.html 共用同一個 JS context，
-   這個防衛寫法只是沿用專案既有慣例，保持風格一致)。 */
 
 import { initializeApp, getApps, getApp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -22,7 +17,6 @@ const app  = getApps().length ? getApp() : initializeApp(cfg);
 const auth = getAuth(app);
 const $    = id => document.getElementById(id);
 
-/* ── 畫面切換：一次只顯示一個 .auth-view ── */
 function showView(id) {
   document.querySelectorAll('.auth-view').forEach(el => el.classList.remove('active'));
   $(id)?.classList.add('active');
@@ -34,7 +28,6 @@ function showError(title, text) {
   showView('viewError');
 }
 
-/* ── Firebase 錯誤碼 → 繁體中文友善訊息，絕對不把原始 error code 丟給使用者 ── */
 function friendlyErrorText(code) {
   return ({
     'auth/expired-action-code': '此連結已過期，請重新申請。',
@@ -46,9 +39,6 @@ function friendlyErrorText(code) {
   })[code] || '發生未知錯誤，請稍後再試，或重新申請一次。';
 }
 
-/* ══════════════════════════════════════════════════════════
-   主流程：解析網址參數，依 mode 分流處理
-══════════════════════════════════════════════════════════ */
 async function init() {
   const params  = new URLSearchParams(window.location.search);
   const mode    = params.get('mode');
@@ -64,17 +54,12 @@ async function init() {
   } else if (mode === 'verifyEmail') {
     await handleVerifyEmail(oobCode);
   } else {
-    // 不支援的 mode(例如 recoverEmail 等 Firebase 其他內建類型)，顯示友善畫面，不讓頁面壞掉
     showError('不支援的操作', '此連結的操作類型不受支援。');
   }
 }
 
-/* ══════════════════════════════════════════════════════════
-   resetPassword：驗證 oobCode → 顯示表單 → 送出新密碼
-══════════════════════════════════════════════════════════ */
 async function handleResetPassword(oobCode) {
   try {
-    // 確認這個 oobCode 是否有效(未過期、未使用過)
     await verifyPasswordResetCode(auth, oobCode);
   } catch (e) {
     showError('此密碼重設連結已失效', friendlyErrorText(e.code));
@@ -85,7 +70,7 @@ async function handleResetPassword(oobCode) {
 
   const msgEl = $('resetFormMsg');
   const btn   = $('confirmResetBtn');
-  let submitting = false; // 防止按鈕被連續重複提交
+  let submitting = false;
 
   btn.addEventListener('click', async () => {
     if (submitting) return;
@@ -129,9 +114,6 @@ async function handleResetPassword(oobCode) {
   });
 }
 
-/* ══════════════════════════════════════════════════════════
-   verifyEmail：套用驗證碼，完成 Email 驗證
-══════════════════════════════════════════════════════════ */
 async function handleVerifyEmail(oobCode) {
   try {
     await applyActionCode(auth, oobCode);

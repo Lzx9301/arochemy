@@ -63,7 +63,6 @@
       content:''; flex:1; height:1px; background:#eee;
     }
 
-    /* 會員中心面板 */
     .member-panel { display:none; }
     .member-welcome {
       display:flex; align-items:center; gap:14px; margin-bottom:24px;
@@ -92,7 +91,6 @@
     }
     .member-sub-row span { font-size:14px; color:#333; }
 
-    /* Toggle */
     .m-toggle { position:relative; width:44px; height:24px; flex-shrink:0; }
     .m-toggle input { opacity:0; width:0; height:0; }
     .m-toggle-track {
@@ -109,45 +107,30 @@
     }
     .m-toggle input:checked + .m-toggle-track::after { transform:translateX(20px); }
 
-    /* ── 會員中心：桌機版左右雙欄排版 ──
-       .auth-card 這個容器同時被登入/註冊/忘記密碼(窄卡片480px)跟
-       會員中心共用，不能直接改動 .auth-card 本身的寬度，
-       所以另外用 .member-view 這個修飾 class 只在顯示會員中心時
-       放寬容器(JS 在切換 memberPanel 顯示狀態的同時，一併切換這個
-       class，見下方 script)，完全不影響登入/註冊等其他畫面的寬度。 */
     .auth-card.member-view {
       width: min(100%, 1100px);
     }
 
     .member-layout {
       display: grid;
-      grid-template-columns: 1.86fr 1fr; /* 約 65% : 35% */
+      grid-template-columns: 1.86fr 1fr;
       gap: 32px;
     }
 
     .member-col-orders { min-width: 0; }
 
-    /* 「我的訂單」是會員中心的主要內容，標題視覺上要比右側設定更明顯，
-       跟右側 .member-section h3 那種低調的小型大寫標籤做出區隔 */
     .member-section--orders h3 {
       font-size: 16px; font-weight: 700;
       letter-spacing: normal; text-transform: none;
       color: #111; margin: 0 0 16px;
     }
 
-    /* 右欄：桌機版 sticky，跟著頁面往下捲時停留在 Header 下方。
-       align-self:start 是關鍵，沒有這個 grid 預設會把子項目拉伸
-       撐滿整個 row 高度，sticky 會完全失效。
-       這裡刻意不加 max-height/overflow，如果右欄內容比視窗還高，
-       用瀏覽器原生 sticky 行為讓它自然跟著頁面捲動，
-       不會截斷任何內容，也不會產生內部小 scrollbar。 */
     .member-col-profile {
       position: sticky;
       top: calc(var(--header-h) + 16px);
       align-self: start;
     }
 
-    /* 我的訂單 */
     .my-order-card {
       background:#fff; border:1px solid #eee; border-radius:12px;
       padding:14px 16px; margin-bottom:10px;
@@ -210,16 +193,12 @@
     .my-order-line.total { font-weight:700; color:#111; font-size:14px; padding-top:6px; }
     .my-order-empty { color:#999; font-size:13px; text-align:center; padding:20px 0; }
 
-    /* ── 900px 以下：會員中心自動恢復單欄，取消 sticky ──
-       HTML 裡「我的訂單」本來就寫在「個人資料」之前，
-       所以恢復單欄後順序自然就是：我的訂單 → 個人資料 → 電子報 → 登出，
-       不需要額外用 order 調整。 */
     @media (max-width: 900px) {
       .auth-card.member-view { width: min(100%, 480px); }
       .member-layout { display: block; }
       .member-col-profile {
         position: static;
-        margin-top: 24px; /* display:block 時 grid 的 gap 不會生效，補上間距 */
+        margin-top: 24px;
       }
     }
 
@@ -347,12 +326,10 @@
     <section class="auth-card">
       <img class="auth-logo" src="./images/head-logo.png" alt="Arochemy">
 
-      <!-- ── 登入 / 註冊 面板 ── -->
       <div id="authPanel">
         <h1 class="auth-title">會員登入 / 註冊</h1>
         <p class="auth-subtitle">登入後可管理個人資料、訂閱設定與訂單紀錄。</p>
 
-        <!-- 登入模式（預設） -->
         <div id="loginMode">
           <div class="auth-field">
             <label for="loginEmail">Email</label>
@@ -372,7 +349,6 @@
           <button class="auth-btn secondary" id="showRegisterBtn" type="button">還沒有帳號？立即註冊</button>
         </div>
 
-        <!-- 註冊模式 -->
         <div id="registerMode" style="display:none">
           <div class="auth-field">
             <label for="regName">姓名</label>
@@ -404,7 +380,6 @@
           </div>
         </div>
 
-        <!-- 忘記密碼模式 -->
         <div id="forgotMode" style="display:none">
           <div class="auth-field">
             <label for="forgotEmail">註冊 Email</label>
@@ -417,7 +392,6 @@
           <p id="forgotMsg" class="auth-msg"></p>
         </div>
 
-        <!-- Email 待驗證提示 -->
         <div id="verifyPendingMode" style="display:none">
           <p class="auth-subtitle" style="margin-bottom:8px">
             驗證信已寄至 <strong id="verifyPendingEmail"></strong>，請先至信箱完成 Email 驗證後再登入。
@@ -432,11 +406,9 @@
         <p id="authMsg" class="auth-msg"></p>
       </div>
 
-      <!-- ── 會員中心面板（登入後顯示）── -->
       <div id="memberPanel" class="member-panel">
         <div class="member-layout">
 
-          <!-- 左欄：我的訂單 -->
           <div class="member-col-orders">
             <div class="member-section member-section--orders">
               <h3>我的訂單</h3>
@@ -445,10 +417,8 @@
             </div>
           </div>
 
-          <!-- 右欄：會員資料(桌機版 sticky) -->
           <div class="member-col-profile">
 
-            <!-- 歡迎列 -->
             <div class="member-welcome">
               <div class="member-avatar-lg" id="memberInitial">A</div>
               <div class="member-welcome-info">
@@ -457,7 +427,6 @@
               </div>
             </div>
 
-            <!-- 個人資料 -->
             <div class="member-section">
               <h3>個人資料</h3>
               <div class="auth-field">
@@ -480,7 +449,6 @@
               <button class="auth-btn primary" id="saveProfileBtn" type="button" style="margin-top:4px">儲存資料</button>
             </div>
 
-            <!-- 電子報訂閱 -->
             <div class="member-section">
               <h3>電子報設定</h3>
               <div class="member-sub-row">
@@ -493,7 +461,6 @@
               <button class="auth-btn secondary" id="saveSubBtn" type="button" style="margin-top:14px">更新訂閱設定</button>
             </div>
 
-            <!-- 登出 -->
             <div class="auth-actions">
               <button class="auth-btn danger" id="logoutBtn" type="button">登出</button>
             </div>
@@ -511,7 +478,6 @@
   <script src="js/cart-badge.js"></script>
   <script src="./main.js"></script>
   <script type="module">
-/* ── 會員中心邏輯（inline，避免多個 Firebase 實例衝突）── */
 import { initializeApp, getApps, getApp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
@@ -558,7 +524,6 @@ function errText(code) {
   })[code] || '發生錯誤，請稍後再試。';
 }
 
-/* ── 4 種畫面狀態切換：login / register / forgot / verify ── */
 const AUTH_MODES = { login: 'loginMode', register: 'registerMode', forgot: 'forgotMode', verify: 'verifyPendingMode' };
 function showAuthMode(mode) {
   Object.values(AUTH_MODES).forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
@@ -571,20 +536,16 @@ function showVerifyPending(email) {
   msg('verifyPendingMsg', '');
 }
 
-/* ── 登入/註冊/忘記密碼 切換 ── */
 $('showRegisterBtn')?.addEventListener('click', () => showAuthMode('register'));
 $('showLoginBtn')?.addEventListener('click', () => showAuthMode('login'));
 $('showForgotBtn')?.addEventListener('click', () => showAuthMode('forgot'));
 $('backToLoginFromForgot')?.addEventListener('click', () => showAuthMode('login'));
 
-/* 「返回登入／登出」：因為這個畫面出現時使用者其實還是登入狀態(只是Email未驗證)，
-   要按這顆才真的登出，回到一般登入畫面 */
 $('backToLoginFromVerify')?.addEventListener('click', async () => {
   try { await signOut(auth); } catch (_) {}
   showAuthMode('login');
 });
 
-/* ── 登入 ── */
 $('loginBtn')?.addEventListener('click', async () => {
   const email = $('loginEmail')?.value.trim();
   const pw    = $('loginPassword')?.value;
@@ -593,7 +554,6 @@ $('loginBtn')?.addEventListener('click', async () => {
   btn.disabled = true; btn.textContent = '登入中…';
   try {
     await signInWithEmailAndPassword(auth, email, pw);
-    // 後續(檢查是否已驗證、導向會員中心或待驗證畫面)交給 onAuthStateChanged 統一處理
   } catch(e) {
     msg('authMsg', errText(e.code), true);
   } finally {
@@ -601,12 +561,11 @@ $('loginBtn')?.addEventListener('click', async () => {
   }
 });
 
-/* ── 註冊 ── */
 $('registerBtn')?.addEventListener('click', async () => {
   const name     = $('regName')?.value.trim();
   const phone    = $('regPhone')?.value.trim();
   const email    = $('regEmail')?.value.trim();
-  const birthday = $('regBirthday')?.value || ''; // <input type="date"> 原生就是 YYYY-MM-DD 字串，直接用，不轉成 Date 物件避免時區偏移
+  const birthday = $('regBirthday')?.value || '';
   const pw       = $('regPassword')?.value;
   const sub      = $('regSubscribed')?.checked || false;
   if (!email || !pw) { msg('authMsg', '請填寫 Email 與密碼。', true); return; }
@@ -617,13 +576,11 @@ $('registerBtn')?.addEventListener('click', async () => {
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pw);
 
-    // 會員資料一定要先寫入成功，就算後面寄驗證信失敗，帳號跟會員資料也都已經建立好了
     await setDoc(doc(db, 'members', cred.user.uid), {
       uid: cred.user.uid, name: name||'', phone: phone||'',
       email, birthday, subscribed: sub, createdAt: serverTimestamp(),
     });
 
-    // 寄送驗證信；就算寄送失敗也不能刪掉剛建立的帳號/會員資料，只是提示可以之後重寄
     let verifyEmailSent = true;
     try {
       const token = await cred.user.getIdToken();
@@ -641,11 +598,6 @@ $('registerBtn')?.addEventListener('click', async () => {
       console.warn('[Auth] 驗證信寄送失敗：', e.message);
     }
 
-    // 注意：這裡刻意不立刻 signOut。因為「重新寄送驗證信」呼叫後端 API 時
-    // 需要用 user.getIdToken() 拿目前登入者的憑證，如果馬上登出，
-    // 待驗證畫面上的「重新寄送驗證信」會沒辦法用。
-    // 讓 onAuthStateChanged 偵測到「已登入但 emailVerified=false」，
-    // 自動顯示待驗證畫面(不會進會員中心)；真正要登出要按畫面上的「返回登入／登出」。
     showVerifyPending(email);
     msg('verifyPendingMsg',
       verifyEmailSent
@@ -661,7 +613,6 @@ $('registerBtn')?.addEventListener('click', async () => {
   }
 });
 
-/* ── 重新寄送驗證信 ── */
 let resendInFlight = false;
 $('resendVerifyBtn')?.addEventListener('click', async () => {
   if (resendInFlight) return;
@@ -691,7 +642,6 @@ $('resendVerifyBtn')?.addEventListener('click', async () => {
     }
 
     msg('verifyPendingMsg', data.alreadyVerified ? '此帳號已經完成 Email 驗證。' : '驗證信已重新寄送，請至信箱查看。');
-    // 成功後鎖定按鈕一段時間，避免使用者連續點擊灌爆信箱、觸發限流
     setTimeout(() => {
       resendInFlight = false;
       btn.disabled = false; btn.textContent = '重新寄送驗證信';
@@ -703,7 +653,6 @@ $('resendVerifyBtn')?.addEventListener('click', async () => {
   }
 });
 
-/* ── 忘記密碼：寄送密碼重設信 ── */
 $('sendResetBtn')?.addEventListener('click', async () => {
   const email = $('forgotEmail')?.value.trim();
   if (!email) { msg('forgotMsg', '請輸入 Email。', true); return; }
@@ -715,7 +664,6 @@ $('sendResetBtn')?.addEventListener('click', async () => {
   const btn = $('sendResetBtn');
   btn.disabled = true; btn.textContent = '寄送中…';
 
-  // 不管帳號存不存在，都顯示同一句話，避免被拿來試探哪些 Email 有註冊過
   const genericMsg = '如果此 Email 已註冊，系統將寄送密碼重設信至該信箱，請至信箱查看。';
 
   try {
@@ -730,29 +678,21 @@ $('sendResetBtn')?.addEventListener('click', async () => {
     } else if (res.status === 400) {
       msg('forgotMsg', 'Email 格式不正確。', true);
     } else {
-      // 不論帳號存不存在，後端都回傳一樣的成功訊息，這裡統一顯示同一句話，
-      // 不會因為 response 內容洩漏帳號是否已經註冊過
       msg('forgotMsg', genericMsg);
     }
   } catch(e) {
-    // 網路等異常情況，一樣不能洩漏任何帳號存在與否的線索，顯示同一句通用訊息
     msg('forgotMsg', genericMsg);
   } finally {
     btn.disabled = false; btn.textContent = '寄送密碼重設信';
   }
 });
 
-/* ── 登出 ── */
 $('logoutBtn')?.addEventListener('click', () => signOut(auth));
 
-/* ── 儲存個人資料 ── */
 $('saveProfileBtn')?.addEventListener('click', async () => {
   const user   = auth.currentUser; if (!user) return;
   const name   = $('editName')?.value.trim();
   const phone  = $('editPhone')?.value.trim();
-  // 注意：這裡刻意不讀取 editBirthday 的值。生日只能由後台管理員修改，
-  // 就算前端這個 disabled input 被人用開發者工具改掉值，這裡也完全不會用到它，
-  // 送給 Firestore 的更新內容裡永遠不會包含 birthday 這個欄位。
   const btn = $('saveProfileBtn');
   btn.disabled = true; btn.textContent = '儲存中…';
   try {
@@ -770,7 +710,6 @@ $('saveProfileBtn')?.addEventListener('click', async () => {
   }
 });
 
-/* ── 更新訂閱 ── */
 $('saveSubBtn')?.addEventListener('click', async () => {
   const user = auth.currentUser; if (!user) return;
   const sub = $('subToggle')?.checked || false;
@@ -786,39 +725,26 @@ $('saveSubBtn')?.addEventListener('click', async () => {
   }
 });
 
-/* ── 監聽登入狀態 ──
-   三種狀態要分開處理：
-   1) user 存在且 emailVerified=true  → 正常登入，進會員中心
-   2) user 存在但 emailVerified=false → 停在待驗證畫面，不能進會員中心
-   3) user 不存在                      → 顯示一般登入/註冊畫面
-   千萬不能因為 user 物件存在，就把 authPanel 隱藏、memberPanel 顯示，
-   一定要先檢查 emailVerified，不然未驗證的帳號會被誤判成正常登入。 */
 onAuthStateChanged(auth, async user => {
   const authPanel   = $('authPanel');
   const memberPanel = $('memberPanel');
   const authCard    = document.querySelector('.auth-card');
 
   if (user && user.emailVerified) {
-    /* ── 已驗證，正常登入 ── */
     if (authPanel)   authPanel.style.display  = 'none';
     if (memberPanel) memberPanel.style.display = 'block';
     authCard?.classList.add('member-view');
 
-    /* 填入 email */
     if ($('editEmail'))         $('editEmail').value          = user.email;
     if ($('memberEmailDisplay'))$('memberEmailDisplay').textContent = user.email;
 
-    /* 更新 header */
     const headerEmail = document.getElementById('userEmail');
     if (headerEmail) headerEmail.textContent = user.email;
     const headerArea  = document.getElementById('userArea');
     if (headerArea)  { headerArea.href = 'login.html'; headerArea.onclick = null; }
 
-    /* 更新 lastLoginAt：只有真正完成驗證並正常登入才更新，
-       未驗證的情況不會走到這個分支，所以不會誤更新登入紀錄 */
     try { await updateDoc(doc(db, 'members', user.uid), { lastLoginAt: serverTimestamp() }); } catch(_) {}
 
-    /* 讀取會員資料 */
     try {
       const snap = await getDoc(doc(db, 'members', user.uid));
       if (snap.exists()) {
@@ -829,8 +755,6 @@ onAuthStateChanged(auth, async user => {
         if ($('memberName'))  $('memberName').textContent   = d.name || '會員';
         if ($('memberInitial'))$('memberInitial').textContent = (d.name || user.email)[0].toUpperCase();
 
-        /* 生日：一律唯讀，會員本人不能自己新增或修改，只能由後台管理員處理。
-           舊會員/尚未由客服補上生日的情況下，欄位留空，並換一句提示文字說明。 */
         const birthdayEl = $('editBirthday');
         const birthdayHintEl = $('birthdayHint');
         if (birthdayEl) birthdayEl.value = d.birthday || '';
@@ -842,10 +766,8 @@ onAuthStateChanged(auth, async user => {
       }
     } catch(e) { console.warn('讀取會員資料失敗：', e.message); }
 
-    /* 我的訂單：只有已驗證會員才載入 */
     loadMyOrders(user);
 
-    /* 登入完成後，如果之前有頁面要求先登入才能繼續(例如結帳)，導回去 */
     const redirect = sessionStorage.getItem('loginRedirect');
     if (redirect) {
       sessionStorage.removeItem('loginRedirect');
@@ -853,26 +775,21 @@ onAuthStateChanged(auth, async user => {
     }
 
   } else if (user && !user.emailVerified) {
-    /* ── 已登入，但 Email 還沒驗證：不能進會員中心 ── */
     if (memberPanel) memberPanel.style.display = 'none';
     if (authPanel)   authPanel.style.display  = '';
     authCard?.classList.remove('member-view');
     showVerifyPending(user.email);
 
   } else {
-    /* ── 沒有登入 ── */
     if (memberPanel) memberPanel.style.display = 'none';
     if (authPanel)   authPanel.style.display  = '';
     authCard?.classList.remove('member-view');
     showAuthMode('login');
     const listEl = $('myOrdersList');
-    if (listEl) listEl.innerHTML = ''; // 登出/未登入時清空，避免殘留上一個帳號的訂單資料
+    if (listEl) listEl.innerHTML = '';
   }
 });
 
-/* ══════════════════════════════════════════════════════════
-   我的訂單：只有已驗證會員才會呼叫(見上方 onAuthStateChanged 分支)
-══════════════════════════════════════════════════════════ */
 const ORDER_STATUS_LABEL = { pending: '待處理', paid: '已付款', shipped: '已出貨', done: '已完成', cancel: '已取消', refunded: '已退款' };
 
 async function loadMyOrders(user) {
@@ -923,14 +840,13 @@ function renderMyOrders(orders, user) {
     return;
   }
 
-  // 前端自己再排序一次，確保「最新訂單排最上面」不會依賴後端/Firestore回傳順序
   const sorted = [...orders].sort((a, b) => {
     const at = parseOrderDate(a.createdAt);
     const bt = parseOrderDate(b.createdAt);
     if (!at && !bt) return 0;
-    if (!at) return 1;  // 沒有日期的排到最後
+    if (!at) return 1;
     if (!bt) return -1;
-    return bt - at; // 新到舊
+    return bt - at;
   });
 
   listEl.innerHTML = sorted.map((o, i) => {
@@ -973,6 +889,7 @@ function renderMyOrders(orders, user) {
           <h5>金額</h5>
           <div class="my-order-line"><span>商品小計</span><span>NT$ ${Number(o.subtotal ?? o.total ?? 0).toLocaleString()}</span></div>
           ${o.discount ? `<div class="my-order-line"><span>優惠折抵</span><span>-NT$ ${Number(o.discount).toLocaleString()}</span></div>` : ''}
+          ${o.shippingFee !== undefined ? `<div class="my-order-line"><span>運費</span><span>${Number(o.shippingFee) > 0 ? `NT$ ${Number(o.shippingFee).toLocaleString()}` : '免運'}</span></div>` : ''}
           ${o.coupon?.code ? `<div class="my-order-line"><span>使用優惠券</span><span>${escHtml(o.coupon.code)}</span></div>` : ''}
           <div class="my-order-line total"><span>訂單總額</span><span>NT$ ${Number(o.total || 0).toLocaleString()}</span></div>
           <h5>配送／收件</h5>
@@ -1019,9 +936,7 @@ function renderMyOrders(orders, user) {
           throw new Error(data.error || '取消失敗');
         }
 
-        // 成功後重新載入整份訂單列表，讓狀態/按鈕(取消按鈕會因為狀態不再是paid而消失)都反映最新結果
         await loadMyOrders(user);
-        // loadMyOrders 執行完才設定訊息，不然會被它內部一開始的清空動作蓋掉
         const msgEl = $('myOrdersMsg');
         if (msgEl) { msgEl.textContent = '✓ 訂單已取消'; msgEl.className = 'auth-msg'; }
 
@@ -1034,8 +949,6 @@ function renderMyOrders(orders, user) {
   });
 }
 
-/* 後端已經把 createdAt 轉成明確的 ISO 字串再回傳(見 routes/orders.js /mine)，
-   這裡多留幾種判斷只是保險，不會影響正常運作 */
 function parseOrderDate(ts) {
   if (!ts) return null;
   let d;

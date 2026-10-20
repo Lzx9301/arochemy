@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Arochemy 後台管理</title>
   <link rel="stylesheet" href="admin.css">
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -14,7 +13,6 @@
 </head>
 <body>
 
-<!-- 登入 -->
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">Arochemy</div>
@@ -35,10 +33,8 @@
 <div id="toast-container" class="toast-container"></div>
 <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
-<!-- ══════════ 主介面 ══════════ -->
 <div id="app-layout" style="display:none">
 
-  <!-- ── 側邊欄 ── -->
   <aside class="sidebar">
     <div class="sidebar-brand">
       <span class="sidebar-logo">Arochemy</span>
@@ -112,7 +108,6 @@
     </div>
   </aside>
 
-  <!-- ── 主內容 ── -->
   <div class="main-content">
     <header class="topbar">
       <button id="hamburger-btn" class="hamburger">
@@ -128,7 +123,6 @@
       </div>
     </header>
 
-    <!-- ══ 儀表板 ══ -->
     <main id="page-dashboard" class="page active">
       <div class="page-hero"><h1>歡迎回來</h1><p>Arochemy 後台管理系統概覽</p></div>
 
@@ -174,7 +168,6 @@
       </div>
     </main>
 
-    <!-- ══ 首頁設定 ══ -->
     <main id="page-hero" class="page">
       <div class="page-hero"><h1>首頁設定</h1><p>管理前台首頁各區塊的文字內容與精選產品</p></div>
 
@@ -193,7 +186,6 @@
               <div class="form-group"><label>副標題</label><textarea id="hero-subtitle" rows="3" placeholder="精選天然精油…"></textarea></div>
             </div>
 
-            <!-- 背景媒體 -->
             <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
               <div class="form-group">
                 <label>背景類型</label>
@@ -250,7 +242,6 @@
       </div>
     </main>
 
-    <!-- ══ 產品管理 ══ -->
     <main id="page-products" class="page">
       <div class="page-hero"><h1>產品管理</h1><p>管理商品目錄、規格價格與庫存</p></div>
 
@@ -301,7 +292,6 @@
       </div>
     </main>
 
-    <!-- ══ 文章管理 ══ -->
     <main id="page-articles" class="page">
       <div class="page-hero"><h1>文章管理</h1><p>發布品牌文章與電子報</p></div>
 
@@ -332,11 +322,9 @@
       </div>
     </main>
 
-    <!-- ══ 訂單管理 ══ -->
     <main id="page-orders" class="page">
       <div class="page-hero"><h1>訂單管理</h1><p>查看客戶訂單、更新狀態與分析銷售數據</p></div>
 
-      <!-- 統計數字 -->
       <div class="summary-row">
         <div class="summary-pill"><span class="s-icon">💰</span><div class="s-info"><div class="s-val" id="orders-month-revenue">NT$ 0</div><div class="s-lbl">本月營收</div></div></div>
         <div class="summary-pill"><span class="s-icon">⏳</span><div class="s-info"><div class="s-val" id="orders-pending-count">0</div><div class="s-lbl">待處理訂單</div></div></div>
@@ -383,7 +371,6 @@
         </div>
       </div>
 
-      <!-- 商品銷量排行 -->
       <div class="card">
         <div class="card-header"><span class="card-title">🏆 商品銷售排行（全部時間）</span></div>
         <div class="card-body">
@@ -394,7 +381,6 @@
       </div>
     </main>
 
-    <!-- ══ 會員管理 ══ -->
     <main id="page-members" class="page">
       <div class="page-hero"><h1>會員管理</h1><p>查看會員資料與電子報訂閱狀態</p></div>
 
@@ -431,7 +417,6 @@
       </div>
     </main>
 
-    <!-- ══ 折價券管理 ══ -->
     <main id="page-coupons" class="page">
       <div class="page-hero"><h1>折價券管理</h1><p>建立與管理優惠碼，設定折扣條件與使用限制</p></div>
 
@@ -464,7 +449,6 @@
       </div>
     </main>
 
-    <!-- ══ 聯絡訊息 ══ -->
     <main id="page-messages" class="page">
       <div class="page-hero"><h1>聯絡訊息</h1><p>查看並處理客戶透過聯絡表單送出的洽詢</p></div>
 
@@ -482,7 +466,6 @@
       </div>
     </main>
 
-    <!-- ══ 網站設定 ══ -->
     <main id="page-settings" class="page">
       <div class="page-hero"><h1>網站設定</h1><p>聯絡資訊、社群連結與基本網站資料</p></div>
 
@@ -521,11 +504,10 @@
       <button class="btn btn-accent btn-lg" id="save-site-settings-btn">儲存所有設定</button>
     </main>
 
-  </div><!-- /main-content -->
-</div><!-- /app-layout -->
+  </div>
+</div>
 
 
-<!-- ════════ Modal：聯絡訊息詳細內容 ════════ -->
 <div id="message-modal" class="modal-overlay">
   <div class="modal" style="max-width:520px">
     <div class="modal-header">
@@ -573,7 +555,6 @@
   </div>
 </div>
 
-<!-- ════════ Modal：編輯會員資料 ════════ -->
 <div id="member-modal" class="modal-overlay">
   <div class="modal" style="max-width:480px">
     <div class="modal-header">
@@ -613,7 +594,6 @@
   </div>
 </div>
 
-<!-- ════════ Modal：新增/編輯折價券 ════════ -->
 <div id="coupon-modal" class="modal-overlay">
   <div class="modal" style="max-width:560px">
     <div class="modal-header">
@@ -724,7 +704,6 @@
   </div>
 </div>
 
-<!-- ════════ Modal：新增/編輯產品 ════════ -->
 <div id="product-modal" class="modal-overlay">
   <div class="modal" style="max-width:740px">
     <div class="modal-header">
@@ -768,7 +747,6 @@
         </div>
       </div>
 
-      <!-- 規格 / 售價 / 庫存表 -->
       <div class="form-group" style="margin-bottom:16px">
         <label>規格 · 售價 · 庫存</label>
         <table class="spec-price-table">
@@ -821,7 +799,6 @@
         <textarea id="product-description" rows="4" placeholder="詳細說明產品特性、香調、使用方式…"></textarea>
       </div>
 
-      <!-- 產品描述圖片(顯示於文字說明區塊，可放產品情境圖、成分說明圖等) -->
       <div class="form-group" style="margin-bottom:16px">
         <label>產品描述圖片</label>
         <div class="hint" style="margin-bottom:8px">會依上傳順序顯示在產品描述文字下方，適合放情境圖等說明用圖片</div>
@@ -834,14 +811,12 @@
         <div class="image-preview-grid" id="product-desc-image-previews"></div>
       </div>
 
-      <!-- 成分總覽 -->
       <div class="form-group" style="margin-bottom:16px">
         <label>成分總覽</label>
         <div class="hint" style="margin-bottom:8px">每行一個成分，格式：成分名稱,百分比　例如：沉香醇,42</div>
         <textarea id="product-composition" rows="5" placeholder="沉香醇,42&#10;乙酸沉香酯,28&#10;樟腦,8"></textarea>
       </div>
 
-      <!-- 產品額外資訊 -->
       <div class="form-grid form-grid-2" style="margin-bottom:16px">
         <div class="form-group">
           <label>科屬</label>
@@ -869,26 +844,22 @@
         </div>
       </div>
 
-      <!-- 保存方式（每行一條） -->
       <div class="form-group" style="margin-bottom:16px">
         <label>保存方式</label>
         <div class="hint" style="margin-bottom:8px">每行一條，Enter 換行</div>
         <textarea id="product-storage" rows="3" placeholder="避光保存，存放於陰涼乾燥處&#10;開封後建議於 12 個月內使用&#10;避免高溫與潮濕環境"></textarea>
       </div>
 
-      <!-- 使用建議 -->
       <div class="form-group" style="margin-bottom:16px">
         <label>使用建議</label>
         <textarea id="product-usage" rows="3" placeholder="稀釋至 1–3% 後塗抹肌膚&#10;可搭配擴香儀進行空間擴香&#10;與基底油調和後使用效果更佳"></textarea>
       </div>
 
-      <!-- 注意事項 -->
       <div class="form-group" style="margin-bottom:16px">
         <label>注意事項</label>
         <textarea id="product-caution" rows="3" placeholder="孕婦、嬰幼兒請在專業人士指導下使用&#10;避免接觸眼睛及黏膜&#10;如有過敏反應請立即停用並就醫"></textarea>
       </div>
 
-      <!-- 文件下載連結 -->
       <div class="form-grid form-grid-3" style="margin-bottom:16px">
         <div class="form-group">
           <label>COA 檢驗報告網址</label>
@@ -904,7 +875,6 @@
         </div>
       </div>
 
-      <!-- 圖片上傳 -->
       <div class="form-group">
         <label>產品圖片</label>
         <div class="image-upload-zone" id="product-image-upload">
@@ -924,7 +894,6 @@
 </div>
 
 
-<!-- ════════ Modal：新增/編輯文章 ════════ -->
 <div id="article-modal" class="modal-overlay">
   <div class="modal" style="max-width:800px">
     <div class="modal-header">
@@ -1020,7 +989,6 @@
 </div>
 
 
-<!-- ════════ Modal：發送電子報 ════════ -->
 <div id="newsletter-modal" class="modal-overlay">
   <div class="modal" style="max-width:580px">
     <div class="modal-header">
@@ -1050,7 +1018,6 @@
 </div>
 
 
-<!-- ════════ Modal：訂單詳細 ════════ -->
 <div id="order-detail-modal" class="modal-overlay">
   <div class="modal" style="max-width:580px">
     <div class="modal-header">
@@ -1100,6 +1067,10 @@
       <div class="order-detail-section">
         <h4>商品清單</h4>
         <div class="order-items-list" id="order-detail-items"></div>
+        <div class="order-total-row" id="order-detail-shipping-row" style="display:none">
+          <span class="order-total-label">運費</span>
+          <span class="order-total-value" id="order-detail-shipping"></span>
+        </div>
         <div class="order-total-row">
           <span class="order-total-label">訂單總計</span>
           <span class="order-total-value" id="order-detail-total"></span>
@@ -1113,7 +1084,6 @@
 </div>
 
 
-<!-- ════════ Modal：刪除確認 ════════ -->
 <div id="confirm-modal" class="modal-overlay confirm-modal">
   <div class="modal">
     <div class="modal-header">

@@ -1,7 +1,3 @@
-/**
- * Arochemy — index.js（重設計版）
- * 首頁動態化：精選產品、最新文章、設定讀取
- */
 
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, getDoc, collection, getDocs }
@@ -30,7 +26,6 @@ function toDate(ts) {
 
 const CAT = { single:'單方精油', compound:'複方精油', spray:'噴霧', massage:'按摩油', 'eye-mask':'眼罩', diffuser:'擴香瓶' };
 
-/* ══ 初始化 ════════════════════════════════════════════════ */
 async function init() {
   await Promise.all([
     loadSettings(),
@@ -41,7 +36,6 @@ async function init() {
   initSocialLinks();
 }
 
-/* ══ 讀取設定（Hero 文字、社群連結）══════════════════════ */
 async function loadSettings() {
   try {
     const [homeSnap, siteSnap] = await Promise.all([
@@ -52,11 +46,9 @@ async function loadSettings() {
     const home = homeSnap.exists() ? homeSnap.data() : {};
     const site = siteSnap.exists() ? siteSnap.data() : {};
 
-    // Hero 文字
     if (home.heroTitle)    setText('heroTitle',     home.heroTitle);
     if (home.heroSubtitle) setText('heroSubtitle',  home.heroSubtitle);
 
-    // Hero 媒體
     if (home.heroMedia?.url) {
       const media = document.getElementById('heroMedia');
       if (media) {
@@ -68,11 +60,9 @@ async function loadSettings() {
       }
     }
 
-    // 精選系列文字
     if (home.brandTitle)    setText('featuredTitle', home.brandTitle);
     if (home.featuredDesc)  setText('featuredDesc',  home.featuredDesc);
 
-    // 品牌故事
     if (home.brandTitle) setText('brandTitle', home.brandTitle);
     if (home.brandBody)  setText('brandBody',  home.brandBody);
 
@@ -81,12 +71,10 @@ async function loadSettings() {
   }
 }
 
-/* ══ 精選產品（最多 5 個）══════════════════════════════════ */
 async function loadFeaturedProducts() {
   const track = document.getElementById('featuredGrid');
   if (!track) return;
 
-  // skeleton
   track.innerHTML = [1,2,3,4,5].map(() => `
     <div class="hp-prod-card" style="opacity:0.4;animation:pulse 1.4s infinite">
       <div class="hp-prod-card-img"></div>
@@ -99,7 +87,6 @@ async function loadFeaturedProducts() {
   try {
     let products = [];
 
-    // 嘗試讀後台設定的 featuredProductIds
     const homeSnap = await getDoc(doc(db, 'settings', 'homepage'));
     const featuredIds = homeSnap.exists() ? (homeSnap.data().featuredProductIds || []) : [];
 
@@ -112,7 +99,6 @@ async function loadFeaturedProducts() {
         .map(s => ({ id: s.id, ...s.data() }));
     }
 
-    // fallback：讀全部 active，優先 featured:true
     if (!products.length) {
       const snap = await getDocs(collection(db, 'products'));
       const all = [];
@@ -153,7 +139,6 @@ async function loadFeaturedProducts() {
   }
 }
 
-/* ══ 精選產品輪播 ══════════════════════════════════════════ */
 function initFeaturedSlider() {
   const section = document.getElementById('featured');
   const track   = document.getElementById('featuredGrid');
@@ -162,14 +147,12 @@ function initFeaturedSlider() {
   const nextBtn = document.getElementById('featuredNext');
   if (!track || !section) return;
 
-  // .hp-cards-track 本身的 padding(32px * 2)+ .hp-cards-viewport 兩側留給箭頭的安全距離(60px * 2)
   const TRACK_PAD = 64 + 120;
 
   let collapsed = false;
   let offset    = 0;
-  let leftW     = 320; // 左側文字欄「展開時」的寬度快取
+  let leftW     = 320;
 
-  // 只有在「未收合」的當下量到的寬度才準確，收合中或收合後量到的都是過渡值
   function measureLeftWidth() {
     if (left && !left.classList.contains('collapsed') && left.offsetWidth > 0) {
       leftW = left.offsetWidth;
@@ -180,11 +163,9 @@ function initFeaturedSlider() {
   function getCardW() {
     const card = track.querySelector('.hp-prod-card');
     if (!card) return 220;
-    return card.offsetWidth + 20; // card width + gap
+    return card.offsetWidth + 20;
   }
 
-  // 不去讀取當下的即時寬度（收合有 CSS transition，點擊當下讀到的還是舊寬度，
-  // 導致要點兩次才會抓到正確結果），改成直接用「目標狀態」數學算出收合後會有多寬
   function getMaxOffset(willCollapse) {
     const cards  = track.querySelectorAll('.hp-prod-card');
     const cardW  = getCardW();
@@ -200,7 +181,6 @@ function initFeaturedSlider() {
     if (left)    left.classList.toggle('collapsed', collapsed);
     if (prevBtn) prevBtn.classList.toggle('visible', collapsed);
 
-    // 收合後如果全部卡片一次就放得下（不需要再滑），改成置中排列
     const maxOffset = getMaxOffset(collapsed);
     track.classList.toggle('fit-all', collapsed && maxOffset === 0);
 
@@ -222,7 +202,6 @@ function initFeaturedSlider() {
     if (collapsed && offset > 0) {
       offset -= 1;
     } else if (collapsed) {
-      // 已經滑到最前面了，再按一次才展開文字欄
       collapsed = false;
       offset = 0;
     }
@@ -232,7 +211,6 @@ function initFeaturedSlider() {
   prevBtn?.addEventListener('click', prev);
   nextBtn?.addEventListener('click', next);
 
-  // 觸控
   let startX = 0;
   track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
   track.addEventListener('touchend', e => {
@@ -240,7 +218,6 @@ function initFeaturedSlider() {
     if (Math.abs(diff) > 50) (diff > 0 ? next() : prev());
   }, { passive: true });
 
-  // 拖曳
   let isDragging = false, dragStartX = 0;
   track.addEventListener('mousedown', e => {
     isDragging = true; dragStartX = e.clientX;
@@ -255,13 +232,12 @@ function initFeaturedSlider() {
   });
 
   window.addEventListener('resize', () => {
-    if (!collapsed) measureLeftWidth(); // 只有展開狀態下量到的才準
+    if (!collapsed) measureLeftWidth();
     if (collapsed) offset = Math.min(offset, getMaxOffset(true));
     render();
   });
 }
 
-/* ══ 最新文章 ══════════════════════════════════════════════ */
 async function loadLatestArticles() {
   const grid = document.getElementById('latestArticles');
   if (!grid) return;
@@ -292,14 +268,11 @@ async function loadLatestArticles() {
   }
 }
 
-/* ══ 社群連結（已在 loadSettings 處理，這裡備用）══════════ */
 function initSocialLinks() {}
 
-/* ── 工具 ── */
 function setText(id, text) {
   const el = document.getElementById(id);
   if (el) el.textContent = text;
 }
 
-/* ── 啟動 ── */
 init();

@@ -1,9 +1,4 @@
-/* ===================================
-   Arochemy Admin Panel — admin.js v3
-   修正：Firestore 索引問題、collection 不存在時的 graceful handling
-   =================================== */
 
-// ── Firebase 初始化 ──────────────────────────────────────────
 const firebaseConfig = {
   apiKey: "AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI",
   authDomain: "trying-89dc6.firebaseapp.com",
@@ -14,14 +9,11 @@ const firebaseConfig = {
   measurementId: "G-KHR4PVKJCK"
 };
 
-// ── 後台使用獨立的 Firebase app 實例（名稱 "admin-app"）────────
-// 這樣後台和前台的登入 session 完全分開，互不干擾
 const adminApp = firebase.initializeApp(firebaseConfig, 'admin-app');
 const auth     = adminApp.auth();
 const db       = adminApp.firestore();
 const storage  = adminApp.storage();
 
-// ── 全域狀態 ──────────────────────────────────────────────────
 let currentUser        = null;
 let editingProductId   = null;
 let editingArticleId   = null;
@@ -30,13 +22,11 @@ let productDescImages  = [];
 let coverImageFile     = null;
 let allOrders          = [];
 let currentOrderFilter = 'all';
-let currentEditingOrderId = null; // 訂單詳細資料Modal目前正在編輯的訂單ID
+let currentEditingOrderId = null;
 
-// ── DOM 工具 ──────────────────────────────────────────────────
 const $  = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
-// ── 安全取得 collection（不存在時回傳空陣列，不報錯）───────────
 async function safeGet(ref) {
   try {
     const snap = await ref.get();
@@ -44,7 +34,6 @@ async function safeGet(ref) {
     snap.forEach(d => items.push({ id: d.id, ...d.data() }));
     return items;
   } catch (e) {
-    // Firestore collection 不存在或權限問題，回傳空陣列
     console.warn('safeGet warning:', e.message);
     return [];
   }
@@ -60,19 +49,10 @@ async function safeGetDoc(ref) {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   認證（含管理員角色驗證）
-════════════════════════════════════════════════════════════ */
 
-// 管理員驗證：
-// 1. 先確認 admins collection 是否有任何文件
-// 2. 若 admins collection 是空的（尚未設定），放行所有登入者進後台
-// 3. 若 admins collection 已有資料，則嚴格驗證 uid
-// 管理員 Email 白名單
 const ADMIN_EMAILS = ['nicoliu930226@gmail.com', 'info@arochemy.com'];
 
 function checkIsAdmin(user) {
-  // 直接傳入 user 物件比對 email，最簡單最可靠
   if (!user || !user.email) return false;
   return ADMIN_EMAILS.includes(user.email.toLowerCase().trim());
 }
@@ -87,7 +67,6 @@ function initAuth() {
 
   auth.onAuthStateChanged(user => {
     if (user) {
-      // 同步比對 email，不需要 await
       if (!checkIsAdmin(user)) {
         auth.signOut();
         loginErr.textContent = '此帳號沒有後台管理權限。';
@@ -95,7 +74,6 @@ function initAuth() {
         appLayout.style.display   = 'none';
         return;
       }
-      // 通過驗證 → 進入後台
       currentUser = user;
       loginScreen.style.display = 'none';
       appLayout.style.display   = 'flex';
@@ -121,7 +99,6 @@ function initAuth() {
     loginBtn.textContent = '驗證中…';
     try {
       await auth.signInWithEmailAndPassword(email, pass);
-      // onAuthStateChanged 接手後續管理員驗證
     } catch (err) {
       const msgs = {
         'auth/user-not-found':    '找不到此帳號',
@@ -143,9 +120,6 @@ function initAuth() {
   });
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   導航
-════════════════════════════════════════════════════════════ */
 function initNav() {
   const navItems    = $$('.nav-item');
   const pages       = $$('.page');
@@ -202,14 +176,9 @@ function initNav() {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   儀表板
-════════════════════════════════════════════════════════════ */
 async function initDashboard() {
-  // 未讀聯絡訊息數量：一登入後台就要看得到 badge，不用特地點進聯絡訊息頁才更新
   loadMessages().catch(e => console.warn('[Dashboard] 載入聯絡訊息未讀數量失敗：', e.message));
 
-  // 各 collection 可能尚未建立，用 safeGet 避免報錯
   const [products, articles, orders, members] = await Promise.all([
     safeGet(db.collection('products')),
     safeGet(db.collection('articles')),
@@ -239,7 +208,6 @@ async function initDashboard() {
   setText('#stat-pending',  pendingCount);
   setText('#stat-done',     completedCount);
 
-  // 最新訂單（最近 5 筆，不用 orderBy 避免索引問題）
   const sorted = [...orders].sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
   const tbody  = $('#recent-orders-list');
   if (tbody) {
@@ -263,17 +231,12 @@ async function initDashboard() {
   await renderSalesRank('#dashboard-sales-rank', 5, orders);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   首頁設定
-════════════════════════════════════════════════════════════ */
 async function loadHomepageSettings() {
-  // 用 safeGetDoc，settings doc 不存在時回傳 {}
   const data = await safeGetDoc(db.collection('settings').doc('homepage'));
 
   setValue('#hero-title',    data.heroTitle    || '');
   setValue('#hero-subtitle', data.heroSubtitle || '');
 
-  // 讀取 Hero 媒體預覽
   if (data.heroMedia?.url) {
     setValue('#hero-media-url', data.heroMedia.url);
     setValue('#hero-media-type', data.heroMedia.type || 'image');
@@ -286,7 +249,6 @@ async function loadHomepageSettings() {
     }
   }
 
-  // 綁定媒體本機上傳預覽
   document.getElementById('hero-media-input')?.addEventListener('change', e => {
     const file = e.target.files[0]; if (!file) return;
     const label = document.getElementById('hero-media-label');
@@ -326,7 +288,6 @@ function initHomepageSettings() {
     const mediaFile = document.getElementById('hero-media-input')?.files[0];
     const mediaType = getValue('#hero-media-type') || 'image';
 
-    // 若有選擇本機檔案，先上傳
     if (mediaFile) {
       btn.textContent = '上傳媒體中…';
       const fd = new FormData();
@@ -374,7 +335,6 @@ function renderFaqEditor(faqs) {
   faqs.forEach(f => addFaqItem(f.q, f.a, f.cat));
 }
 
-/* FAQ 分類：代碼要跟前台 js/faq.js 的 FAQ_CATS 一致 */
 const FAQ_CATS = {
   products: '關於產品',
   care:     '使用與保存',
@@ -416,9 +376,6 @@ function collectFaqs() {
   })).filter(f => f.q);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   產品管理
-════════════════════════════════════════════════════════════ */
 const SPEC_SIZES = ['5ml', '10ml', '30ml', '50ml', '100ml'];
 
 async function loadProducts(filter = '', catFilter = '') {
@@ -426,7 +383,6 @@ async function loadProducts(filter = '', catFilter = '') {
   if (!tbody) return;
   tbody.innerHTML = skeletonRow(7);
 
-  // 不用 orderBy，抓回來後在前端排序，避免索引建立需求
   const products = await safeGet(db.collection('products'));
   products.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
 
@@ -543,7 +499,6 @@ async function openProductModal(id = null) {
   $('#product-featured').checked = false;
   $('#product-modal-title').textContent = id ? '編輯產品' : '新增產品';
 
-  // 新增模式才套用預設值
   if (!id) {
     setValue('#product-storage',
       '放置於陰涼處，避免陽光直射。\n保存於孩童、寵物不可及之處。'
@@ -574,11 +529,9 @@ async function openProductModal(id = null) {
       setValue('#product-doc-coa',     data.docCOA      || '');
       setValue('#product-doc-sds',     data.docSDS      || '');
       setValue('#product-doc-eu',      data.docEU       || '');
-      // 成分：陣列轉成每行一條 "名稱,百分比" 格式
       setValue('#product-composition',
         (data.composition || []).map(c => c.name + ',' + c.pct).join('\n')
       );
-      // 清單欄位：陣列轉換行文字
       setValue('#product-storage', (data.storage || []).join('\n'));
       setValue('#product-usage',   (data.usage   || []).join('\n'));
       setValue('#product-caution', (data.caution || []).join('\n'));
@@ -649,7 +602,6 @@ function renderProductImagePreviews() {
   productImages.forEach((img, i) => {
     const div = document.createElement('div');
     div.className = 'image-preview-item';
-    // 支援 dataUrl（新上傳預覽）或 url 字串（已儲存的圖片）
     const src = img.dataUrl || img.url || (typeof img === 'string' ? img : '');
     div.innerHTML = `
       <img src="${escHtml(src)}" alt="圖片 ${i+1}"
@@ -709,13 +661,11 @@ async function saveProduct() {
       };
     });
 
-    // 計算「所有啟用規格」的總庫存
     const totalStock = SPEC_SIZES.reduce((s, sz) => {
       const sp = specs[sz];
       if (!sp || !sp.enabled) return s;
       return s + (Number(sp.stock) || 0);
     }, 0);
-    // 計算「所有規格（不論啟用）」的總庫存，判斷是否需要自動下架
     const allStock = SPEC_SIZES.reduce((s, sz) => s + (Number(specs[sz]?.stock) || 0), 0);
     let status = getValue('#product-status');
     if (allStock === 0 && status === 'active') {
@@ -723,7 +673,6 @@ async function saveProduct() {
       toast('所有規格庫存為 0，已自動下架', 'info');
     }
 
-    // 解析成分（每行 "名稱,百分比"）
     const compositionRaw = getValue('#product-composition');
     const composition = compositionRaw
       .split('\n')
@@ -735,7 +684,6 @@ async function saveProduct() {
       })
       .filter(c => c.name);
 
-    // 解析清單欄位（每行一條）
     const parseList = sel => getValue(sel).split('\n').map(l => l.trim()).filter(Boolean);
 
     const data = {
@@ -785,9 +733,6 @@ async function saveProduct() {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   文章管理
-════════════════════════════════════════════════════════════ */
 async function loadArticles(filter = '') {
   const tbody = $('#articles-table-body');
   if (!tbody) return;
@@ -836,16 +781,13 @@ function initArticlesPage() {
   $('#article-search')?.addEventListener('input', e => loadArticles(e.target.value));
   $('#save-article-btn')?.addEventListener('click', saveArticle);
 
-  // 封面圖片上傳（用 label for 觸發，不需要 click()）
   document.getElementById('article-cover-input')?.addEventListener('change', e => {
     const file = e.target.files[0]; if (!file) return;
     coverImageFile = file;
 
-    // 更新 label 顯示檔名
     const labelSpan = document.getElementById('article-cover-label');
     if (labelSpan) labelSpan.textContent = file.name;
 
-    // 顯示預覽
     const reader = new FileReader();
     reader.onload = ev => {
       const preview = document.getElementById('cover-preview');
@@ -854,7 +796,6 @@ function initArticlesPage() {
     reader.readAsDataURL(file);
   });
 
-  // 封面網址即時預覽
   const coverUrlInput = document.getElementById('article-cover-url');
   coverUrlInput?.addEventListener('input', () => {
     const url     = coverUrlInput.value.trim();
@@ -963,7 +904,6 @@ async function saveArticle() {
   btn.disabled = true; btn.textContent = '儲存中…';
 
   try {
-    // ── 步驟1：封面圖片處理（優先上傳檔案，其次讀網址欄位）─
     let coverUrl = (document.getElementById('article-cover-url')?.value || '').trim();
 
     if (coverImageFile) {
@@ -983,7 +923,6 @@ async function saveArticle() {
       coverUrl = ex.coverImage || '';
     }
 
-    // ── 步驟2：組合文章資料 ───────────────────────────
     btn.textContent = '寫入資料庫…';
     const editor = $('#article-editor-content');
     const title  = getValue('#article-title');
@@ -1004,7 +943,6 @@ async function saveArticle() {
       updatedAt:  firebase.firestore.FieldValue.serverTimestamp(),
     };
 
-    // ── 步驟4：寫入 Firestore ─────────────────────────
     btn.textContent = '寫入資料庫…';
     console.log('[saveArticle] 開始寫入 Firestore，data:', data);
     console.log('[saveArticle] 當前登入用戶：', auth.currentUser?.email);
@@ -1041,9 +979,6 @@ async function saveArticle() {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   電子報
-════════════════════════════════════════════════════════════ */
 async function openNewsletterModal(articleId, articleTitle) {
   let article = { title: articleTitle, excerpt: '', coverImage: '' };
   try {
@@ -1051,7 +986,6 @@ async function openNewsletterModal(articleId, articleTitle) {
     if (d.title) article = { id: articleId, ...d };
   } catch(e) {}
 
-  // 訂閱者：不用 where，在前端篩選避免索引問題
   const members     = await safeGet(db.collection('members'));
   const subscribers = members.filter(m => m.subscribed === true);
 
@@ -1096,13 +1030,7 @@ async function openNewsletterModal(articleId, articleTitle) {
   };
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   訂單管理
-════════════════════════════════════════════════════════════ */
 
-/* 統一由這支函式呼叫後端 PATCH /api/orders/:id/status，
-   不再讓任何地方直接寫 Firestore 的 orders.status —— 這樣後端
-   requireAdmin 驗證、shipped 通知信、避免重複寄信的邏輯才會確實生效。 */
 async function updateOrderStatus(orderId, { status, trackingNumber }) {
   const user = auth.currentUser;
   if (!user) throw new Error('登入狀態已失效，請重新登入');
@@ -1132,11 +1060,9 @@ async function loadOrders(statusFilter = null) {
   if (statusFilter !== null) currentOrderFilter = statusFilter;
   tbody.innerHTML = skeletonRow(7);
 
-  // 全部抓回，前端排序篩選（避免 Firestore 索引問題）
   allOrders = await safeGet(db.collection('orders'));
   allOrders.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
 
-  // 月份篩選
   const selMonth = $('#order-month-filter')?.value;
   let filtered = allOrders;
   if (selMonth) {
@@ -1147,12 +1073,10 @@ async function loadOrders(statusFilter = null) {
     });
   }
 
-  // 狀態篩選
   if (currentOrderFilter && currentOrderFilter !== 'all') {
     filtered = filtered.filter(o => o.status === currentOrderFilter);
   }
 
-  // 統計（以全部訂單為基準）
   const now   = new Date();
   const month = now.getMonth(), year = now.getFullYear();
   let monthRevenue = 0, pendingCnt = 0, doneCnt = 0;
@@ -1212,7 +1136,7 @@ async function loadOrders(statusFilter = null) {
           loadOrders();
         } catch (e) {
           toast('更新失敗：' + e.message, 'error');
-          loadOrders(); // 失敗時重新讀取實際資料，不讓下拉選單停在使用者選擇但實際沒生效的狀態
+          loadOrders();
         }
       });
     });
@@ -1261,9 +1185,8 @@ function initOrdersPage() {
       await updateOrderStatus(currentEditingOrderId, { status, trackingNumber });
       toast('訂單狀態已更新', 'success');
       closeModal('order-detail-modal');
-      loadOrders(); // 更新成功後重新載入訂單列表，反映最新實際資料
+      loadOrders();
     } catch (e) {
-      // 更新失敗：不假裝成功，顯示錯誤，且不關閉 Modal，讓管理員可以重試
       errorEl.textContent = '更新失敗：' + e.message;
       errorEl.style.display = '';
     } finally {
@@ -1282,7 +1205,6 @@ function openOrderDetail(o) {
   setText('#order-detail-phone', o.customerPhone  || '—');
   setText('#order-detail-ship',  o.shippingMethod || '—');
   setText('#order-detail-addr',  o.address || o.storeInfo || '—');
-  // 已付款但庫存不足的訂單：在備註欄最前面標示需人工處理的品項
   const shortageNote = o.stockShortage
     ? '⚠ 已付款但庫存不足，需人工處理：' + (o.stockShortageItems || [])
         .map(i => `${i.name || ''}（${i.spec || ''}）訂購 ${i.requested}／付款當下庫存 ${i.available}`).join('；') + '\n'
@@ -1290,7 +1212,6 @@ function openOrderDetail(o) {
   setText('#order-detail-note',  shortageNote + (o.note || '（無備註）'));
   setText('#order-detail-status', statusLabel(o.status));
 
-  // 狀態編輯區塊：帶入目前狀態跟既有物流單號(如果有)
   currentEditingOrderId = o.id;
   setValue('#order-detail-status-select', o.status || 'pending');
   setValue('#order-detail-tracking-input', o.trackingNumber || '');
@@ -1316,13 +1237,18 @@ function openOrderDetail(o) {
     itemsEl.appendChild(div);
   });
 
+  const shippingRow = $('#order-detail-shipping-row');
+  if (shippingRow) {
+    const hasShipping = o.shippingFee !== undefined && o.shippingFee !== null;
+    shippingRow.style.display = hasShipping ? '' : 'none';
+    if (hasShipping) {
+      setText('#order-detail-shipping', Number(o.shippingFee) > 0 ? 'NT$ ' + Number(o.shippingFee).toLocaleString() : '免運');
+    }
+  }
   setText('#order-detail-total', 'NT$ ' + Number(o.total || total).toLocaleString());
   openModal('order-detail-modal');
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   商品銷量排行（共用，傳入 orders 陣列避免重複請求）
-════════════════════════════════════════════════════════════ */
 async function renderSalesRank(containerSel, limit = 5, ordersData = null) {
   const container = $(containerSel);
   if (!container) return;
@@ -1367,15 +1293,11 @@ async function renderSalesRank(containerSel, limit = 5, ordersData = null) {
   });
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   會員管理
-════════════════════════════════════════════════════════════ */
 async function loadMembers(filter = '') {
   const tbody = $('#members-table-body');
   if (!tbody) return;
   tbody.innerHTML = skeletonRow(8);
 
-  // 直接 get 全部，前端篩選
   const members = await safeGet(db.collection('members'));
   members.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
 
@@ -1444,8 +1366,6 @@ async function saveMember() {
   saveBtn.textContent = '儲存中…';
 
   try {
-    // 生日在後台是唯一可以修改它的地方，直接用 <input type="date"> 原生的
-    // YYYY-MM-DD 字串，不轉換成 Date 物件，避免時區造成日期前後偏移
     await db.collection('members').doc(editingMemberId).update({
       name:     getValue('#member-name'),
       phone:    getValue('#member-phone'),
@@ -1489,9 +1409,6 @@ function initMembersPage() {
   });
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   折價券管理
-════════════════════════════════════════════════════════════ */
 let editingCouponId = null;
 
 async function loadCoupons(filter = '') {
@@ -1562,7 +1479,6 @@ async function openCouponModal(id = null) {
   $('#coupon-modal-title').textContent = id ? '編輯折價券' : '新增折價券';
   $('#coupon-error').style.display = 'none';
 
-  // 重置表單
   setValue('#coupon-code', '');
   setValue('#coupon-description', '');
   setValue('#coupon-type', 'fixed');
@@ -1597,7 +1513,6 @@ async function openCouponModal(id = null) {
     setValue('#coupon-usage-limit', d.usageLimit ?? '');
     $('#coupon-enabled').checked = d.enabled !== false;
 
-    // 適用對象：舊券沒有 assignedCustomerId(undefined/null/空字串)一律視為一般優惠券
     if (d.assignedCustomerId) {
       setValue('#coupon-audience', 'member');
       $('#coupon-assigned-member-field').style.display = '';
@@ -1609,7 +1524,6 @@ async function openCouponModal(id = null) {
     }
 
     if (d.endDate) {
-      // 編輯時一律用「指定結束日期」呈現既有的到期日，方便直接調整
       setValue('#coupon-expiry-mode', 'date');
       const endDate = toDate(d.endDate);
       setValue('#coupon-expiry-date', endDate.toISOString().slice(0, 10));
@@ -1622,8 +1536,6 @@ async function openCouponModal(id = null) {
   openModal('coupon-modal');
 }
 
-/* ── 折價券「指定會員」選擇器：搜尋 + 選擇，沿用既有 members 資料，
-   不另外建立新的會員管理系統 ── */
 let cachedMembersForCoupon = null;
 
 async function loadMembersForCouponPicker() {
@@ -1631,7 +1543,7 @@ async function loadMembersForCouponPicker() {
   const members = await safeGet(db.collection('members'));
   cachedMembersForCoupon = members.map(m => ({
     uid: m.id, name: m.name || '', email: m.email || '',
-  })).filter(m => m.email); // 沒有 email 的資料異常，不列入選擇清單
+  })).filter(m => m.email);
   cachedMembersForCoupon.sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email, 'zh-Hant'));
   renderCouponMemberOptions(cachedMembersForCoupon);
 }
@@ -1691,7 +1603,6 @@ async function saveCoupon() {
   saveBtn.textContent = '儲存中…';
 
   try {
-    // 檢查優惠碼是否重複(排除自己)
     const dup = await db.collection('coupons').where('code', '==', code).get();
     const isDuplicate = dup.docs.some(d => d.id !== editingCouponId);
     if (isDuplicate) {
@@ -1704,7 +1615,7 @@ async function saveCoupon() {
       code, type, value, minSpend,
       newUserOnly, newUserWindowDays,
       usageLimit, enabled, endDate,
-      assignedCustomerId, // 'member' 時是選到的 uid；'all' 時明確存 null，確保改回一般券時能正確清除
+      assignedCustomerId,
       description: getValue('#coupon-description'),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     };
@@ -1762,9 +1673,6 @@ function initCouponsPage() {
   });
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   聯絡訊息管理
-════════════════════════════════════════════════════════════ */
 let editingMessageId = null;
 let editingMessageStatus = null;
 
@@ -1772,10 +1680,8 @@ async function loadMessages() {
   const tbody = $('#messages-table-body');
 
   const messages = await safeGet(db.collection('b2b_inquiries'));
-  // createdAt 由新到舊；toDate() 對缺少 createdAt 的舊資料已經有防呆，不會報錯
   messages.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
 
-  // 更新側邊選單未讀數量 badge，就算目前不在這一頁也會更新
   const unreadCount = messages.filter(m => m.status === 'unread').length;
   const badge = $('#messages-unread-badge');
   if (badge) {
@@ -1787,7 +1693,7 @@ async function loadMessages() {
     }
   }
 
-  if (!tbody) return; // 目前不在聯絡訊息頁面時，只更新 badge，不用畫表格
+  if (!tbody) return;
 
   tbody.innerHTML = '';
   if (!messages.length) {
@@ -1796,9 +1702,9 @@ async function loadMessages() {
   }
 
   messages.forEach(m => {
-    const isUnread = m.status !== 'read'; // 沒有 status 欄位的舊資料也當作未讀處理
+    const isUnread = m.status !== 'read';
     const tr = document.createElement('tr');
-    if (isUnread) tr.style.fontWeight = '700'; // 未讀：用粗體做明顯但不誇張的區別
+    if (isUnread) tr.style.fontWeight = '700';
     tr.style.cursor = 'pointer';
     tr.innerHTML = `
       <td><span class="badge badge-${isUnread ? 'success' : 'hidden'}">${isUnread ? '● 未讀' : '已讀'}</span></td>
@@ -1886,9 +1792,6 @@ function initMessagesPage() {
   $('#msg-delete-btn')?.addEventListener('click', confirmDeleteMessage);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   網站設定
-════════════════════════════════════════════════════════════ */
 async function loadSiteSettings() {
   const d = await safeGetDoc(db.collection('settings').doc('site'));
   setValue('#site-name',        d.siteName        || '');
@@ -1922,9 +1825,6 @@ function initSettingsPage() {
   });
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   Modal 系統
-════════════════════════════════════════════════════════════ */
 function openModal(id)  { document.getElementById(id)?.classList.add('open');    document.body.style.overflow = 'hidden'; }
 function closeModal(id) { document.getElementById(id)?.classList.remove('open'); document.body.style.overflow = ''; }
 
@@ -1942,9 +1842,6 @@ function initModals() {
   });
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   刪除確認
-════════════════════════════════════════════════════════════ */
 function confirmDelete(type, id, name) {
   const labels = { product: '產品', article: '文章', coupon: '折價券' };
   const collections = { product: 'products', article: 'articles', coupon: 'coupons' };
@@ -1970,9 +1867,6 @@ function confirmDelete(type, id, name) {
   openModal('confirm-modal');
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   Toast
-════════════════════════════════════════════════════════════ */
 function toast(msg, type = 'info') {
   const icons     = { success: '✓', error: '✕', info: 'ℹ' };
   const container = $('#toast-container');
@@ -1986,9 +1880,6 @@ function toast(msg, type = 'info') {
   }, 3500);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   工具函式
-════════════════════════════════════════════════════════════ */
 const getValue   = sel => document.querySelector(sel)?.value || '';
 const setValue   = (sel, val)  => { const el = document.querySelector(sel); if (el) el.value = val; };
 const setText    = (sel, val)  => { const el = document.querySelector(sel); if (el) el.textContent = val; };
@@ -1996,7 +1887,6 @@ const escHtml    = str => String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;')
 const catLabel   = v => ({ single:'單方精油', compound:'複方精油', spray:'噴霧', massage:'按摩油', 'eye-mask':'眼罩', diffuser:'擴香瓶' }[v] || v || '—');
 const statusLabel= s => ({ pending:'待處理', paid:'已付款', shipped:'已出貨', done:'已完成', cancel:'已取消', refunded:'已退款' }[s] || '待處理');
 
-// Firestore Timestamp / Date / 字串 都能轉成 Date
 function toDate(ts) {
   if (!ts) return new Date(0);
   if (ts.toDate) return ts.toDate();
@@ -2013,11 +1903,7 @@ function skeletonRow(cols) {
   return `<tr><td colspan="${cols}"><div class="skeleton" style="height:14px;margin:8px 0"></div></td></tr>`;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   啟動
-════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
-  // EmailJS 初始化
 
 
   initAuth();
@@ -2032,7 +1918,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initMessagesPage();
   initSettingsPage();
 
-  // 插入連結
   $('#insert-link-btn')?.addEventListener('mousedown', e => {
     e.preventDefault();
     const url = prompt('請輸入連結網址：');

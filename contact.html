@@ -127,7 +127,6 @@
 
   <main>
 
-    <!-- ══ 1. 主視覺 ═══════════════════════════════════════ -->
     <section class="pg-hero">
       <div class="pg-hero-text">
         <p class="pg-eyebrow">CONTACT AROCHEMY</p>
@@ -140,7 +139,6 @@
       </div>
     </section>
 
-    <!-- ══ 2. 聯絡資訊 ═════════════════════════════════════ -->
     <section class="ct-info">
       <div class="pg-wrap">
         <p class="pg-mono pg-kicker">01 / CONTACT INFORMATION</p>
@@ -167,7 +165,6 @@
       </div>
     </section>
 
-    <!-- ══ 3. 聯絡表單 ═════════════════════════════════════ -->
     <section class="ct-form-sec" id="contact-form">
       <div class="pg-wrap ct-form-grid">
         <div class="ct-form-intro">
@@ -212,7 +209,6 @@
 <footer class="footer">
   <div class="container footer-inner">
 
-    <!-- 左側：品牌資訊 -->
     <div class="footer-info">
       <div class="footer-brand">
         <img src="./images/head-logo.png" alt="Arochemy Essential Oil" class="footer-logo">
@@ -240,7 +236,6 @@
       </div>
     </div>
 
-    <!-- 右側：連結群組 -->
     <div class="footer-link-groups">
       <div class="footer-link-col">
         <div class="footer-link-title">追蹤我們</div>
@@ -300,7 +295,6 @@
     const app = getApps().find(a=>a.name==='[DEFAULT]') || initializeApp(cfg);
     const db  = getFirestore(app);
 
-    // 聯絡表單送出
     document.getElementById('contactSubmitBtn')?.addEventListener('click', async () => {
       const btn = document.getElementById('contactSubmitBtn');
       const msg = document.getElementById('contactMsg');
@@ -326,7 +320,6 @@
       try {
         await addDoc(collection(db, 'b2b_inquiries'), {
           name, email, subject: subject || '（無主旨）', message,
-          // 電話是選填：沒填就不寫入這個欄位
           ...(phone ? { phone } : {}),
           createdAt: serverTimestamp(), status: 'unread'
         });

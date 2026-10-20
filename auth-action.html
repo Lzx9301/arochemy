@@ -6,9 +6,6 @@
   <title>帳號操作｜Arochemy</title>
   <link rel="icon" type="image/png" href="./images/logo.png" />
   <style>
-    /* ── 這份 <style> 刻意跟 login.html 的 .auth-* 系列樣式保持一致，
-       維持品牌識別統一。login.html 這次不能修改，所以無法共用同一份
-       <style>，只能在這裡複製一份對應的視覺規格。══════════════════ */
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -61,7 +58,6 @@
     .auth-back { display: inline-block; margin-top: 20px; color: #555; text-decoration: none; font-size: 13px; }
     .auth-back:hover { color: #111; }
 
-    /* ── 本頁專屬：結果狀態畫面（成功/錯誤/載入中）── */
     .auth-icon { font-size: 40px; text-align: center; margin-bottom: 16px; }
     .auth-result-title { font-size: 22px; margin: 0 0 10px; text-align: center; }
     .auth-result-text { color: #666; font-size: 14px; line-height: 1.8; text-align: center; margin: 0 0 8px; }
@@ -84,12 +80,10 @@
         <img class="auth-logo" src="./images/head-logo.png" alt="Arochemy">
       </a>
 
-      <!-- ══ 載入中：正在解析連結、驗證 oobCode ══ -->
       <div id="viewLoading" class="auth-view active">
         <p class="auth-loading">正在確認您的連結，請稍候…</p>
       </div>
 
-      <!-- ══ resetPassword：輸入新密碼 ══ -->
       <div id="viewResetForm" class="auth-view">
         <h1 class="auth-title">重設會員密碼</h1>
         <p class="auth-subtitle">請輸入您的新密碼，設定完成後即可使用新密碼登入 Arochemy 會員帳號。</p>
@@ -109,7 +103,6 @@
         <p id="resetFormMsg" class="auth-msg"></p>
       </div>
 
-      <!-- ══ resetPassword：成功 ══ -->
       <div id="viewResetSuccess" class="auth-view">
         <div class="auth-icon">✓</div>
         <h1 class="auth-result-title">密碼已成功更新</h1>
@@ -119,7 +112,6 @@
         </div>
       </div>
 
-      <!-- ══ verifyEmail：成功 ══ -->
       <div id="viewVerifySuccess" class="auth-view">
         <div class="auth-icon">✓</div>
         <h1 class="auth-result-title">Email 驗證完成</h1>
@@ -129,7 +121,6 @@
         </div>
       </div>
 
-      <!-- ══ 共用錯誤畫面（連結無效/過期、不支援的操作、未知錯誤）══ -->
       <div id="viewError" class="auth-view">
         <div class="auth-icon">⚠</div>
         <h1 class="auth-result-title" id="errorTitle">連結已失效</h1>

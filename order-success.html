@@ -10,7 +10,6 @@
 </head>
 <body>
 
-  <!-- Sticky Header -->
   <header class="header" id="top">
     <div class="container header-inner">
       <a class="brand" href="index.html" aria-label="回到首頁">
@@ -75,7 +74,6 @@
 
 
 
-  <!-- Mobile Drawer -->
   <div class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
     <div class="mobile-dropdown" role="dialog" aria-modal="true" aria-label="手機選單">
       <form class="header-search mobile-header-search" id="mobileSearchForm" role="search">
@@ -143,7 +141,6 @@
   <footer class="footer">
     <div class="container footer-inner">
 
-    <!-- 左側：品牌資訊 -->
     <div class="footer-info">
       <div class="footer-brand">
         <img src="./images/head-logo.png" alt="Arochemy Essential Oil" class="footer-logo">
@@ -171,7 +168,6 @@
       </div>
     </div>
 
-    <!-- 右側：連結群組 -->
     <div class="footer-link-groups">
       <div class="footer-link-col">
         <div class="footer-link-title">追蹤我們</div>
@@ -230,7 +226,6 @@
     const el      = document.getElementById('orderIdText');
     if (orderId && el) el.textContent = '訂單編號：#' + orderId.slice(-6).toUpperCase();
 
-    // 抵達這頁代表付款真的成功了，這時候才清空購物車
     localStorage.removeItem('arochemy_cart');
     window.updateCartBadge?.();
   </script>

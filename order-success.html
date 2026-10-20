@@ -124,15 +124,15 @@
 
   <main class="container" style="padding:60px 20px;max-width:640px;margin:0 auto">
     <div class="card" style="padding:48px 40px;text-align:center">
-      <div style="font-size:56px;margin-bottom:16px">✅</div>
-      <h1 style="font-size:28px;margin-bottom:8px">訂單已建立</h1>
-      <p class="muted" style="margin-bottom:8px">感謝您的訂購，我們已收到您的訂單資料。</p>
+      <div id="osIcon" style="font-size:56px;margin-bottom:16px">⏳</div>
+      <h1 id="osTitle" style="font-size:28px;margin-bottom:8px">付款確認中</h1>
+      <p id="osDesc" class="muted" style="margin-bottom:8px">正在確認付款結果，請稍候，請勿關閉或重新付款。</p>
       <p id="orderIdText" class="muted" style="font-size:13px;margin-bottom:32px"></p>
-      <p class="muted" style="font-size:13px;margin-bottom:32px;line-height:1.7">
+      <p id="osNote" class="muted" style="font-size:13px;margin-bottom:32px;line-height:1.7">
         我們將盡快處理您的訂單，<br>如有問題歡迎透過 Email 或 LINE 聯繫。
       </p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-        <a class="btn primary" href="products.html">繼續購物</a>
+        <a id="osPrimaryBtn" class="btn primary" href="products.html">繼續購物</a>
         <a class="btn" href="index.html">回到首頁</a>
       </div>
     </div>
@@ -221,13 +221,61 @@
   <script src="./main.js"></script>
   <script type="module" src="js/user.js"></script>
   <script>
-    const params  = new URLSearchParams(location.search);
-    const orderId = params.get('orderId');
-    const el      = document.getElementById('orderIdText');
-    if (orderId && el) el.textContent = '訂單編號：#' + orderId.slice(-6).toUpperCase();
+    (function () {
+      const STATUS_API   = 'https://arochemy-backend-production.up.railway.app/api/payment/status';
+      const POLL_MS      = 3000;
+      const MAX_ATTEMPTS = 20;
 
-    localStorage.removeItem('arochemy_cart');
-    window.updateCartBadge?.();
+      const params  = new URLSearchParams(location.search);
+      const rawId   = params.get('orderId') || '';
+      const orderId = /^[A-Za-z0-9]{1,64}$/.test(rawId) ? rawId : '';
+      const el      = document.getElementById('orderIdText');
+      if (orderId && el) el.textContent = '訂單編號：#' + orderId.slice(-6).toUpperCase();
+
+      const setText = (id, text) => { const n = document.getElementById(id); if (n) n.textContent = text; };
+      const setNote = (html) => { const n = document.getElementById('osNote'); if (n) n.innerHTML = html; };
+
+      function showPaid() {
+        setText('osIcon', '✅');
+        setText('osTitle', '訂單已建立');
+        setText('osDesc', '感謝您的訂購，我們已收到您的訂單資料。');
+        setNote('我們將盡快處理您的訂單，<br>如有問題歡迎透過 Email 或 LINE 聯繫。');
+        try { localStorage.removeItem('arochemy_cart'); } catch (e) {}
+        window.updateCartBadge?.();
+      }
+
+      function showFailed() {
+        setText('osIcon', '⚠️');
+        setText('osTitle', '付款未完成');
+        setText('osDesc', '這筆付款未成功，訂單尚未成立，購物車內容已為您保留。');
+        setNote('請回到購物車重新結帳，<br>如有問題歡迎透過 Email 或 LINE 聯繫。');
+        const btn = document.getElementById('osPrimaryBtn');
+        if (btn) { btn.href = 'cart.html'; btn.textContent = '回到購物車'; }
+      }
+
+      function showUnconfirmed() {
+        setText('osIcon', '⏳');
+        setText('osTitle', '付款結果確認中');
+        setText('osDesc', '我們尚未收到金流的付款確認，購物車內容已為您保留，請勿重複付款。');
+        setNote('請稍後至會員中心查看訂單，<br>或透過 Email、LINE 與我們聯繫確認。');
+      }
+
+      if (!orderId) { showUnconfirmed(); return; }
+
+      let attempts = 0;
+      async function check() {
+        attempts++;
+        try {
+          const res  = await fetch(STATUS_API + '?orderId=' + encodeURIComponent(orderId), { cache: 'no-store' });
+          const data = await res.json().catch(() => ({}));
+          if (data.status === 'paid')   return showPaid();
+          if (data.status === 'failed') return showFailed();
+        } catch (e) {}
+        if (attempts >= MAX_ATTEMPTS) return showUnconfirmed();
+        setTimeout(check, POLL_MS);
+      }
+      check();
+    })();
   </script>
   <script type="module" src="js/site-settings.js"></script>
 </body>

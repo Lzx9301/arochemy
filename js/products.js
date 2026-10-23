@@ -233,7 +233,7 @@ function productCard(p) {
                 type="button">
                 加入購物車
               </button>`
-            : `<span class="sold-out-tag">已售完</span>`}
+            : `<span class="sold-out-tag">缺貨</span>`}
         </div>
       </div>
     </div>

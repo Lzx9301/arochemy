@@ -178,9 +178,9 @@ function renderVariantPills(p) {
         data-price="${specs[s]?.price || 0}"
         data-stock="${specs[s]?.stock || 0}"
         type="button"
-        ${!inStock ? 'title="已售完"' : ''}
+        ${!inStock ? 'title="缺貨"' : ''}
       >
-        ${s}${!inStock ? ' <span class="pill-sold">售完</span>' : ''}
+        ${s}${!inStock ? ' <span class="pill-sold">缺貨</span>' : ''}
       </button>
     `;
   }).join('');

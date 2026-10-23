@@ -55,15 +55,51 @@ onAuthStateChanged(auth, user => {
   if (userEmailEl) userEmailEl.textContent = (user && user.emailVerified) ? user.email : '';
 });
 
+let stockState    = 'loading';
+let outOfStockKeys = new Set();
+let stockSeq       = 0;
+
+const cartKey = item => `${item.id}_${item.size}`;
+function hasOutOfStock() { return getCart().some(item => outOfStockKeys.has(cartKey(item))); }
+
+async function checkCartStock() {
+  const seq  = ++stockSeq;
+  const cart = getCart();
+  if (!cart.length) { stockState = 'success'; outOfStockKeys = new Set(); renderCart(); return; }
+  stockState = 'loading';
+  updateCheckoutBtn();
+  try {
+    const ids   = [...new Set(cart.map(item => item.id).filter(Boolean))];
+    const snaps = await Promise.all(ids.map(id => getDoc(doc(db, 'products', id))));
+    if (seq !== stockSeq) return;
+    const products = new Map(snaps.map(s => [s.id, s.exists() ? s.data() : null]));
+    const oos = new Set();
+    cart.forEach(item => {
+      const p = products.get(item.id);
+      if (!p) return;
+      const stock = Number(p.specs?.[item.size]?.stock) || 0;
+      if (stock <= 0) oos.add(cartKey(item));
+    });
+    outOfStockKeys = oos;
+    stockState = 'success';
+  } catch (e) {
+    if (seq !== stockSeq) return;
+    console.warn('[Cart] 讀取庫存失敗：', e.message);
+    outOfStockKeys = new Set();
+    stockState = 'error';
+  }
+  renderCart();
+}
+
 function updateCheckoutBtn() {
   if (!checkoutBtn) return;
-  if (!authReady) {
+  if (!authReady || stockState === 'loading') {
     checkoutBtn.disabled    = true;
     checkoutBtn.textContent = '載入中...';
     return;
   }
   checkoutBtn.textContent = '前往結帳';
-  checkoutBtn.disabled    = !getCart().length;
+  checkoutBtn.disabled    = !getCart().length || hasOutOfStock();
 }
 
 let checkoutModalSeq = 0;
@@ -132,7 +168,11 @@ function renderCart() {
   const total = cart.reduce((s, item) => s + item.price * item.qty, 0);
   if (cartTotalEl) cartTotalEl.textContent = `NT$ ${total.toLocaleString()}`;
 
-  cartListEl.innerHTML = cart.map((item, i) => `
+  const oosNotice = hasOutOfStock()
+    ? `<p style="color:#b94a48;font-size:13px;margin:0 0 8px">購物車內有缺貨商品，請先移除後再結帳</p>`
+    : '';
+
+  cartListEl.innerHTML = oosNotice + cart.map((item, i) => `
     <div class="cart-item" data-i="${i}">
       <div class="cart-item-img">
         ${item.img
@@ -143,6 +183,7 @@ function renderCart() {
       <div class="cart-item-info">
         <div class="cart-item-name">${esc(item.name)}</div>
         <div class="cart-item-spec muted">${esc(item.size || '')}</div>
+        ${outOfStockKeys.has(cartKey(item)) ? '<div class="cart-item-spec" style="color:#b94a48">缺貨</div>' : ''}
         <div class="cart-item-price">NT$ ${Number(item.price).toLocaleString()}</div>
       </div>
 
@@ -673,7 +714,7 @@ function showSuccess(orderId) {
 }
 
 checkoutBtn?.addEventListener('click', () => {
-  if (!authReady) return;
+  if (!authReady || stockState === 'loading' || hasOutOfStock()) return;
   if (!currentUser) {
     sessionStorage.setItem('loginRedirect', 'cart.html');
     if (cartMsgEl) {
@@ -866,3 +907,4 @@ style.textContent = `
 document.head.appendChild(style);
 
 renderCart();
+checkCartStock();

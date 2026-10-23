@@ -126,36 +126,30 @@
         <div class="p-breadcrumb">
             <a href="products.html">產品</a>
             <span class="sep">/</span>
-            <span id="bcName">臺灣杉</span>
+            <span id="bcName">載入中...</span>
         </div>
 
         <section class="p-top">
             <div class="p-gallery card">
-                <div class="p-main-img" id="mainImg" aria-label="product image"></div>
+                <div class="p-main-img" id="mainImg" aria-label="product image"><div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999">載入中...</div></div>
                 <div class="p-thumbs" id="thumbs"></div>
             </div>
 
             <aside class="p-buy card">
-                <h1 class="p-title" id="pName">臺灣杉</h1>
+                <h1 class="p-title" id="pName">載入中...</h1>
 
-                <div class="p-sub" id="pEn">
-                    Taiwania
-                </div>
-                <div class="p-latin" id="pLatin">
-                    Taiwania cryptomerioides Hayata
-                </div>
+                <div class="p-sub" id="pEn" style="display:none"></div>
+                <div class="p-latin" id="pLatin" style="display:none"></div>
 
                 <div class="p-price-row">
-                    <div class="p-price" id="pPrice">
-                        NT$ 666
-                    </div>
+                    <div class="p-price" id="pPrice">載入中...</div>
                 </div>
 
                 <div class="p-field">
                     <div class="p-label">
                         規格
                     </div>
-                    <div class="p-pills" id="variantPills"></div>
+                    <div class="p-pills" id="variantPills"><span class="muted">載入中...</span></div>
                 </div>
 
                 <div class="p-field">
@@ -163,17 +157,17 @@
                         數量
                     </div>
                     <div class="p-qty">
-                        <button class="p-qty-btn" id="qtyMinus" aria-label="minus">−</button>
-                        <input class="p-qty-input" id="qtyInput" value="1" inputmode="numeric" />
-                        <button class="p-qty-btn" id="qtyPlus" aria-label="plus">＋</button>
+                        <button class="p-qty-btn" id="qtyMinus" aria-label="minus" disabled>−</button>
+                        <input class="p-qty-input" id="qtyInput" value="1" inputmode="numeric" disabled />
+                        <button class="p-qty-btn" id="qtyPlus" aria-label="plus" disabled>＋</button>
                     </div>
                 </div>
 
                 <div class="p-actions3">
-                    <button class="p-buy-now" id="btnBuy">立即購買</button>
-                    <button class="p-add-cart" id="btnCart">放入購物車</button>
+                    <button class="p-buy-now" id="btnBuy" disabled>立即購買</button>
+                    <button class="p-add-cart" id="btnCart" disabled>放入購物車</button>
 
-                    <button class="p-fav" id="btnFav" aria-label="收藏">
+                    <button class="p-fav" id="btnFav" aria-label="收藏" disabled>
                         <svg class="p-fav-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
                             <path d="M12 20.5 4.6 13.3a4.6 4.6 0 0 1 0-6.6 4.7 4.7 0 0 1 6.6 0l.8.8.8-.8a4.7 4.7 0 0 1 6.6 0 4.6 4.6 0 0 1 0 6.6z"
                                 fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
@@ -184,9 +178,7 @@
 
                 <a class="p-fav-link" href="cart.html#favorites">查看我的收藏 →</a>
 
-                <div class="p-note">
-                    ※ 本頁為樣式/資料測試版（之後可接後台）
-                </div>
+                <div class="p-note" style="display:none"></div>
             </aside>
 
         </section>
@@ -194,14 +186,14 @@
         <section class="p-mid">
             <div class="p-box card">
                 <h2 class="p-h2">產品概述</h2>
-                <dl class="p-kv" id="overviewKV"></dl>
+                <dl class="p-kv" id="overviewKV"><div class="muted">載入中...</div></dl>
             </div>
 
             <div class="p-box card">
                 <h2 class="p-h2">成分總覽</h2>
 
                 <div class="p-comp-panel">
-                    <div class="p-bars" id="compBars"></div>
+                    <div class="p-bars" id="compBars"><div class="muted" style="padding:16px">載入中...</div></div>
                 </div>
 
                 <div class="p-docs">
@@ -214,18 +206,18 @@
         </section>
 
         <section class="p-long card">
-            <div class="p-prose" id="descText"></div>
+            <div class="p-prose" id="descText"><p class="muted">載入中...</p></div>
 
             <hr class="p-divider" />
 
             <h2 class="p-h2">保存方式</h2>
-            <ul class="p-list" id="storageList"></ul>
+            <ul class="p-list" id="storageList"><li class="muted">載入中...</li></ul>
 
             <h2 class="p-h2">使用建議</h2>
-            <ul class="p-list" id="usageList"></ul>
+            <ul class="p-list" id="usageList"><li class="muted">載入中...</li></ul>
 
             <h2 class="p-h2">注意事項</h2>
-            <ul class="p-list" id="cautionList"></ul>
+            <ul class="p-list" id="cautionList"><li class="muted">載入中...</li></ul>
         </section>
     </main>
 <footer class="footer">
@@ -241,17 +233,11 @@
         Liyu International Co., Ltd.
       </div>
 
-      <div class="muted" style="margin-top:8px;" id="footer-tel">
-        Tel：+886 911 505 015
-      </div>
+      <div class="muted" style="margin-top:8px;" id="footer-tel" data-default="Tel：+886 911 505 015">載入中...</div>
 
-      <div class="muted" id="footer-email">
-        Email：lyu.aroma@gmail.com
-      </div>
+      <div class="muted" id="footer-email" data-default="Email：lyu.aroma@gmail.com">載入中...</div>
 
-      <div class="muted" id="footer-address">
-        地址：彰化縣員林市中山路二段556巷21號
-      </div>
+      <div class="muted" id="footer-address" data-default="地址：彰化縣員林市中山路二段556巷21號">載入中...</div>
 
       <div class="muted" style="margin-top:10px;">
         © <span id="year"></span> Arochemy

@@ -326,7 +326,9 @@
     <section class="auth-card">
       <img class="auth-logo" src="./images/head-logo.png" alt="Arochemy">
 
-      <div id="authPanel">
+      <p id="authLoading" style="text-align:center;color:#999;padding:40px 0">載入中...</p>
+
+      <div id="authPanel" style="display:none">
         <h1 class="auth-title">會員登入 / 註冊</h1>
         <p class="auth-subtitle">登入後可管理個人資料、訂閱設定與訂單紀錄。</p>
 
@@ -413,16 +415,16 @@
             <div class="member-section member-section--orders">
               <h3>我的訂單</h3>
               <p id="myOrdersMsg" class="auth-msg" style="margin-top:0"></p>
-              <div id="myOrdersList"></div>
+              <div id="myOrdersList"><p class="my-order-empty">載入中...</p></div>
             </div>
           </div>
 
           <div class="member-col-profile">
 
             <div class="member-welcome">
-              <div class="member-avatar-lg" id="memberInitial">A</div>
+              <div class="member-avatar-lg" id="memberInitial"></div>
               <div class="member-welcome-info">
-                <h2 id="memberName">會員</h2>
+                <h2 id="memberName">載入中...</h2>
                 <p id="memberEmailDisplay"></p>
               </div>
             </div>
@@ -431,11 +433,11 @@
               <h3>個人資料</h3>
               <div class="auth-field">
                 <label for="editName">姓名</label>
-                <input id="editName" placeholder="請輸入姓名">
+                <input id="editName" placeholder="請輸入姓名" disabled>
               </div>
               <div class="auth-field">
                 <label for="editPhone">電話</label>
-                <input id="editPhone" placeholder="請輸入電話">
+                <input id="editPhone" placeholder="請輸入電話" disabled>
               </div>
               <div class="auth-field">
                 <label>Email</label>
@@ -444,9 +446,9 @@
               <div class="auth-field">
                 <label for="editBirthday">生日</label>
                 <input id="editBirthday" type="date" disabled readonly>
-                <div class="hint" id="birthdayHint" style="margin-top:6px;font-size:12px;color:#999">如需修改生日，請聯絡客服協助處理。</div>
+                <div class="hint" id="birthdayHint" style="margin-top:6px;font-size:12px;color:#999">載入中...</div>
               </div>
-              <button class="auth-btn primary" id="saveProfileBtn" type="button" style="margin-top:4px">儲存資料</button>
+              <button class="auth-btn primary" id="saveProfileBtn" type="button" style="margin-top:4px" disabled>儲存資料</button>
             </div>
 
             <div class="member-section">
@@ -454,11 +456,11 @@
               <div class="member-sub-row">
                 <span>訂閱 Arochemy 電子報<br><small style="color:#aaa;font-size:12px">接收新品上市與活動資訊</small></span>
                 <label class="m-toggle">
-                  <input type="checkbox" id="subToggle">
+                  <input type="checkbox" id="subToggle" disabled>
                   <span class="m-toggle-track"></span>
                 </label>
               </div>
-              <button class="auth-btn secondary" id="saveSubBtn" type="button" style="margin-top:14px">更新訂閱設定</button>
+              <button class="auth-btn secondary" id="saveSubBtn" type="button" style="margin-top:14px" disabled>更新訂閱設定</button>
             </div>
 
             <div class="auth-actions">
@@ -725,10 +727,31 @@ $('saveSubBtn')?.addEventListener('click', async () => {
   }
 });
 
+let authSeq = 0;
+
+function setProfileLoading(state) {
+  const loading = state !== 'success';
+  ['editName', 'editPhone', 'subToggle', 'saveProfileBtn', 'saveSubBtn'].forEach(id => { if ($(id)) $(id).disabled = loading; });
+  if (state === 'loading') {
+    if ($('memberName'))    $('memberName').textContent    = '載入中...';
+    if ($('memberInitial')) $('memberInitial').textContent = '';
+    if ($('birthdayHint'))  $('birthdayHint').textContent  = '載入中...';
+    if ($('editName'))      $('editName').value  = '';
+    if ($('editPhone'))     $('editPhone').value = '';
+    if ($('subToggle'))     $('subToggle').checked = false;
+    if ($('editBirthday'))  $('editBirthday').value = '';
+  } else if (state === 'error') {
+    if ($('memberName'))    $('memberName').textContent    = '資料載入失敗，請稍後再試';
+    if ($('birthdayHint'))  $('birthdayHint').textContent  = '';
+  }
+}
+
 onAuthStateChanged(auth, async user => {
+  const seq = ++authSeq;
   const authPanel   = $('authPanel');
   const memberPanel = $('memberPanel');
   const authCard    = document.querySelector('.auth-card');
+  if ($('authLoading')) $('authLoading').style.display = 'none';
 
   if (user && user.emailVerified) {
     if (authPanel)   authPanel.style.display  = 'none';
@@ -743,10 +766,19 @@ onAuthStateChanged(auth, async user => {
     const headerArea  = document.getElementById('userArea');
     if (headerArea)  { headerArea.href = 'login.html'; headerArea.onclick = null; }
 
+    setProfileLoading('loading');
+    loadMyOrders(user, seq);
+
     try { await updateDoc(doc(db, 'members', user.uid), { lastLoginAt: serverTimestamp() }); } catch(_) {}
 
     try {
       const snap = await getDoc(doc(db, 'members', user.uid));
+      if (seq !== authSeq) return;
+      if (!snap.exists()) {
+        if ($('memberName'))    $('memberName').textContent    = '會員';
+        if ($('memberInitial')) $('memberInitial').textContent = user.email[0].toUpperCase();
+        if ($('birthdayHint'))  $('birthdayHint').textContent  = '尚未設定，請聯絡客服協助新增。';
+      }
       if (snap.exists()) {
         const d = snap.data();
         if ($('editName'))    $('editName').value    = d.name  || '';
@@ -764,9 +796,11 @@ onAuthStateChanged(auth, async user => {
             : '尚未設定，請聯絡客服協助新增。';
         }
       }
-    } catch(e) { console.warn('讀取會員資料失敗：', e.message); }
-
-    loadMyOrders(user);
+      setProfileLoading('success');
+    } catch(e) {
+      console.warn('讀取會員資料失敗：', e.message);
+      if (seq === authSeq) setProfileLoading('error');
+    }
 
     const redirect = sessionStorage.getItem('loginRedirect');
     if (redirect) {
@@ -792,12 +826,12 @@ onAuthStateChanged(auth, async user => {
 
 const ORDER_STATUS_LABEL = { pending: '待處理', paid: '已付款', shipped: '已出貨', done: '已完成', cancel: '已取消', refunded: '已退款' };
 
-async function loadMyOrders(user) {
+async function loadMyOrders(user, seq = authSeq) {
   const listEl = $('myOrdersList');
   const msgEl  = $('myOrdersMsg');
   if (!listEl) return;
 
-  listEl.innerHTML = '<p class="my-order-empty">載入中…</p>';
+  listEl.innerHTML = '<p class="my-order-empty">載入中...</p>';
   if (msgEl) { msgEl.textContent = ''; msgEl.className = 'auth-msg'; }
 
   try {
@@ -805,6 +839,7 @@ async function loadMyOrders(user) {
     const res = await fetch('https://arochemy-backend-production.up.railway.app/api/orders/mine', {
       headers: { 'Authorization': `Bearer ${token}` },
     });
+    if (seq !== authSeq) return;
 
     if (res.status === 401) {
       listEl.innerHTML = '';
@@ -818,6 +853,7 @@ async function loadMyOrders(user) {
     }
 
     const data = await res.json();
+    if (seq !== authSeq) return;
     if (!res.ok || !data.success) {
       throw new Error(data.error || '讀取訂單失敗');
     }
@@ -825,8 +861,9 @@ async function loadMyOrders(user) {
     renderMyOrders(data.orders || [], user);
 
   } catch (e) {
+    if (seq !== authSeq) return;
     listEl.innerHTML = '';
-    if (msgEl) { msgEl.textContent = '訂單載入失敗，請稍後再試。'; msgEl.className = 'auth-msg error'; }
+    if (msgEl) { msgEl.textContent = '資料載入失敗，請稍後再試'; msgEl.className = 'auth-msg error'; }
     console.warn('[MyOrders] 載入失敗：', e.message);
   }
 }
@@ -836,7 +873,7 @@ function renderMyOrders(orders, user) {
   if (!listEl) return;
 
   if (!orders.length) {
-    listEl.innerHTML = '<p class="my-order-empty">目前還沒有訂單紀錄。</p>';
+    listEl.innerHTML = '<p class="my-order-empty">目前沒有訂單</p>';
     return;
   }
 

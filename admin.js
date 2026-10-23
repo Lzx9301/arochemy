@@ -27,6 +27,42 @@ let currentEditingOrderId = null;
 const $  = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
+const LOADING_TEXT    = '載入中...';
+const LOAD_ERROR_TEXT = '資料載入失敗，請稍後再試';
+
+function markLoadError(value, e) {
+  Object.defineProperty(value, '__loadError', { value: e || true, enumerable: false });
+  return value;
+}
+function isLoadError(value) { return !!(value && value.__loadError); }
+
+const loadSeq = {};
+function nextSeq(key) { loadSeq[key] = (loadSeq[key] || 0) + 1; return loadSeq[key]; }
+function isLatest(key, seq) { return loadSeq[key] === seq; }
+
+async function withLoadingButton(btn, task) {
+  if (!btn || btn.disabled) return;
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = LOADING_TEXT;
+  try { await task(); }
+  finally { btn.disabled = false; btn.textContent = orig; }
+}
+
+function setFormLoading(fieldSels, btnSels, state) {
+  const ready = state === 'success';
+  fieldSels.forEach(sel => {
+    const el = document.querySelector(sel);
+    if (!el) return;
+    if (el.dataset.origPlaceholder === undefined) el.dataset.origPlaceholder = el.placeholder || '';
+    el.disabled = !ready;
+    if (state === 'loading') { el.value = ''; el.placeholder = LOADING_TEXT; }
+    else if (state === 'error') { el.value = ''; el.placeholder = LOAD_ERROR_TEXT; }
+    else el.placeholder = el.dataset.origPlaceholder;
+  });
+  btnSels.forEach(sel => { const b = document.querySelector(sel); if (b) b.disabled = !ready; });
+}
+
 async function safeGet(ref) {
   try {
     const snap = await ref.get();
@@ -35,7 +71,7 @@ async function safeGet(ref) {
     return items;
   } catch (e) {
     console.warn('safeGet warning:', e.message);
-    return [];
+    return markLoadError([], e);
   }
 }
 
@@ -45,7 +81,7 @@ async function safeGetDoc(ref) {
     return doc.exists ? doc.data() : {};
   } catch (e) {
     console.warn('safeGetDoc warning:', e.message);
-    return {};
+    return markLoadError({}, e);
   }
 }
 
@@ -179,12 +215,33 @@ function initNav() {
 async function initDashboard() {
   loadMessages().catch(e => console.warn('[Dashboard] 載入聯絡訊息未讀數量失敗：', e.message));
 
+  const seq = nextSeq('dashboard');
+  ['#stat-products', '#stat-articles', '#stat-orders', '#stat-members', '#stat-revenue', '#stat-pending', '#stat-done']
+    .forEach(sel => setText(sel, LOADING_TEXT));
+  const recentBody = $('#recent-orders-list');
+  if (recentBody) recentBody.innerHTML = skeletonRow(4);
+  const rankBox = $('#dashboard-sales-rank');
+  if (rankBox) rankBox.innerHTML = loadingBlock();
+
   const [products, articles, orders, members] = await Promise.all([
     safeGet(db.collection('products')),
     safeGet(db.collection('articles')),
     safeGet(db.collection('orders')),
     safeGet(db.collection('members')),
   ]);
+  if (!isLatest('dashboard', seq)) return;
+
+  const statOrError = (sel, list, value) => setText(sel, isLoadError(list) ? '載入失敗' : value);
+  statOrError('#stat-products', products, products.length);
+  statOrError('#stat-articles', articles, articles.length);
+  statOrError('#stat-members',  members,  members.length);
+
+  if (isLoadError(orders)) {
+    ['#stat-orders', '#stat-revenue', '#stat-pending', '#stat-done'].forEach(sel => setText(sel, '載入失敗'));
+    if (recentBody) recentBody.innerHTML = errorRow(4);
+    if (rankBox) rankBox.innerHTML = errorBlock();
+    return;
+  }
 
   const now   = new Date();
   const month = now.getMonth();
@@ -200,10 +257,7 @@ async function initDashboard() {
     else if (o.status !== 'cancel') pendingCount++;
   });
 
-  setText('#stat-products', products.length);
-  setText('#stat-articles', articles.length);
   setText('#stat-orders',   orders.length);
-  setText('#stat-members',  members.length);
   setText('#stat-revenue',  monthlyRevenue.toLocaleString());
   setText('#stat-pending',  pendingCount);
   setText('#stat-done',     completedCount);
@@ -231,8 +285,24 @@ async function initDashboard() {
   await renderSalesRank('#dashboard-sales-rank', 5, orders);
 }
 
+const HOMEPAGE_FIELDS  = ['#hero-title', '#hero-subtitle', '#hero-media-url', '#brand-title', '#brand-body'];
+const HOMEPAGE_BUTTONS = ['#save-hero-btn', '#save-brand-btn', '#save-faq-btn', '#add-faq-btn'];
+
 async function loadHomepageSettings() {
+  const seq = nextSeq('homepage');
+  setFormLoading(HOMEPAGE_FIELDS, HOMEPAGE_BUTTONS, 'loading');
+  const faqBox = $('#faq-editor-list');
+  if (faqBox) faqBox.innerHTML = loadingBlock();
+
   const data = await safeGetDoc(db.collection('settings').doc('homepage'));
+  if (!isLatest('homepage', seq)) return;
+  if (isLoadError(data)) {
+    setFormLoading(HOMEPAGE_FIELDS, HOMEPAGE_BUTTONS, 'error');
+    if (faqBox) faqBox.innerHTML = errorBlock();
+    toast(LOAD_ERROR_TEXT, 'error');
+    return;
+  }
+  setFormLoading(HOMEPAGE_FIELDS, HOMEPAGE_BUTTONS, 'success');
 
   setValue('#hero-title',    data.heroTitle    || '');
   setValue('#hero-subtitle', data.heroSubtitle || '');
@@ -381,9 +451,12 @@ const SPEC_SIZES = ['5ml', '10ml', '30ml', '50ml', '100ml'];
 async function loadProducts(filter = '', catFilter = '') {
   const tbody = $('#products-table-body');
   if (!tbody) return;
+  const seq = nextSeq('products');
   tbody.innerHTML = skeletonRow(7);
 
   const products = await safeGet(db.collection('products'));
+  if (!isLatest('products', seq)) return;
+  if (isLoadError(products)) { tbody.innerHTML = errorRow(7); return; }
   products.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
 
   let filtered = products;
@@ -439,7 +512,7 @@ async function loadProducts(filter = '', catFilter = '') {
     tbody.appendChild(tr);
   });
 
-  $$('.edit-product-btn').forEach(b  => b.addEventListener('click', () => openProductModal(b.dataset.id)));
+  $$('.edit-product-btn').forEach(b  => b.addEventListener('click', () => withLoadingButton(b, () => openProductModal(b.dataset.id))));
   $$('.delete-product-btn').forEach(b => b.addEventListener('click', () => confirmDelete('product', b.dataset.id, b.dataset.name)));
 }
 
@@ -514,6 +587,8 @@ async function openProductModal(id = null) {
   if (id) {
     try {
       const data = await safeGetDoc(db.collection('products').doc(id));
+      if (editingProductId !== id) return;
+      if (isLoadError(data)) { toast(LOAD_ERROR_TEXT, 'error'); return; }
       setValue('#product-name',        data.name        || '');
       setValue('#product-category',    data.category    || '');
       setValue('#product-description', data.description || '');
@@ -542,7 +617,7 @@ async function openProductModal(id = null) {
         if (!row) return;
         const sp = specs[size] || {};
         row.querySelector('.spec-enabled').checked = sp.enabled === true || (sp.enabled !== false && (!!sp.price || sp.stock > 0));
-        row.querySelector('.spec-price').value     = sp.price || '';
+        row.querySelector('.spec-price').value     = sp.price ?? '';
         row.querySelector('.spec-stock').value     = sp.stock !== undefined ? sp.stock : '';
       });
 
@@ -736,9 +811,12 @@ async function saveProduct() {
 async function loadArticles(filter = '') {
   const tbody = $('#articles-table-body');
   if (!tbody) return;
+  const seq = nextSeq('articles');
   tbody.innerHTML = skeletonRow(5);
 
   const articles = await safeGet(db.collection('articles'));
+  if (!isLatest('articles', seq)) return;
+  if (isLoadError(articles)) { tbody.innerHTML = errorRow(5); return; }
   articles.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
 
   const filtered = filter
@@ -771,9 +849,9 @@ async function loadArticles(filter = '') {
     tbody.appendChild(tr);
   });
 
-  $$('.edit-article-btn').forEach(b    => b.addEventListener('click', () => openArticleModal(b.dataset.id)));
+  $$('.edit-article-btn').forEach(b    => b.addEventListener('click', () => withLoadingButton(b, () => openArticleModal(b.dataset.id))));
   $$('.delete-article-btn').forEach(b  => b.addEventListener('click', () => confirmDelete('article', b.dataset.id, b.dataset.name)));
-  $$('.newsletter-btn').forEach(b      => b.addEventListener('click', () => openNewsletterModal(b.dataset.id, b.dataset.title)));
+  $$('.newsletter-btn').forEach(b      => b.addEventListener('click', () => withLoadingButton(b, () => openNewsletterModal(b.dataset.id, b.dataset.title))));
 }
 
 function initArticlesPage() {
@@ -881,6 +959,8 @@ async function openArticleModal(id = null) {
   if (id) {
     $('#article-modal-title').textContent = '編輯文章';
     const d = await safeGetDoc(db.collection('articles').doc(id));
+    if (editingArticleId !== id) return;
+    if (isLoadError(d)) { toast(LOAD_ERROR_TEXT, 'error'); return; }
     setValue('#article-title',    d.title    || '');
     setValue('#article-category', d.category || '');
     setValue('#article-status',   d.status   || 'draft');
@@ -987,6 +1067,7 @@ async function openNewsletterModal(articleId, articleTitle) {
   } catch(e) {}
 
   const members     = await safeGet(db.collection('members'));
+  if (isLoadError(members)) { toast(LOAD_ERROR_TEXT, 'error'); return; }
   const subscribers = members.filter(m => m.subscribed === true);
 
   setValue('#newsletter-article-id', articleId);
@@ -1058,9 +1139,21 @@ async function loadOrders(statusFilter = null) {
   const tbody = $('#orders-table-body');
   if (!tbody) return;
   if (statusFilter !== null) currentOrderFilter = statusFilter;
+  const seq = nextSeq('orders');
   tbody.innerHTML = skeletonRow(7);
+  ['#orders-month-revenue', '#orders-pending-count', '#orders-done-count', '#orders-total-count'].forEach(sel => setText(sel, LOADING_TEXT));
+  const ordersRank = $('#orders-sales-rank');
+  if (ordersRank) ordersRank.innerHTML = loadingBlock();
 
-  allOrders = await safeGet(db.collection('orders'));
+  const fetched = await safeGet(db.collection('orders'));
+  if (!isLatest('orders', seq)) return;
+  if (isLoadError(fetched)) {
+    tbody.innerHTML = errorRow(7);
+    ['#orders-month-revenue', '#orders-pending-count', '#orders-done-count', '#orders-total-count'].forEach(sel => setText(sel, '載入失敗'));
+    if (ordersRank) ordersRank.innerHTML = errorBlock();
+    return;
+  }
+  allOrders = fetched;
   allOrders.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
 
   const selMonth = $('#order-month-filter')?.value;
@@ -1254,6 +1347,7 @@ async function renderSalesRank(containerSel, limit = 5, ordersData = null) {
   if (!container) return;
 
   const orders    = ordersData || await safeGet(db.collection('orders'));
+  if (isLoadError(orders)) { container.innerHTML = errorBlock(); return; }
   const salesMap  = {};
 
   orders.forEach(o => {
@@ -1296,9 +1390,17 @@ async function renderSalesRank(containerSel, limit = 5, ordersData = null) {
 async function loadMembers(filter = '') {
   const tbody = $('#members-table-body');
   if (!tbody) return;
+  const seq = nextSeq('members');
   tbody.innerHTML = skeletonRow(8);
+  setText('#members-sub-count', LOADING_TEXT);
 
   const members = await safeGet(db.collection('members'));
+  if (!isLatest('members', seq)) return;
+  if (isLoadError(members)) {
+    tbody.innerHTML = errorRow(7);
+    setText('#members-sub-count', '載入失敗');
+    return;
+  }
   members.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
 
   const filtered  = filter
@@ -1337,7 +1439,7 @@ async function loadMembers(filter = '') {
   });
 
   $$('.member-edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => openMemberModal(btn.dataset.id));
+    btn.addEventListener('click', () => withLoadingButton(btn, () => openMemberModal(btn.dataset.id)));
   });
 }
 
@@ -1348,6 +1450,8 @@ async function openMemberModal(uid) {
   $('#member-error').style.display = 'none';
 
   const d = await safeGetDoc(db.collection('members').doc(uid));
+  if (editingMemberId !== uid) return;
+  if (isLoadError(d)) { toast(LOAD_ERROR_TEXT, 'error'); return; }
   setValue('#member-email',    d.email    || '');
   setValue('#member-name',     d.name     || '');
   setValue('#member-phone',    d.phone    || '');
@@ -1394,6 +1498,7 @@ function initMembersPage() {
 
   $('#export-subscribers-btn')?.addEventListener('click', async () => {
     const members     = await safeGet(db.collection('members'));
+    if (isLoadError(members)) { toast(LOAD_ERROR_TEXT, 'error'); return; }
     const subscribers = members.filter(m => m.subscribed === true);
     if (!subscribers.length) { toast('目前沒有訂閱者', 'info'); return; }
 
@@ -1414,9 +1519,12 @@ let editingCouponId = null;
 async function loadCoupons(filter = '') {
   const tbody = $('#coupons-table-body');
   if (!tbody) return;
+  const seq = nextSeq('coupons');
   tbody.innerHTML = skeletonRow(8);
 
   const coupons = await safeGet(db.collection('coupons'));
+  if (!isLatest('coupons', seq)) return;
+  if (isLoadError(coupons)) { tbody.innerHTML = errorRow(8); return; }
   coupons.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
 
   const filtered = filter
@@ -1467,7 +1575,7 @@ async function loadCoupons(filter = '') {
   });
 
   $$('.coupon-edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => openCouponModal(btn.dataset.id));
+    btn.addEventListener('click', () => withLoadingButton(btn, () => openCouponModal(btn.dataset.id)));
   });
   $$('.coupon-delete-btn').forEach(btn => {
     btn.addEventListener('click', () => confirmDelete('coupon', btn.dataset.id, btn.dataset.code));
@@ -1502,6 +1610,8 @@ async function openCouponModal(id = null) {
 
   if (id) {
     const d = await safeGetDoc(db.collection('coupons').doc(id));
+    if (editingCouponId !== id) return;
+    if (isLoadError(d)) { toast(LOAD_ERROR_TEXT, 'error'); return; }
     setValue('#coupon-code', d.code || '');
     setValue('#coupon-description', d.description || '');
     setValue('#coupon-type', d.type || 'fixed');
@@ -1516,7 +1626,9 @@ async function openCouponModal(id = null) {
     if (d.assignedCustomerId) {
       setValue('#coupon-audience', 'member');
       $('#coupon-assigned-member-field').style.display = '';
-      await loadMembersForCouponPicker();
+      const pickerOk = await loadMembersForCouponPicker();
+      if (editingCouponId !== id) return;
+      if (!pickerOk) { toast(LOAD_ERROR_TEXT, 'error'); return; }
       $('#coupon-assigned-member').value = d.assignedCustomerId;
       const matched = cachedMembersForCoupon?.find(m => m.uid === d.assignedCustomerId);
       setText('#coupon-assigned-member-hint',
@@ -1539,22 +1651,32 @@ async function openCouponModal(id = null) {
 let cachedMembersForCoupon = null;
 
 async function loadMembersForCouponPicker() {
-  if (cachedMembersForCoupon) { renderCouponMemberOptions(cachedMembersForCoupon); return; }
+  if (cachedMembersForCoupon) { renderCouponMemberOptions(cachedMembersForCoupon); return true; }
+  const selectEl = $('#coupon-assigned-member');
+  if (selectEl) selectEl.innerHTML = `<option value="" disabled>${LOADING_TEXT}</option>`;
   const members = await safeGet(db.collection('members'));
+  if (cachedMembersForCoupon) { renderCouponMemberOptions(cachedMembersForCoupon); return true; }
+  if (isLoadError(members)) {
+    if (selectEl) selectEl.innerHTML = `<option value="" disabled>${LOAD_ERROR_TEXT}</option>`;
+    return false;
+  }
   cachedMembersForCoupon = members.map(m => ({
     uid: m.id, name: m.name || '', email: m.email || '',
   })).filter(m => m.email);
   cachedMembersForCoupon.sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email, 'zh-Hant'));
   renderCouponMemberOptions(cachedMembersForCoupon);
+  return true;
 }
 
 function renderCouponMemberOptions(list, targetSelector = '#coupon-assigned-member') {
   const selectEl = $(targetSelector);
   if (!selectEl) return;
   const current = selectEl.value;
-  selectEl.innerHTML = list.map(m =>
-    `<option value="${m.uid}">${escHtml(m.name || '（未填姓名）')}（${escHtml(m.email)}）</option>`
-  ).join('');
+  selectEl.innerHTML = list.length
+    ? list.map(m =>
+        `<option value="${m.uid}">${escHtml(m.name || '（未填姓名）')}（${escHtml(m.email)}）</option>`
+      ).join('')
+    : `<option value="" disabled>目前沒有資料</option>`;
   if (current && list.some(m => m.uid === current)) selectEl.value = current;
 }
 
@@ -1678,8 +1800,15 @@ let editingMessageStatus = null;
 
 async function loadMessages() {
   const tbody = $('#messages-table-body');
+  const seq = nextSeq('messages');
+  if (tbody) tbody.innerHTML = skeletonRow(6);
 
   const messages = await safeGet(db.collection('b2b_inquiries'));
+  if (!isLatest('messages', seq)) return;
+  if (isLoadError(messages)) {
+    if (tbody) tbody.innerHTML = errorRow(6);
+    return;
+  }
   messages.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
 
   const unreadCount = messages.filter(m => m.status === 'unread').length;
@@ -1716,15 +1845,18 @@ async function loadMessages() {
     `;
     tr.querySelector('.message-view-btn').addEventListener('click', (e) => {
       e.stopPropagation();
-      openMessageModal(m.id);
+      withLoadingButton(e.currentTarget, () => openMessageModal(m.id));
     });
-    tr.addEventListener('click', () => openMessageModal(m.id));
+    tr.addEventListener('click', () => withLoadingButton(tr.querySelector('.message-view-btn'), () => openMessageModal(m.id)));
     tbody.appendChild(tr);
   });
 }
 
 async function openMessageModal(id) {
+  const seq = nextSeq('messageModal');
   const d = await safeGetDoc(db.collection('b2b_inquiries').doc(id));
+  if (!isLatest('messageModal', seq)) return;
+  if (isLoadError(d)) { toast(LOAD_ERROR_TEXT, 'error'); return; }
   editingMessageId     = id;
   editingMessageStatus = d.status === 'read' ? 'read' : 'unread';
 
@@ -1792,8 +1924,19 @@ function initMessagesPage() {
   $('#msg-delete-btn')?.addEventListener('click', confirmDeleteMessage);
 }
 
+const SITE_FIELDS = ['#site-name', '#site-description', '#contact-email', '#contact-phone', '#contact-address', '#social-ig', '#social-fb', '#social-line'];
+
 async function loadSiteSettings() {
+  const seq = nextSeq('site');
+  setFormLoading(SITE_FIELDS, ['#save-site-settings-btn'], 'loading');
   const d = await safeGetDoc(db.collection('settings').doc('site'));
+  if (!isLatest('site', seq)) return;
+  if (isLoadError(d)) {
+    setFormLoading(SITE_FIELDS, ['#save-site-settings-btn'], 'error');
+    toast(LOAD_ERROR_TEXT, 'error');
+    return;
+  }
+  setFormLoading(SITE_FIELDS, ['#save-site-settings-btn'], 'success');
   setValue('#site-name',        d.siteName        || '');
   setValue('#site-description', d.siteDescription || '');
   setValue('#contact-email',    d.contactEmail    || '');
@@ -1900,7 +2043,19 @@ function formatDate(ts) {
 }
 
 function skeletonRow(cols) {
-  return `<tr><td colspan="${cols}"><div class="skeleton" style="height:14px;margin:8px 0"></div></td></tr>`;
+  return `<tr><td colspan="${cols}" style="text-align:center;padding:32px;color:var(--text-muted)">${LOADING_TEXT}</td></tr>`;
+}
+
+function errorRow(cols) {
+  return `<tr><td colspan="${cols}" style="text-align:center;padding:32px;color:var(--text-muted)">${LOAD_ERROR_TEXT}</td></tr>`;
+}
+
+function loadingBlock() {
+  return `<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:12px">${LOADING_TEXT}</div>`;
+}
+
+function errorBlock() {
+  return `<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:12px">${LOAD_ERROR_TEXT}</div>`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {

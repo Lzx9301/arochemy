@@ -26,6 +26,37 @@ function toDate(ts) {
 
 const CAT = { single:'單方精油', compound:'複方精油', spray:'噴霧', massage:'按摩油', 'eye-mask':'眼罩', diffuser:'擴香瓶' };
 
+const FALLBACK_HTML = {
+  heroMedia:     `<video autoplay muted loop playsinline preload="auto">
+          <source src="images/hero-bg.mp4" type="video/mp4">
+        </video>`,
+  heroTitle:     '把臺灣森林，帶進你的日常',
+  heroSubtitle:  `真正動人的香氣，<br>
+          不需要來自遙遠的國度，<br>
+          它一直共存在這座島嶼。`,
+  featuredTitle: '臺灣森林系列',
+  featuredDesc:  `小小多山的島嶼，<br>
+          不只住著 2300 萬的人類，<br>
+          更滋養了上萬種的植物。<br><br>
+          我們把植物能量保留於瓶中，<br>
+          陪伴您的每一個呼吸。`,
+  brandTitle:    '以植物香氣，認識臺灣',
+  brandBody:     `AROCHEMY 希望讓臺灣的植物，不再只是圖鑑裡叫得出名字的物種，
+而是能被聞見、被理解，也被記得的存在。
+我們從氣味出發，重新靠近植物，也重新認識腳下的這座島嶼。`,
+};
+
+let homepagePromise = null;
+function getHomepage() {
+  if (!homepagePromise) homepagePromise = getDoc(doc(db, 'settings', 'homepage'));
+  return homepagePromise;
+}
+
+function setFallback(id) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = FALLBACK_HTML[id];
+}
+
 async function init() {
   await Promise.all([
     loadSettings(),
@@ -38,16 +69,14 @@ async function init() {
 
 async function loadSettings() {
   try {
-    const [homeSnap, siteSnap] = await Promise.all([
-      getDoc(doc(db, 'settings', 'homepage')),
-      getDoc(doc(db, 'settings', 'site')),
-    ]);
+    const homeSnap = await getHomepage();
 
     const home = homeSnap.exists() ? homeSnap.data() : {};
-    const site = siteSnap.exists() ? siteSnap.data() : {};
 
     if (home.heroTitle)    setText('heroTitle',     home.heroTitle);
+    else                   setFallback('heroTitle');
     if (home.heroSubtitle) setText('heroSubtitle',  home.heroSubtitle);
+    else                   setFallback('heroSubtitle');
 
     if (home.heroMedia?.url) {
       const media = document.getElementById('heroMedia');
@@ -58,16 +87,23 @@ async function loadSettings() {
              </video>`
           : `<img src="${esc(home.heroMedia.url)}" alt="" style="width:100%;height:100%;object-fit:cover">`;
       }
+    } else {
+      setFallback('heroMedia');
     }
 
     if (home.brandTitle)    setText('featuredTitle', home.brandTitle);
+    else                    setFallback('featuredTitle');
     if (home.featuredDesc)  setText('featuredDesc',  home.featuredDesc);
+    else                    setFallback('featuredDesc');
 
     if (home.brandTitle) setText('brandTitle', home.brandTitle);
+    else                 setFallback('brandTitle');
     if (home.brandBody)  setText('brandBody',  home.brandBody);
+    else                 setFallback('brandBody');
 
   } catch (e) {
     console.warn('[index] loadSettings error:', e.message);
+    ['heroMedia', 'heroTitle', 'heroSubtitle', 'featuredTitle', 'featuredDesc', 'brandTitle', 'brandBody'].forEach(setFallback);
   }
 }
 
@@ -75,19 +111,12 @@ async function loadFeaturedProducts() {
   const track = document.getElementById('featuredGrid');
   if (!track) return;
 
-  track.innerHTML = [1,2,3,4,5].map(() => `
-    <div class="hp-prod-card" style="opacity:0.4;animation:pulse 1.4s infinite">
-      <div class="hp-prod-card-img"></div>
-      <div class="hp-prod-card-body">
-        <div style="height:10px;background:#ddd;border-radius:4px;width:50%;margin-bottom:8px"></div>
-        <div style="height:14px;background:#ddd;border-radius:4px;width:80%"></div>
-      </div>
-    </div>`).join('');
+  track.innerHTML = '<div style="padding:40px;color:#999">載入中...</div>';
 
   try {
     let products = [];
 
-    const homeSnap = await getDoc(doc(db, 'settings', 'homepage'));
+    const homeSnap = await getHomepage();
     const featuredIds = homeSnap.exists() ? (homeSnap.data().featuredProductIds || []) : [];
 
     if (featuredIds.length) {
@@ -135,7 +164,7 @@ async function loadFeaturedProducts() {
 
   } catch (e) {
     console.warn('[index] loadFeaturedProducts error:', e.message);
-    track.innerHTML = '';
+    track.innerHTML = '<div style="padding:40px;color:#999">資料載入失敗，請稍後再試</div>';
   }
 }
 
@@ -251,7 +280,10 @@ async function loadLatestArticles() {
     articles.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
     const latest = articles.slice(0, 2);
 
-    if (!latest.length) return;
+    if (!latest.length) {
+      grid.innerHTML = '<p class="muted">目前沒有文章</p>';
+      return;
+    }
 
     grid.innerHTML = latest.map(a => `
       <a class="article-card" href="article.html?id=${esc(a.id)}" style="text-decoration:none;color:inherit;display:block">
@@ -265,6 +297,7 @@ async function loadLatestArticles() {
       </a>`).join('');
   } catch (e) {
     console.warn('[index] loadLatestArticles error:', e.message);
+    grid.innerHTML = '<p class="muted">資料載入失敗，請稍後再試</p>';
   }
 }
 

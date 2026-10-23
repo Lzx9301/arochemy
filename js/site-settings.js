@@ -45,7 +45,6 @@ function restoreDefaultTexts() {
     setHref('footer-line-link', site.socialLine);
     setHref('articles-follow-link', site.socialIG);
     setHref('faq-ig-link', site.socialIG);
-    setHref('contact-ig',  site.socialIG);
     const tel = document.getElementById('contact-tel');
     if (tel && site.contactPhone) { tel.textContent = site.contactPhone; tel.href = 'tel:' + String(site.contactPhone).replace(/[^0-9+]/g, ''); }
     const mail = document.getElementById('contact-email');

@@ -87,6 +87,12 @@ function render(p) {
   ['qtyMinus', 'qtyPlus', 'qtyInput'].forEach(id => { if ($(id)) $(id).disabled = !canBuy; });
   if ($('btnBuy'))  $('btnBuy').disabled  = !canBuy;
   if ($('btnCart')) $('btnCart').disabled = !canBuy;
+  if (!canBuy) {
+    if ($('btnBuy'))  $('btnBuy').style.display  = 'none';
+    if ($('btnCart')) $('btnCart').style.display = 'none';
+    const qtyField = $('qtyInput')?.closest('.p-field');
+    if (qtyField) qtyField.style.display = 'none';
+  }
   if ($('btnFav'))  $('btnFav').disabled  = false;
 
   updateFavUI(isFaved(p.id));

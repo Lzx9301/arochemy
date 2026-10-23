@@ -40,9 +40,34 @@ function getSelectedShip() {
   return document.querySelector('input[name="ship"]:checked')?.value || '宅配到府';
 }
 
-function calcShippingFee(ship, amountAfterDiscount) {
-  if (amountAfterDiscount >= SHIPPING_FREE_THRESHOLD) return 0;
+function calcShippingFee(ship, subtotal) {
+  if (subtotal >= SHIPPING_FREE_THRESHOLD) return 0;
   return ship.includes('超商') ? SHIPPING_FEE.store : SHIPPING_FEE.home;
+}
+
+const ZERO_TOTAL_MESSAGE = '優惠折抵後應付金額為 NT$0，目前無法線上結帳，請聯絡客服協助處理';
+
+function computeCouponDiscount(coupon, base) {
+  if (!coupon) return 0;
+  const amount = Math.max(0, Number(base) || 0);
+  let discount = 0;
+  if (coupon.type === 'percent') {
+    discount = Math.floor(amount * (Number(coupon.value) / 100));
+    if (coupon.maxDiscount != null && Number(coupon.maxDiscount) > 0) {
+      discount = Math.min(discount, Number(coupon.maxDiscount));
+    }
+  } else {
+    discount = Number(coupon.value) || 0;
+  }
+  return Math.max(0, Math.min(discount, amount));
+}
+
+function calcTotals(ship) {
+  const subtotal    = getCartTotal();
+  const shippingFee = calcShippingFee(ship, subtotal);
+  const base        = subtotal + shippingFee;
+  const discount    = computeCouponDiscount(appliedCoupon, base);
+  return { subtotal, shippingFee, discount, finalTotal: Math.max(0, base - discount) };
 }
 
 let currentUser = null;
@@ -105,10 +130,12 @@ function updateCheckoutBtn() {
 let checkoutModalSeq = 0;
 let checkoutPending  = 0;
 
+let zeroTotal = false;
+
 function refreshSubmitBtn() {
   const btn = document.getElementById('co-submit');
   if (!btn) return;
-  btn.disabled    = checkoutPending > 0;
+  btn.disabled    = checkoutPending > 0 || zeroTotal;
   btn.textContent = checkoutPending > 0 ? '載入中...' : '確認送出訂單';
 }
 
@@ -404,6 +431,9 @@ function renderCouponSummary() {
 
   subtotalEl.textContent = `NT$ ${subtotal.toLocaleString()}`;
 
+  const totals = calcTotals(getSelectedShip());
+  couponDiscount = totals.discount;
+
   if (appliedCoupon && couponDiscount > 0) {
     discountRow.style.display = '';
     discountEl.textContent = `-NT$ ${couponDiscount.toLocaleString()}`;
@@ -411,13 +441,25 @@ function renderCouponSummary() {
     discountRow.style.display = 'none';
   }
 
-  const afterDiscount = Math.max(0, subtotal - couponDiscount);
-  const shippingFee   = calcShippingFee(getSelectedShip(), afterDiscount);
+  const shippingFee   = totals.shippingFee;
   const shippingEl    = document.getElementById('co-summary-shipping');
   if (shippingEl) {
     shippingEl.textContent = shippingFee > 0 ? `NT$ ${shippingFee.toLocaleString()}` : '免運';
   }
-  totalEl.textContent = `NT$ ${(afterDiscount + shippingFee).toLocaleString()}`;
+  totalEl.textContent = `NT$ ${totals.finalTotal.toLocaleString()}`;
+
+  zeroTotal = totals.finalTotal <= 0;
+  const errorEl = document.getElementById('co-error');
+  if (errorEl) {
+    if (zeroTotal) {
+      errorEl.textContent   = ZERO_TOTAL_MESSAGE;
+      errorEl.style.display = '';
+    } else if (errorEl.textContent === ZERO_TOTAL_MESSAGE) {
+      errorEl.textContent   = '';
+      errorEl.style.display = 'none';
+    }
+  }
+  refreshSubmitBtn();
 
   const appliedEl = document.getElementById('co-coupon-applied');
   if (appliedCoupon) {
@@ -482,7 +524,6 @@ async function applyCouponCode(code) {
     }
 
     appliedCoupon  = data.coupon;
-    couponDiscount = data.discount;
     document.getElementById('co-coupon-code').value = '';
     renderCouponSummary();
 
@@ -565,7 +606,7 @@ function initCouponUI() {
 }
 
 async function submitOrder() {
-  if (checkoutPending > 0) return;
+  if (checkoutPending > 0 || zeroTotal) return;
   const submitBtn = document.getElementById('co-submit');
   const errorEl  = document.getElementById('co-error');
 
@@ -598,9 +639,7 @@ async function submitOrder() {
   submitBtn.textContent = '送出中…';
 
   const cart  = getCart();
-  const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
-  const afterDiscount = Math.max(0, total - couponDiscount);
-  const finalTotal = afterDiscount + calcShippingFee(ship, afterDiscount);
+  const { finalTotal } = calcTotals(ship);
 
   try {
     const authHeader = await getAuthHeader();

@@ -903,6 +903,15 @@ style.textContent = `
     transition: color 0.15s;
   }
   .cart-remove:hover { color: #e55; }
+
+  @media (max-width: 600px) {
+    .cart-head .btn { white-space: nowrap; flex-shrink: 0; }
+    .cart-item { flex-wrap: wrap; row-gap: 10px; }
+    .cart-remove { order: 1; align-self: flex-start; margin-left: auto; }
+    .cart-item-info { order: 2; flex: 1 1 100%; }
+    .cart-item-qty, .cart-item-subtotal { order: 3; }
+    .cart-item-subtotal { margin-left: auto; }
+  }
 `;
 document.head.appendChild(style);
 

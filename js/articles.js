@@ -52,6 +52,7 @@ function fmtDate(ts) {
 const catLabel = key => CAT_LABELS[key] || key || '';
 
 let allArticles = [];
+let loadState   = 'loading';
 let currentCat  = 'all';
 let currentPage = 1;
 
@@ -67,7 +68,7 @@ async function init() {
 
   buildChips();
   bindTopics();
-  if (gridEl) gridEl.innerHTML = skeletons(3);
+  if (gridEl) gridEl.innerHTML = `<p class="ar-empty">載入中...</p>`;
 
   try {
     const snap = await getDocs(collection(db, 'articles'));
@@ -77,9 +78,15 @@ async function init() {
       if (a.status === 'published') allArticles.push({ id: d.id, ...a });
     });
     allArticles.sort((a, b) => toDate(b.createdAt) - toDate(a.createdAt));
+    loadState = 'success';
   } catch (e) {
     console.warn('[articles] load error:', e.message);
     allArticles = [];
+    loadState = 'error';
+    if (featureEl) featureEl.innerHTML = `<p class="ar-empty">資料載入失敗，請稍後再試</p>`;
+    if (gridEl) gridEl.innerHTML = `<p class="ar-empty">資料載入失敗，請稍後再試</p>`;
+    renderPager(0);
+    return;
   }
 
   renderFeature();
@@ -151,7 +158,7 @@ function filtered() {
 }
 
 function renderList() {
-  if (!gridEl) return;
+  if (!gridEl || loadState !== 'success') return;
   const list  = filtered();
   const pages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
   currentPage = Math.min(Math.max(1, currentPage), pages);

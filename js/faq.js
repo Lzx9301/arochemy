@@ -88,12 +88,12 @@ function applySearch() {
   if (noResultEl) noResultEl.hidden = !kw || total > 0;
 }
 
-render(DEFAULT_FAQS);
 searchEl?.addEventListener('input', applySearch);
 
 getDoc(doc(db, 'settings', 'homepage')).then(snap => {
   const faqs = snap.exists() ? (snap.data().faqs || []).filter(f => f && f.q) : [];
-  if (!faqs.length) return;
-  render(faqs);
+  render(faqs.length ? faqs : DEFAULT_FAQS);
   applySearch();
-}).catch(() => {});
+}).catch(() => {
+  if (sectionsEl) sectionsEl.innerHTML = '<p class="fq-empty" style="text-align:center;padding:60px 0">資料載入失敗，請稍後再試</p>';
+});

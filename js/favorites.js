@@ -49,14 +49,17 @@ async function loadProduct(id) {
     data = snap.exists() ? { id: snap.id, ...snap.data() } : null;
   } catch (e) {
     console.warn('[favorites] 讀取商品失敗：', id, e.message);
-    data = undefined;
+    return undefined;
   }
   cache.set(id, data);
   return data;
 }
 
+let renderSeq = 0;
+
 async function render() {
   if (!gridEl) return;
+  const seq = ++renderSeq;
   const ids = getFavs();
 
   if (!ids.length) {
@@ -70,8 +73,10 @@ async function render() {
     return;
   }
 
-  gridEl.innerHTML = `<p class="muted fav-loading">收藏商品載入中…</p>`;
+  gridEl.innerHTML = `<p class="muted fav-loading">載入中...</p>`;
+  if (countEl) countEl.textContent = '';
   const list = await Promise.all(ids.map(loadProduct));
+  if (seq !== renderSeq) return;
 
   const missing = ids.filter((id, i) => list[i] === null);
   if (missing.length) saveFavs(ids.filter(id => !missing.includes(id)));
@@ -80,10 +85,14 @@ async function render() {
   if (countEl) countEl.textContent = items.length ? `${items.length} 件` : '';
 
   if (!items.length) {
-    gridEl.innerHTML = `
-      <div class="fav-empty">
-        <p>收藏的商品暫時無法顯示，請稍後再試。</p>
-      </div>`;
+    const failed = list.some(x => x === undefined);
+    gridEl.innerHTML = failed
+      ? `<div class="fav-empty"><p>資料載入失敗，請稍後再試</p></div>`
+      : `<div class="fav-empty">
+          <p>目前還沒有收藏的商品。</p>
+          <p class="muted">在商品頁點選「♡ 收藏」，就會出現在這裡。</p>
+          <a class="btn" href="products.html">去逛逛商品</a>
+        </div>`;
     return;
   }
 

@@ -58,7 +58,7 @@ async function init() {
     product = { id: snap.id, ...snap.data() };
     render(product);
   } catch (e) {
-    showError('商品資料載入失敗，請稍後再試。<br><small style="color:#bbb">' + e.message + '</small>');
+    showError('資料載入失敗，請稍後再試');
     console.error(e);
   }
 }
@@ -70,8 +70,8 @@ function render(p) {
 
   setText('pEn',    p.nameEn    || '');
   setText('pLatin', p.nameLatin || '');
-  if (!p.nameEn)    $('pEn')?.closest?.('.p-sub')    && ($('pEn').style.display    = 'none');
-  if (!p.nameLatin) $('pLatin')?.closest?.('.p-latin') && ($('pLatin').style.display = 'none');
+  if ($('pEn'))    $('pEn').style.display    = p.nameEn    ? '' : 'none';
+  if ($('pLatin')) $('pLatin').style.display = p.nameLatin ? '' : 'none';
 
   renderGallery(p.images || []);
 
@@ -82,6 +82,12 @@ function render(p) {
   $('btnCart')?.addEventListener('click', () => addToCart(false));
   $('btnBuy')?.addEventListener('click',  () => addToCart(true));
   $('btnFav')?.addEventListener('click',  toggleFav);
+
+  const canBuy = !!currentSize && Number(p.specs?.[currentSize]?.stock) > 0;
+  ['qtyMinus', 'qtyPlus', 'qtyInput'].forEach(id => { if ($(id)) $(id).disabled = !canBuy; });
+  if ($('btnBuy'))  $('btnBuy').disabled  = !canBuy;
+  if ($('btnCart')) $('btnCart').disabled = !canBuy;
+  if ($('btnFav'))  $('btnFav').disabled  = false;
 
   updateFavUI(isFaved(p.id));
 

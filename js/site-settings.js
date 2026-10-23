@@ -14,10 +14,21 @@ const firebaseConfig = {
 const app = getApps().find(a => a.name === '[DEFAULT]') || initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
+const SETTING_TEXT_IDS = ['footer-tel', 'footer-email', 'footer-address', 'contact-tel', 'contact-email'];
+
+function restoreDefaultTexts() {
+  SETTING_TEXT_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.dataset.default !== undefined && el.textContent.trim() === '載入中...') {
+      el.textContent = el.dataset.default;
+    }
+  });
+}
+
 (async function applySiteSettings() {
   try {
     const snap = await getDoc(doc(db, 'settings', 'site'));
-    if (!snap.exists()) return;
+    if (!snap.exists()) { restoreDefaultTexts(); return; }
     const site = snap.data();
 
     const setText = (id, text) => { const el = document.getElementById(id); if (el && text) el.textContent = text; };
@@ -39,7 +50,9 @@ const db  = getFirestore(app);
     if (tel && site.contactPhone) { tel.textContent = site.contactPhone; tel.href = 'tel:' + String(site.contactPhone).replace(/[^0-9+]/g, ''); }
     const mail = document.getElementById('contact-email');
     if (mail && site.contactEmail) { mail.textContent = site.contactEmail; mail.href = 'mailto:' + site.contactEmail; }
+    restoreDefaultTexts();
   } catch (e) {
     console.warn('[site-settings] 讀取網站設定失敗:', e.message);
+    restoreDefaultTexts();
   }
 })();

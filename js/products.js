@@ -38,6 +38,7 @@ const CAT_LABEL = {
 const SPEC_SIZES = ['5ml', '10ml', '30ml', '50ml', '100ml'];
 
 let allProducts     = [];
+let loadState       = 'loading';
 let currentCatKey   = 'all';
 let currentSortKey  = 'default';
 
@@ -129,7 +130,9 @@ function initSortFilter() {
 }
 
 async function loadProducts() {
-  grid.innerHTML = renderSkeletons(6);
+  loadState = 'loading';
+  grid.innerHTML = statusBlock('載入中...');
+  if (totalCount) totalCount.textContent = '載入中...';
 
   try {
     const snap = await getDocs(collection(db, 'products'));
@@ -145,15 +148,19 @@ async function loadProducts() {
       return tb - ta;
     });
 
+    loadState = 'success';
     renderProducts(allProducts);
   } catch (e) {
-    grid.innerHTML = `<p style="color:#888;padding:40px 0">商品載入失敗，請重新整理頁面。</p>`;
+    loadState = 'error';
+    grid.innerHTML = statusBlock('資料載入失敗，請稍後再試');
+    if (totalCount) totalCount.textContent = '';
     console.error('loadProducts error:', e);
   }
 }
 
 function renderProducts(list) {
-  totalCount.textContent = list.length;
+  if (loadState !== 'success') return;
+  totalCount.textContent = `${list.length} items`;
 
   if (!list.length) {
     grid.innerHTML = `
@@ -173,7 +180,8 @@ function productCard(p) {
   const specs   = p.specs || {};
   const enabled = SPEC_SIZES.filter(s => specs[s]?.enabled && specs[s]?.stock > 0);
   const defaultSpec = enabled[0] || null;
-  const defaultPrice = defaultSpec ? specs[defaultSpec].price : 0;
+  const priceSpec   = defaultSpec || SPEC_SIZES.find(s => specs[s]?.enabled) || null;
+  const defaultPrice = priceSpec ? specs[priceSpec].price : null;
   const img = p.images?.[0] || '';
   const catName = CAT_LABEL[p.category] || '';
 
@@ -213,7 +221,7 @@ function productCard(p) {
 
         <div class="product-footer">
           <div class="product-price" data-id="${p.id}">
-            NT$ ${Number(defaultPrice).toLocaleString()}
+            ${defaultPrice === null || defaultPrice === undefined ? '' : `NT$ ${Number(defaultPrice).toLocaleString()}`}
           </div>
           ${enabled.length
             ? `<button class="btn primary add-cart-btn"
@@ -380,6 +388,10 @@ function initDropdownClose() {
       sortMenu?.classList.remove('open');
     }
   });
+}
+
+function statusBlock(text) {
+  return `<div style="grid-column:1/-1;text-align:center;padding:60px 0;color:#999"><p>${esc(text)}</p></div>`;
 }
 
 function renderSkeletons(n) {

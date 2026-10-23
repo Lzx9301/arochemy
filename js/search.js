@@ -59,10 +59,21 @@ async function runSearch() {
 
   const nq = normalize(q);
 
-  const [products, faqs] = await Promise.all([
-    fetchProducts(),
-    fetchFaqs(),
-  ]);
+  if (countEl) countEl.textContent = '載入中...';
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  let products, faqs;
+  try {
+    [products, faqs] = await Promise.all([
+      fetchProducts(),
+      fetchFaqs(),
+    ]);
+  } catch (e) {
+    if (countEl) countEl.textContent = '資料載入失敗，請稍後再試';
+    if (productsSection) productsSection.style.display = 'none';
+    if (faqSection) faqSection.style.display = 'none';
+    return;
+  }
 
   const matchedProducts = products.filter(p => {
     const haystack = [
@@ -126,7 +137,7 @@ async function fetchProducts() {
     return list;
   } catch (e) {
     console.error('[search] 讀取商品失敗：', e.message);
-    return [];
+    throw e;
   }
 }
 
@@ -137,14 +148,14 @@ async function fetchFaqs() {
     return snap.data().faqs || [];
   } catch (e) {
     console.error('[search] 讀取 FAQ 失敗：', e.message);
-    return [];
+    throw e;
   }
 }
 
 function productCard(p) {
   const specs   = p.specs || {};
   const enabled = SPEC_SIZES.filter(s => specs[s]?.enabled && specs[s]?.stock > 0);
-  const price   = enabled[0] ? specs[enabled[0]].price : 0;
+  const price   = enabled[0] ? Number(specs[enabled[0]].price) : null;
   const img     = p.images?.[0] || '';
   const catName = CAT_LABEL[p.category] || '';
 
@@ -160,7 +171,7 @@ function productCard(p) {
         <h3 class="product-name">
           <a href="product.html?id=${p.id}">${esc(p.name)}</a>
         </h3>
-        ${price ? `<div class="product-price">NT$ ${Number(price).toLocaleString()}</div>` : ''}
+        ${Number.isFinite(price) ? `<div class="product-price">NT$ ${price.toLocaleString()}</div>` : ''}
       </div>
     </div>
   `;

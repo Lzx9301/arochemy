@@ -50,7 +50,7 @@ async function init() {
     renderArticle(article);
     loadRelated(article);
   } catch (e) {
-    showError('文章載入失敗，請稍後再試。');
+    showError('資料載入失敗，請稍後再試');
     console.error(e);
   }
 }

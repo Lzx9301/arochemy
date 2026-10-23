@@ -46,11 +46,49 @@ function calcShippingFee(ship, amountAfterDiscount) {
 }
 
 let currentUser = null;
+let authReady   = false;
 onAuthStateChanged(auth, user => {
   currentUser = user;
+  authReady   = true;
+  updateCheckoutBtn();
   const userEmailEl = document.getElementById('userEmail');
   if (userEmailEl) userEmailEl.textContent = (user && user.emailVerified) ? user.email : '';
 });
+
+function updateCheckoutBtn() {
+  if (!checkoutBtn) return;
+  if (!authReady) {
+    checkoutBtn.disabled    = true;
+    checkoutBtn.textContent = '載入中...';
+    return;
+  }
+  checkoutBtn.textContent = '前往結帳';
+  checkoutBtn.disabled    = !getCart().length;
+}
+
+let checkoutModalSeq = 0;
+let checkoutPending  = 0;
+
+function refreshSubmitBtn() {
+  const btn = document.getElementById('co-submit');
+  if (!btn) return;
+  btn.disabled    = checkoutPending > 0;
+  btn.textContent = checkoutPending > 0 ? '載入中...' : '確認送出訂單';
+}
+
+async function trackPending(task) {
+  const seq = checkoutModalSeq;
+  checkoutPending++;
+  refreshSubmitBtn();
+  try {
+    return await task(() => seq === checkoutModalSeq);
+  } finally {
+    if (seq === checkoutModalSeq) {
+      checkoutPending = Math.max(0, checkoutPending - 1);
+      refreshSubmitBtn();
+    }
+  }
+}
 
 async function getAuthHeader() {
   if (currentUser && currentUser.emailVerified) {
@@ -85,11 +123,11 @@ function renderCart() {
         <a class="btn" href="products.html" style="margin-top:16px">開始選購</a>
       </div>`;
     if (cartTotalEl) cartTotalEl.textContent = 'NT$ 0';
-    if (checkoutBtn) checkoutBtn.disabled = true;
+    updateCheckoutBtn();
     return;
   }
 
-  if (checkoutBtn) checkoutBtn.disabled = false;
+  updateCheckoutBtn();
 
   const total = cart.reduce((s, item) => s + item.price * item.qty, 0);
   if (cartTotalEl) cartTotalEl.textContent = `NT$ ${total.toLocaleString()}`;
@@ -211,7 +249,7 @@ function openCheckoutModal() {
         <div id="co-coupon-applied" class="co-coupon-applied" style="display:none"></div>
         <button type="button" id="co-coupon-toggle" class="co-coupon-toggle">查看可用優惠券 ▾</button>
         <div id="co-coupon-list" class="co-coupon-list" style="display:none">
-          <div class="co-coupon-list-loading">載入中…</div>
+          <div class="co-coupon-list-loading">載入中...</div>
         </div>
 
         <div class="co-summary">
@@ -258,18 +296,33 @@ function openCheckoutModal() {
   document.body.appendChild(modal);
   document.body.style.overflow = 'hidden';
 
+  checkoutModalSeq++;
+  checkoutPending = 0;
+
   if (currentUser) {
     const emailEl = document.getElementById('co-email');
     if (emailEl) emailEl.value = currentUser.email;
 
-    getDoc(doc(db, 'members', currentUser.uid)).then(snap => {
-      if (!snap.exists()) return;
-      const d = snap.data();
-      const nameEl  = document.getElementById('co-name');
-      const phoneEl = document.getElementById('co-phone');
-      if (nameEl  && d.name)  nameEl.value  = d.name;
-      if (phoneEl && d.phone) phoneEl.value = d.phone;
-    }).catch(() => {});
+    const uid     = currentUser.uid;
+    const nameEl  = document.getElementById('co-name');
+    const phoneEl = document.getElementById('co-phone');
+    const origPlaceholders = [nameEl?.placeholder, phoneEl?.placeholder];
+    if (nameEl)  nameEl.placeholder  = '載入中...';
+    if (phoneEl) phoneEl.placeholder = '載入中...';
+
+    trackPending(async isCurrent => {
+      try {
+        const snap = await getDoc(doc(db, 'members', uid));
+        if (!isCurrent() || currentUser?.uid !== uid || !snap.exists()) return;
+        const d = snap.data();
+        if (nameEl  && d.name  && !nameEl.value)  nameEl.value  = d.name;
+        if (phoneEl && d.phone && !phoneEl.value) phoneEl.value = d.phone;
+      } catch (e) {
+      } finally {
+        if (nameEl)  nameEl.placeholder  = origPlaceholders[0] || '';
+        if (phoneEl) phoneEl.placeholder = origPlaceholders[1] || '';
+      }
+    });
   }
 
   modal.querySelectorAll('input[name="ship"]').forEach(radio => {
@@ -356,6 +409,7 @@ async function applyCouponCode(code) {
 
   msgEl.style.display = 'none';
 
+  return trackPending(async isCurrent => {
   try {
     const authHeader = await getAuthHeader();
     const res = await fetch(`${COUPON_API}/validate`, {
@@ -367,6 +421,8 @@ async function applyCouponCode(code) {
       }),
     });
 
+    if (!isCurrent()) return;
+
     if (res.status === 401) {
       msgEl.textContent = '登入狀態可能已失效，請重新登入後再試一次';
       msgEl.style.color = '#b94a48';
@@ -375,6 +431,7 @@ async function applyCouponCode(code) {
     }
 
     const data = await res.json();
+    if (!isCurrent()) return;
 
     if (!data.valid) {
       msgEl.textContent = data.reason || '此優惠碼無法使用';
@@ -389,15 +446,19 @@ async function applyCouponCode(code) {
     renderCouponSummary();
 
   } catch (e) {
+    if (!isCurrent()) return;
     msgEl.textContent = '優惠券驗證失敗，請稍後再試';
     msgEl.style.color = '#b94a48';
     msgEl.style.display = '';
   }
+  });
 }
 
 async function loadEligibleCoupons() {
   const listEl = document.getElementById('co-coupon-list');
   if (!listEl) return;
+  const seq = checkoutModalSeq;
+  listEl.innerHTML = `<div class="co-coupon-list-loading">載入中...</div>`;
 
   try {
     const authHeader = await getAuthHeader();
@@ -406,7 +467,9 @@ async function loadEligibleCoupons() {
     });
     const res  = await fetch(`${COUPON_API}/eligible?${params}`, { headers: authHeader });
     const data = await res.json();
-    const coupons = data.coupons || [];
+    if (seq !== checkoutModalSeq) return;
+    if (!res.ok || !Array.isArray(data.coupons)) throw new Error(data.error || 'load failed');
+    const coupons = data.coupons;
 
     if (!coupons.length) {
       listEl.innerHTML = `<div class="co-coupon-list-empty">目前沒有可以使用的優惠券</div>`;
@@ -428,7 +491,8 @@ async function loadEligibleCoupons() {
     });
 
   } catch (e) {
-    listEl.innerHTML = `<div class="co-coupon-list-empty">優惠券載入失敗</div>`;
+    if (seq !== checkoutModalSeq) return;
+    listEl.innerHTML = `<div class="co-coupon-list-empty">資料載入失敗，請稍後再試</div>`;
   }
 }
 
@@ -460,6 +524,7 @@ function initCouponUI() {
 }
 
 async function submitOrder() {
+  if (checkoutPending > 0) return;
   const submitBtn = document.getElementById('co-submit');
   const errorEl  = document.getElementById('co-error');
 
@@ -608,6 +673,7 @@ function showSuccess(orderId) {
 }
 
 checkoutBtn?.addEventListener('click', () => {
+  if (!authReady) return;
   if (!currentUser) {
     sessionStorage.setItem('loginRedirect', 'cart.html');
     if (cartMsgEl) {

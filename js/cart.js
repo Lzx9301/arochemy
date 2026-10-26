@@ -215,7 +215,7 @@ function renderCart() {
 
       <div class="cart-item-qty">
         <button class="p-qty-btn qty-minus" data-i="${i}" type="button" aria-label="減少">−</button>
-        <span class="qty-val">${item.qty}</span>
+        <input class="qty-val" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" aria-label="數量" data-i="${i}" value="${item.qty}">
         <button class="p-qty-btn qty-plus" data-i="${i}" type="button" aria-label="增加">＋</button>
       </div>
 
@@ -234,12 +234,31 @@ function renderCart() {
   cartListEl.querySelectorAll('.qty-minus').forEach(btn =>
     btn.addEventListener('click', () => changeQty(Number(btn.dataset.i), -1))
   );
+  cartListEl.querySelectorAll('input.qty-val').forEach(input => {
+    input.addEventListener('input', () => {
+      const digits = input.value.replace(/[^0-9]/g, '');
+      if (digits !== input.value) input.value = digits;
+    });
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') input.blur(); });
+    input.addEventListener('change', () => setQty(Number(input.dataset.i), input.value));
+  });
   cartListEl.querySelectorAll('.qty-plus').forEach(btn =>
     btn.addEventListener('click', () => changeQty(Number(btn.dataset.i), +1))
   );
   cartListEl.querySelectorAll('.cart-remove').forEach(btn =>
     btn.addEventListener('click', () => removeItem(Number(btn.dataset.i)))
   );
+}
+
+const MAX_QTY_PER_ITEM = 999;
+
+function setQty(i, raw) {
+  const cart = getCart();
+  if (!cart[i]) return;
+  const n = parseInt(String(raw).replace(/[^0-9]/g, ''), 10);
+  if (Number.isInteger(n) && n >= 1) cart[i].qty = Math.min(n, MAX_QTY_PER_ITEM);
+  saveCart(cart);
+  renderCart();
 }
 
 function changeQty(i, delta) {
@@ -934,6 +953,12 @@ style.textContent = `
     padding: 4px 10px;
   }
   .qty-val { font-size: 14px; font-weight: 600; min-width: 20px; text-align: center; }
+  input.qty-val {
+    width: 40px; padding: 2px 0; border: none; border-radius: 6px;
+    background: transparent; color: inherit; font-family: inherit;
+    outline: none;
+  }
+  input.qty-val:focus { background: #fff; box-shadow: 0 0 0 1px #ccc; }
   .cart-item-subtotal { font-size: 14px; font-weight: 700; white-space: nowrap; }
   .cart-remove {
     background: none; border: none; cursor: pointer;
@@ -943,6 +968,7 @@ style.textContent = `
   .cart-remove:hover { color: #e55; }
 
   @media (max-width: 600px) {
+    input.qty-val { font-size: 16px; }
     .cart-head .btn { white-space: nowrap; flex-shrink: 0; }
     .cart-item { flex-wrap: wrap; row-gap: 10px; }
     .cart-remove { order: 1; align-self: flex-start; margin-left: auto; }

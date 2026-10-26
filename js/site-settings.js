@@ -23,6 +23,18 @@ function restoreDefaultTexts() {
       el.textContent = el.dataset.default;
     }
   });
+  document.querySelectorAll('[data-site-field]').forEach(el => {
+    if (el.dataset.default !== undefined && el.textContent.trim() === '載入中...') {
+      el.textContent = el.dataset.default;
+    }
+  });
+}
+
+function applySiteFields(site) {
+  document.querySelectorAll('[data-site-field]').forEach(el => {
+    const value = String(site[el.dataset.siteField] ?? '').trim();
+    if (value) el.textContent = value;
+  });
 }
 
 (async function applySiteSettings() {
@@ -49,6 +61,7 @@ function restoreDefaultTexts() {
     if (tel && site.contactPhone) { tel.textContent = site.contactPhone; tel.href = 'tel:' + String(site.contactPhone).replace(/[^0-9+]/g, ''); }
     const mail = document.getElementById('contact-email');
     if (mail && site.contactEmail) { mail.textContent = site.contactEmail; mail.href = 'mailto:' + site.contactEmail; }
+    applySiteFields(site);
     restoreDefaultTexts();
   } catch (e) {
     console.warn('[site-settings] 讀取網站設定失敗:', e.message);

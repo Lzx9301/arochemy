@@ -3,6 +3,7 @@ import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, getDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getCart as storeGetCart, saveCart as storeSaveCart, ownerReady, onOwnerChange } from './cart-store.js';
 
 const firebaseConfig = {
   apiKey:            'AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI',
@@ -165,13 +166,11 @@ async function getAuthHeader() {
   return {};
 }
 
-function getCart()      { try { return JSON.parse(localStorage.getItem('arochemy_cart') || '[]'); } catch { return []; } }
-function saveCart(c)    { localStorage.setItem('arochemy_cart', JSON.stringify(c)); }
+function getCart()      { return storeGetCart(); }
+function saveCart(c)    { storeSaveCart(c); }
 
 function updateCartBadge(cart) {
-  const total = cart.reduce((s, c) => s + c.qty, 0);
-  const badge = document.getElementById('cartCount');
-  if (badge) badge.textContent = total;
+  if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
 }
 
 function renderCart() {
@@ -954,5 +953,16 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-renderCart();
-checkCartStock();
+ownerReady.then(() => {
+  renderCart();
+  checkCartStock();
+});
+
+onOwnerChange(() => {
+  if (document.getElementById('checkout-modal')) {
+    document.getElementById('checkout-modal').remove();
+    document.body.style.overflow = '';
+  }
+  renderCart();
+  checkCartStock();
+});

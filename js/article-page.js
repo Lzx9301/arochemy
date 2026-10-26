@@ -56,7 +56,7 @@ async function init() {
 }
 
 function renderArticle(a) {
-  document.title = `${a.title || '文章'}｜Arochemy`;
+  document.title = `${a.title || '文章'}｜AROCHEMY`;
   const metaDesc = document.getElementById('metaDesc');
   if (metaDesc) metaDesc.content = a.excerpt || a.title || '';
 

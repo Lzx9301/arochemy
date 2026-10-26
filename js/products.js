@@ -3,6 +3,7 @@ import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12
 import { getFirestore,
          collection,
          getDocs }         from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getCart as storeGetCart, saveCart as storeSaveCart, ownerReady, isOwnerReady } from './cart-store.js';
 
 const firebaseConfig = {
   apiKey:            'AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI',
@@ -286,6 +287,7 @@ function bindCardEvents(p) {
 }
 
 function addToCart(item) {
+  if (!isOwnerReady()) { ownerReady.then(() => addToCart(item)); return; }
   const cart = getCart();
   const key   = `${item.id}_${item.size}`;
   const exist = cart.find(c => `${c.id}_${c.size}` === key);
@@ -299,12 +301,11 @@ function addToCart(item) {
 }
 
 function getCart() {
-  try { return JSON.parse(localStorage.getItem('arochemy_cart') || '[]'); }
-  catch { return []; }
+  return storeGetCart();
 }
 
 function saveCart(cart) {
-  localStorage.setItem('arochemy_cart', JSON.stringify(cart));
+  storeSaveCart(cart);
 }
 
 function updateCartBadge(cart) {

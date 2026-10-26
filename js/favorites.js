@@ -1,6 +1,7 @@
 
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFavs as storeGetFavs, saveFavs as storeSaveFavs, favKey, ownerReady, onOwnerChange } from './cart-store.js';
 
 const firebaseConfig = {
   apiKey:            'AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI',
@@ -13,17 +14,15 @@ const firebaseConfig = {
 const app = getApps().find(a => a.name === '[DEFAULT]') || initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
-const FAV_KEY    = 'arochemy_favs';
 const SPEC_SIZES = ['5ml', '10ml', '30ml', '50ml', '100ml'];
 
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
 function getFavs() {
-  try { const v = JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); return Array.isArray(v) ? v : []; }
-  catch { return []; }
+  return storeGetFavs();
 }
 function saveFavs(ids) {
-  try { localStorage.setItem(FAV_KEY, JSON.stringify(ids)); } catch {}
+  storeSaveFavs(ids);
 }
 
 function priceText(p) {
@@ -127,6 +126,7 @@ async function render() {
   });
 }
 
-window.addEventListener('storage', e => { if (e.key === FAV_KEY) render(); });
+window.addEventListener('storage', e => { if (e.key && e.key === favKey()) render(); });
 
-render();
+ownerReady.then(render);
+onOwnerChange(render);

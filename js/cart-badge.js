@@ -1,10 +1,13 @@
-const CART_KEY = "arochemy_cart";
-
 function updateCartBadge() {
   const el = document.getElementById("cartCount");
   if (!el) return;
 
-  const cart = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+  const key = window.__arochemyCartKey;
+  if (!key) { el.textContent = ""; el.style.display = "none"; return; }
+
+  let cart = [];
+  try { cart = JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) { cart = []; }
+  if (!Array.isArray(cart)) cart = [];
   const count = cart.reduce((sum, item) => sum + Number(item.qty || 0), 0);
 
   el.textContent = String(count);

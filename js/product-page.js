@@ -1,6 +1,7 @@
 
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getCart as storeGetCart, saveCart as storeSaveCart, getFavs as storeGetFavs, saveFavs as storeSaveFavs, favKey, ownerReady, isOwnerReady, onOwnerChange } from './cart-store.js';
 
 const firebaseConfig = {
   apiKey:            'AIzaSyAgRq-fVWsQuyO2odbfVEjgOZoHyACEApI',
@@ -56,6 +57,7 @@ async function init() {
     }
 
     product = { id: snap.id, ...snap.data() };
+    await ownerReady;
     render(product);
   } catch (e) {
     showError('資料載入失敗，請稍後再試');
@@ -64,7 +66,7 @@ async function init() {
 }
 
 function render(p) {
-  document.title = `${p.name}｜Arochemy`;
+  document.title = `${p.name}｜AROCHEMY`;
   setText('bcName', p.name);
   setText('pName',  p.name);
 
@@ -221,6 +223,7 @@ function initQty() {
 }
 
 function addToCart(buyNow = false) {
+  if (!isOwnerReady()) return;
   if (!currentSize) { showToast('請先選擇規格'); return; }
 
   const qty  = Math.max(1, parseInt($('qtyInput')?.value) || 1);
@@ -258,15 +261,16 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove('show'), 2800);
 }
 
-function getFavs()     { try { return JSON.parse(localStorage.getItem('arochemy_favs')||'[]'); } catch { return []; } }
+function getFavs()     { return storeGetFavs(); }
 function isFaved(id)   { return getFavs().includes(id); }
 
 function toggleFav() {
+  if (!isOwnerReady() || !product) return;
   const favs = getFavs();
   const idx  = favs.indexOf(product.id);
   if (idx > -1) favs.splice(idx, 1);
   else favs.push(product.id);
-  localStorage.setItem('arochemy_favs', JSON.stringify(favs));
+  storeSaveFavs(favs);
   updateFavUI(idx === -1);
 }
 
@@ -371,9 +375,11 @@ function showError(msg) {
   `;
 }
 
-function getCart()      { try { return JSON.parse(localStorage.getItem('arochemy_cart')||'[]'); } catch { return []; } }
-function saveCart(cart) { localStorage.setItem('arochemy_cart', JSON.stringify(cart)); }
+function getCart()      { return storeGetCart(); }
+function saveCart(cart) { storeSaveCart(cart); }
+onOwnerChange(() => { if (product) updateFavUI(isFaved(product.id)); });
 function updateCartBadge(cart) {
+  if (typeof window.updateCartBadge === 'function') { window.updateCartBadge(); return; }
   const total  = cart.reduce((s, c) => s + c.qty, 0);
   const badge  = document.getElementById('cartCount');
   if (badge) badge.textContent = total;

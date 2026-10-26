@@ -234,8 +234,8 @@
         setText('osTitle', '訂單已建立');
         setText('osDesc', '感謝您的訂購，我們已收到您的訂單資料。');
         setNote('我們將盡快處理您的訂單，<br>如有問題歡迎透過 Email 或 LINE 聯繫。');
-        try { localStorage.removeItem('arochemy_cart'); } catch (e) {}
-        window.updateCartBadge?.();
+        if (window.arochemyCartStore) window.arochemyCartStore.clearCart();
+        else window.addEventListener('arochemy:cart-store-ready', () => window.arochemyCartStore.clearCart(), { once: true });
       }
 
       function showFailed() {
